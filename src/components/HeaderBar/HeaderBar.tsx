@@ -20,6 +20,7 @@ import {
   IconMoon,
   IconSun,
   IconPencil,
+  IconFolderOpen,
 } from "@tabler/icons-react";
 import { ActionButton } from "../UI/ActionButton";
 import { IconButton } from "../UI/IconButton";
@@ -35,6 +36,7 @@ interface HeaderBarProps {
   onSave?: () => void;
   onExport?: () => void;
   onSettings?: () => void;
+  onOpenFlowSelector?: () => void;
 }
 
 export function HeaderBar({
@@ -43,6 +45,7 @@ export function HeaderBar({
   onSave = () => {},
   onExport = () => {},
   onSettings = () => {},
+  onOpenFlowSelector,
 }: HeaderBarProps) {
   const { theme, toggleTheme, isDark } = useTheme();
   const { logout } = useUsers();
@@ -184,6 +187,16 @@ export function HeaderBar({
           </UnstyledButton>
         </Group>
         <Group gap={8} wrap="nowrap">
+          {onOpenFlowSelector && (
+            <Tooltip label="Cambiar flujo" withArrow>
+              {renderActionButton(
+                <IconFolderOpen size={16} />,
+                "Flujos",
+                onOpenFlowSelector
+              )}
+            </Tooltip>
+          )}
+
           {renderActionButton(
             <IconPlayerPlay size={16} />,
             "Run",
