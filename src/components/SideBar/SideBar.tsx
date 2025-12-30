@@ -1,10 +1,8 @@
-import { useContext } from "react";
 import { Stack, Title, ScrollArea } from "@mantine/core";
 import {
   IconPlayerPlay,
   IconClock,
   IconWebhook,
-  IconUpload,
   IconBrain,
   IconGitBranch,
   IconRobot,
@@ -12,14 +10,21 @@ import {
   IconGenderNeutrois,
   IconFileUpload,
 } from "@tabler/icons-react";
-import { FlowContext } from "../Flow/context/FlowContext";
-import { useTheme } from "../../theme/themeContext";
+import { useFlowActions } from "../Flow/context/FlowActionsContext";
+import { useReactFlow } from "@xyflow/react";
+import { useTheme } from "../../theme/ThemeContext";
 import { ActionButton } from "../UI/ActionButton";
 import { DropdownSection } from "../UI/DropdownSection";
 
 export function Sidebar() {
-  const { addNode } = useContext(FlowContext);
-  const { theme } = useTheme();
+  const { addNode } = useFlowActions();
+  const { theme } = useTheme(); 
+  const reactFlow = useReactFlow();
+
+  const addAndCenter = (nodeData) =>
+    addNode(nodeData, "custom", (node) => {
+      reactFlow.setCenter(node.position.x, node.position.y, { zoom: 1 });
+    });
 
   return (
     <ScrollArea
@@ -33,8 +38,6 @@ export function Sidebar() {
     >
       <div style={{ padding: "0 1rem" }}>
         <Stack spacing="lg">
-
-          {/* TITLE */}
           <div
             style={{
               paddingBottom: theme.spacing.md,
@@ -54,10 +57,14 @@ export function Sidebar() {
             </Title>
           </div>
 
-          {/* TRIGGER */}
           <DropdownSection
             title="Trigger"
-            icon={<IconGenderNeutrois size={18} color={theme.colors.text.accent} />}
+            icon={
+              <IconGenderNeutrois
+                size={18}
+                color={theme.colors.text.accent}
+              />
+            }
             defaultOpen
             style={{
               background: theme.colors.background.secondary,
@@ -67,93 +74,128 @@ export function Sidebar() {
             }}
           >
             <ActionButton
-                icon={<IconPlayerPlay size={16} />}
-                onClick={() =>
-                  addNode(
-                    {
-                      label: "Manual Trigger",
-                      subtitle: "Trigger",
-                      icon: IconPlayerPlay,
-                    },
-                    "custom"
-                  )
-                }
-              >
-                Manual
+              icon={<IconPlayerPlay size={16} />}
+              onClick={() =>
+                addNode(
+                  {
+                    label: "Manual Trigger",
+                    subtitle: "Trigger",
+                    icon: IconPlayerPlay,
+                  },
+                  "custom"
+                )
+              }
+            >
+              Manual
             </ActionButton>
+
             <ActionButton
-                icon={<IconClock size={16} />}
-                onClick={() =>
-                  addNode(
-                    {
-                      label: "Schedule",
-                      subtitle: "Trigger",
-                      icon: IconClock,
-                    },
-                    "custom"
-                  )
-                }
-              >
-                Schedule
+              icon={<IconClock size={16} />}
+              onClick={() =>
+                addNode(
+                  {
+                    label: "Schedule",
+                    subtitle: "Trigger",
+                    icon: IconClock,
+                  },
+                  "custom"
+                )
+              }
+            >
+              Schedule
             </ActionButton>
+
             <ActionButton
-                icon={<IconWebhook size={16} />}
-                onClick={() =>
-                  addNode(
-                    {
-                      label: "WebHook",
-                      subtitle: "Trigger",
-                      icon: IconWebhook,
-                    },
-                    "custom"
-                  )
-                }
-              >
-                WebHook
+              icon={<IconWebhook size={16} />}
+              onClick={() =>
+                addNode(
+                  {
+                    label: "WebHook",
+                    subtitle: "Trigger",
+                    icon: IconWebhook,
+                  },
+                  "custom"
+                )
+              }
+            >
+              WebHook
             </ActionButton>
+
             <ActionButton
-                icon={<IconFileUpload size={16} />}
-                onClick={() =>
-                  addNode(
-                    {
-                      label: "File Uploader",
-                      subtitle: "Trigger",
-                      icon: IconFileUpload,
-                    },
-                    "custom"
-                  )
-                }
-              >
-                File Uploader
+              icon={<IconFileUpload size={16} />}
+              onClick={() =>
+                addNode(
+                  {
+                    label: "File Uploader",
+                    subtitle: "Trigger",
+                    icon: IconFileUpload,
+                  },
+                  "custom"
+                )
+              }
+            >
+              File Uploader
             </ActionButton>
           </DropdownSection>
 
-          {/* AI */}
           <DropdownSection
             title="AI"
-            icon={<IconRobot size={18} color={theme.colors.accent.cyan} />}
+            icon={
+              <IconRobot
+                size={18}
+                color={theme.colors.accent.cyan}
+              />
+            }
             style={{
               background: theme.colors.background.secondary,
               borderRadius: theme.borderRadius.md,
               padding: "0.5rem",
             }}
           >
-            <ActionButton icon={<IconBrain size={16} />} onClick={addNode}>
+            <ActionButton
+              icon={<IconBrain size={16} />}
+              onClick={() =>
+                addNode(
+                  {
+                    label: "GPT Node",
+                    subtitle: "AI",
+                    icon: IconBrain,
+                  },
+                  "custom"
+                )
+              }
+            >
               GPT Node
             </ActionButton>
           </DropdownSection>
 
-          {/* CONDITIONAL */}
           <DropdownSection
             title="Conditional"
-            icon={<IconBraces size={18} color={theme.colors.accent.primary} />}
+            icon={
+              <IconBraces
+                size={18}
+                color={theme.colors.accent.primary}
+              />
+            }
             style={{
               background: theme.colors.background.secondary,
               borderRadius: theme.borderRadius.md,
               padding: "0.5rem",
             }}
           >
-            <ActionButton icon={<IconGitBranch size={16} />} onClick={addNode}>
+            <ActionButton
+              icon={<IconGitBranch size={16} />}
+              onClick={() =>
+                addNode(
+                  {
+                    label: "IF",
+                    subtitle: "Conditional",
+                    icon: IconGitBranch,
+                  },
+                  "custom"
+                )
+              }
+            >
               IF
             </ActionButton>
           </DropdownSection>

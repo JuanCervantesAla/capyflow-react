@@ -1,36 +1,3 @@
-// import { useState } from "react";
-// import { Card, Stack, Title, Collapse, Button } from "@mantine/core";
-
-// interface DropdownProps {
-//   title: string;
-//   children: React.ReactNode;
-//   defaultOpen?: boolean;
-// }
-
-// export function Dropdown({ title, children, defaultOpen = false }: DropdownProps) {
-//   const [opened, setOpened] = useState(defaultOpen);
-
-//   return (
-//     <Card withBorder shadow="xs" p="sm" style={{ marginBottom: 12, background: "#1E293B" }}>
-//       <Button
-//         variant="subtle"
-//         color="gray"
-//         fullWidth
-//         onClick={() => setOpened((o) => !o)}
-//         style={{ justifyContent: "flex-start", fontWeight: 600 }}
-//       >
-//         {title}
-//       </Button>
-//       <Collapse in={opened} transitionDuration={180}>
-//         <Stack spacing="xs" mt="sm">
-//           {children}
-//         </Stack>
-//       </Collapse>
-//     </Card>
-//   );
-// }
-
-
 import { useState } from "react";
 import { Card, Stack, Collapse, UnstyledButton, Text } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";

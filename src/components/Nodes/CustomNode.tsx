@@ -1,19 +1,48 @@
 import { Text } from "@mantine/core";
 import { Modal, Button } from "@mantine/core";
 import { Handle, Position } from "@xyflow/react";
-import { IconBrandReact, IconTrash } from "@tabler/icons-react";
+import { IconTrash, IconCopy } from "@tabler/icons-react";
 import { useTheme } from "../../theme/ThemeContext";
-import { useContext, useEffect, useState } from "react";
-import { FlowContext } from "../Flow/context/FlowContext";
-import { IconCopy } from "@tabler/icons-react";
+import { useContext, useEffect, useState, useCallback, useMemo } from "react";
+import { useFlowActions } from "../Flow/context/FlowActionsContext";
 import type { NodeProps } from "@xyflow/react";
 import type { NodeData } from "../../components/Flow/types/NodeTypes";
 import { getIconComponent } from "../../utils/iconLoader";
+import { memo } from "react";
 
-export function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
-  const Icon = getIconComponent(data.icon);
+if (typeof window !== "undefined" && !document.getElementById("delete-btn-animation")) {
+  const style = document.createElement("style");
+  style.id = "delete-btn-animation";
+  style.innerHTML = `
+    @keyframes popOut {
+      0% {
+        opacity: 0;
+        transform: translate(10px, -10px) scale(0.4);
+      }
+      60% {
+        opacity: 1;
+        transform: translate(-3px, 3px) scale(1.15);
+      }
+      100% {
+        transform: translate(0, 0) scale(1);
+      }
+    }
+    .delete-appear {
+      animation: popOut 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .delete-hide {
+      opacity: 0;
+      transform: scale(0.6);
+      transition: 0.2s ease;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+export const CustomNode = memo(function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
+  const Icon = useMemo(() => getIconComponent(data.icon), [data.icon]);
   const { theme } = useTheme();
-  const { deleteNode, duplicateNode } = useContext(FlowContext);
+  const { deleteNode, duplicateNode } = useFlowActions();
   const [showDelete, setShowDelete] = useState(selected);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -26,57 +55,83 @@ export function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
     }
   }, [selected]);
 
-  useEffect(() => {
-    if (!document.getElementById("delete-btn-animation")) {
-      const style = document.createElement("style");
-      style.id = "delete-btn-animation";
-      style.innerHTML = `
-        @keyframes popOut {
-          0% {
-            opacity: 0;
-            transform: translate(10px, -10px) scale(0.4);
-          }
-          60% {
-            opacity: 1;
-            transform: translate(-3px, 3px) scale(1.15);
-          }
-          100% {
-            transform: translate(0, 0) scale(1);
-          }
-        }
-        .delete-appear {
-          animation: popOut 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .delete-hide {
-          opacity: 0;
-          transform: scale(0.6);
-          transition: 0.2s ease;
-        }
-      `;
-      document.head.appendChild(style);
-    }
+  const handleDelete = useCallback(() => {
+    deleteNode(id);
+    setConfirmOpen(false);
+  }, [deleteNode, id]);
+
+  const handleDuplicate = useCallback(() => {
+    duplicateNode(id);
+  }, [duplicateNode, id]);
+
+  const handleOpenConfirm = useCallback(() => {
+    setConfirmOpen(true);
   }, []);
+
+  const handleCloseConfirm = useCallback(() => {
+    setConfirmOpen(false);
+  }, []);
+
+  
+  const nodeStyle = useMemo(() => ({
+    borderRadius: theme.borderRadius.md,
+    overflow: "hidden",
+    border: selected
+      ? `2px solid ${theme.colors.selection.border}`
+      : `1px solid ${theme.colors.border.primary}`,
+    boxShadow: selected ? theme.effects.glowBlue : theme.effects.shadow,
+    background: selected
+      ? theme.colors.selection.background
+      : theme.colors.background.secondary,
+  }), [selected, theme]);
+
+  const topBarStyle = useMemo(() => ({
+    height: 6,
+    background: selected
+      ? theme.colors.selection.border
+      : theme.colors.background.tertiary,
+  }), [selected, theme]);
+
+  const iconContainerStyle = useMemo(() => ({
+    width: 40,
+    height: 40,
+    borderRadius: "50%",
+    background: theme.colors.accent.primary,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    flexShrink: 0,
+  }), [theme]);
+
+  const contentStyle = useMemo(() => ({
+    padding: theme.spacing.md,
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing.md,
+  }), [theme]);
+
+  const handleStyle = useMemo(() => ({
+    width: 12,
+    height: 12,
+    background: theme.colors.accent.primary,
+    borderRadius: "50%",
+    border: `2px solid ${theme.colors.selection.background}`,
+  }), [theme]);
 
   return (
     <div style={{ width: 240, position: "relative" }}>
       <Modal
         opened={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onClose={handleCloseConfirm}
         title="¿Eliminar nodo?"
         centered
       >
         <Text>¿Estás seguro de que quieres eliminar este nodo?</Text>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
-          <Button variant="default" onClick={() => setConfirmOpen(false)}>
+          <Button variant="default" onClick={handleCloseConfirm}>
             Cancelar
           </Button>
-          <Button
-            color="red"
-            onClick={() => {
-              deleteNode(id);
-              setConfirmOpen(false);
-            }}
-          >
+          <Button color="red" onClick={handleDelete}>
             Eliminar
           </Button>
         </div>
@@ -84,7 +139,7 @@ export function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
       
       {showDelete && (
         <button
-          onClick={() => setConfirmOpen(true)}
+          onClick={handleOpenConfirm}
           className={selected ? "delete-appear" : "delete-hide"}
           style={{
             position: "absolute",
@@ -105,22 +160,21 @@ export function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "scale(1.14)";
-            e.currentTarget.style.background =
-              theme.colors.selection.background;
+            e.currentTarget.style.background = theme.colors.selection.background;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.background =
-              theme.colors.background.tertiary;
+            e.currentTarget.style.background = theme.colors.background.tertiary;
           }}
           title="Eliminar nodo"
         >
           <IconTrash size={18} color={theme.colors.accent.primary} />
         </button>
       )}
+      
       {showDelete && (
         <button
-          onClick={() => duplicateNode(id)}
+          onClick={handleDuplicate}
           className={selected ? "delete-appear" : "delete-hide"}
           style={{
             position: "absolute",
@@ -141,13 +195,11 @@ export function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "scale(1.14)";
-            e.currentTarget.style.background =
-              theme.colors.selection.background;
+            e.currentTarget.style.background = theme.colors.selection.background;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.background =
-              theme.colors.background.tertiary;
+            e.currentTarget.style.background = theme.colors.background.tertiary;
           }}
           title="Duplicar nodo"
         >
@@ -155,48 +207,11 @@ export function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
         </button>
       )}
 
-      <div
-        style={{
-          borderRadius: theme.borderRadius.md,
-          overflow: "hidden",
-          border: selected
-            ? `2px solid ${theme.colors.selection.border}`
-            : `1px solid ${theme.colors.border.primary}`,
-          boxShadow: selected ? theme.effects.glowBlue : theme.effects.shadow,
-          background: selected
-            ? theme.colors.selection.background
-            : theme.colors.background.secondary,
-        }}
-      >
-        <div
-          style={{
-            height: 6,
-            background: selected
-              ? theme.colors.selection.border
-              : theme.colors.background.tertiary,
-          }}
-        />
+      <div style={nodeStyle}>
+        <div style={topBarStyle} />
 
-        <div
-          style={{
-            padding: theme.spacing.md,
-            display: "flex",
-            alignItems: "center",
-            gap: theme.spacing.md,
-          }}
-        >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              background: theme.colors.accent.primary,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              flexShrink: 0,
-            }}
-          >
+        <div style={contentStyle}>
+          <div style={iconContainerStyle}>
             <Icon size={22} color="#fff" />
           </div>
 
@@ -211,28 +226,17 @@ export function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
         </div>
       </div>
 
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{
-          width: 12,
-          height: 12,
-          background: theme.colors.accent.primary,
-          borderRadius: "50%",
-          border: `2px solid ${theme.colors.selection.background}`,
-        }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          width: 12,
-          height: 12,
-          background: theme.colors.accent.primary,
-          borderRadius: "50%",
-          border: `2px solid ${theme.colors.selection.background}`,
-        }}
-      />
+      <Handle type="target" position={Position.Left} style={handleStyle} />
+      <Handle type="source" position={Position.Right} style={handleStyle} />
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.selected === nextProps.selected &&
+    prevProps.data.label === nextProps.data.label &&
+    prevProps.data.subtitle === nextProps.data.subtitle &&
+    prevProps.data.icon === nextProps.data.icon
+  );
+});

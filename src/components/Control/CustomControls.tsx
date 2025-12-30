@@ -41,8 +41,7 @@ export function CustomControls() {
       tooltip="Zoom In"
     />
 
-    {/* CONTENEDOR ROTADO */}
-    <div
+        <div
   style={{
     width: 40,
     height: 140,
@@ -78,21 +77,16 @@ export function CustomControls() {
     />
   </ControlCard>
 
-  {/* <span style={{ color: theme.colors.text.accent, fontSize: 12 }}>
-    {Math.round(zoom * 100)}%
-  </span> */}
-
+  
   <style>{`
-    /* TRACK */
-    input[type="range"]::-webkit-slider-runnable-track {
+        input[type="range"]::-webkit-slider-runnable-track {
       width: 120px;
       height: 6px;
       background: #000;
       border-radius: 3px;
     }
 
-    /* THUMB (Chrome | Edge) */
-    input[type="range"]::-webkit-slider-thumb {
+        input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 18px;
@@ -109,8 +103,7 @@ export function CustomControls() {
       transform: scale(1.2);
     }
 
-    /* FIREFOX */
-    input[type="range"]::-moz-range-track {
+        input[type="range"]::-moz-range-track {
       width: 120px;
       height: 6px;
       background: #000;
