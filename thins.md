@@ -163,48 +163,40 @@ Paleta diseñada para una experiencia **moderna, tech-forward y visualmente impa
 
 ```css
 :root {
-  /* Primary Colors */
-  --primary: #7C3AED;
+    --primary: #7C3AED;
   --primary-hover: #6D28D9;
   --primary-light: #A78BFA;
   
-  /* Accent Colors */
-  --accent-cyan: #06B6D4;
+    --accent-cyan: #06B6D4;
   --accent-magenta: #EC4899;
   --success: #10B981;
   --warning: #F59E0B;
   --error: #EF4444;
   
-  /* Backgrounds */
-  --bg-dark: #0F0F1A;
+    --bg-dark: #0F0F1A;
   --surface: #1A1A2E;
   --surface-elevated: #25254A;
   --border: #2D2D52;
   
-  /* Text */
-  --text-primary: #F9FAFB;
+    --text-primary: #F9FAFB;
   --text-secondary: #9CA3AF;
   --text-muted: #6B7280;
   
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
   --shadow-md: 0 4px 14px rgba(124, 58, 237, 0.15);
   --shadow-lg: 0 10px 40px rgba(124, 58, 237, 0.25);
   --shadow-glow: 0 0 30px rgba(124, 58, 237, 0.4);
   
-  /* Transitions */
-  --transition-fast: 150ms ease;
+    --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 350ms ease;
 }
 
-/* Dark mode (default) */
 body {
   background-color: var(--bg-dark);
   color: var(--text-primary);
 }
 
-/* Light mode override */
 body.light-mode {
   --bg-dark: #FAFBFC;
   --surface: #FFFFFF;

@@ -12,8 +12,9 @@ export function useUsers() {
 
   const login = async (email: string, password: string) => {
     try {
-      const data = await api.post<{ token: string; user: User }>('/api/login', { email, password });
+      const data = await api.post<{ token: string; user: User }>('/login', { email, password });
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
       setError(null);
     } catch (err: any) {
@@ -26,7 +27,7 @@ export function useUsers() {
     navigate('/login');
   };
 
-  //TODO: ADD ALL USER METHODS, REGISTER, GET USER, ETC...
+
 
   return { user, error, login, logout };
 }

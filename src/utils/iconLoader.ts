@@ -1,12 +1,26 @@
-import * as TablerIcons from "@tabler/icons-react";
 
-//Importa todos los iconos de icons react esto para hacer un paso de prop dinamico
+
+
+
+
+
+import * as TablerIcons from "@tabler/icons-react";
+import { memo } from "react";
 
 export const ICONS = {
   ...TablerIcons,
 };
 
+const iconCache = new Map();
+
 export function getIconComponent(name?: string) {
-  if (!name || !ICONS[name]) return ICONS["IconBrandReact"];
-  return ICONS[name];
+  if (!name) return ICONS["IconBrandReact"];
+  
+  if (iconCache.has(name)) {
+    return iconCache.get(name);
+  }
+  
+  const icon = ICONS[name] || ICONS["IconBrandReact"];
+  iconCache.set(name, icon);
+  return icon;
 }

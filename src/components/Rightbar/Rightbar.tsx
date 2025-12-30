@@ -51,7 +51,7 @@ export function Rightbar({ node, onClose }: RightbarProps) {
         <CloseButton
           onClick={() => {
             setVisible(false);
-            setTimeout(onClose, 300); // Espera la animación antes de desmontar
+            setTimeout(onClose, 300); 
           }}
         />
       </Group>

@@ -6,7 +6,6 @@ export type NodeStatus =
   | "disabled"
   | "queued";
 
-/* ---------------------- PARAMETROS DEL NODO ---------------------- */
 
 export type NodeParameterType =
   | "string"
@@ -20,75 +19,61 @@ export type NodeParameterType =
   | "any";
 
 export interface NodeParameter {
-  id: string;                 // ID único para editor
-  name: string;               // Nombre visible
-  type: NodeParameterType;    // Tipo del param
-  value: any;                 // Valor actual
-  required?: boolean;         // Es obligatorio?
-  options?: string[];         // Para selects
-  placeholder?: string;       // UX
-  description?: string;       // Ayuda al usuario
+  id: string;                 
+  name: string;               
+  type: NodeParameterType;    
+  value: any;                 
+  required?: boolean;         
+  options?: string[];         
+  placeholder?: string;       
+  description?: string;       
 }
 
 
-/* ---------------------- INPUTS / OUTPUTS ---------------------- */
 
 export interface NodeIO {
-  id: string;                 // id único
-  name: string;               // mostrado en UI
-  type?: string;              // "json" | "text" | "binary"
+  id: string;                 
+  name: string;               
+  type?: string;              
   required?: boolean;
   description?: string;
 }
 
 
-/* ---------------------- DATA DEL NODO ---------------------- */
 
 export interface NodeData {
-  /* ------- IDENTIDAD ------- */
-  label: string;
+    label: string;
   subtitle?: string;
-  icon?: string;               // nombre del icono
-
-  /* ------- APARIENCIA ------- */
-  color?: string;              // color del nodo
-  category?: string;           // "AI", "HTTP", "Logic", etc
+  icon?: string;                   color?: string;              
+  category?: string;           
   description?: string;
 
-  /* ------- CONFIG DEL USUARIO ------- */
-  parameters?: NodeParameter[];
+    parameters?: NodeParameter[];
   inputs?: NodeIO[];
   outputs?: NodeIO[];
 
-  /* ------- ESTADO DE EJECUCIÓN ------- */
-  status?: NodeStatus;
-  lastRun?: string;            // timestamp
-  errorMessage?: string;       // motivo del error
+    status?: NodeStatus;
+  lastRun?: string;            
+  errorMessage?: string;       
   executionTimeMs?: number;
 
-  /* ------- CONTROL ------- */
-  disabled?: boolean;
+    disabled?: boolean;
   retryOnFail?: boolean;
   retries?: number;
 
-  /* ------- METADATA VARIADA ------- */
-  version?: string;
+    version?: string;
   createdAt?: string;
   updatedAt?: string;
 
-  /* ------- FLEXIBILIDAD ------- */
-  [key: string]: any;
+    [key: string]: any;
 }
 
 
-/* ---------------------- NODO COMPLETO ---------------------- */
 
 export interface FlowNode {
-  id: string;                       // ID reactflow/XYFlow
-  type: string;                     // "httpRequest" | "aiChat" | "math" | etc
+  id: string;                       
+  type: string;                     
   position: { x: number; y: number };
-  data: NodeData;                   // toda la info del nodo
-
-  width?: number;                   // útil para UI
+  data: NodeData;                     width?: number;                   
   height?: number;
 }
