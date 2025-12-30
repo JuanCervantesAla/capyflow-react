@@ -40,17 +40,17 @@ export function useFlows() {
   };
 
   const fetchFlowsList = async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<{ id: string; name: string }[]>('/flows/list');
-      setFlows(data as any);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const data = await api.get<Flow[]>('/flows');
+    setFlows(data);
+    setError(null);
+  } catch (err: any) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const updateFlow = async (id: string, data: Partial<Flow>) => {
     return await api.put<Flow>(`/flows/${id}`, data);

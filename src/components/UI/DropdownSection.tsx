@@ -1,78 +1,7 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState } from "react";
 import { Collapse, Stack, UnstyledButton, Text, Group } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
-import { useTheme } from "../../theme/themeContext";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface DropdownSectionProps {
   title: string;
