@@ -1,3 +1,4 @@
+import { MantineProvider } from "@mantine/core";
 import { ThemeProvider } from "./theme/ThemeContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
@@ -23,5 +24,22 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
+    <MantineProvider>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
+    </MantineProvider>
   );
 }

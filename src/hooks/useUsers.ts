@@ -12,8 +12,9 @@ export function useUsers() {
 
   const login = async (email: string, password: string) => {
     try {
-      const data = await api.post<{ token: string; user: User }>('/api/login', { email, password });
+      const data = await api.post<{ token: string; user: User }>('/login', { email, password });
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
       setError(null);
     } catch (err: any) {
@@ -29,6 +30,7 @@ export function useUsers() {
   // REGISTER
   const register = async (name: string, email: string, password: string) => {
     setError(null);
+
 
     try {
       const response = await api.post<{ message: string }>('/api/register', {
