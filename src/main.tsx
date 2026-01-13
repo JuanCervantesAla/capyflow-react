@@ -11,6 +11,8 @@ import App from "./App";
 
 import { MantineProvider, createTheme } from "@mantine/core";
 import "@mantine/core/styles.css";
+import './index.css';
+
 
 const theme = createTheme({
   fontFamily: "Inter, sans-serif",            
