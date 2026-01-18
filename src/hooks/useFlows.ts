@@ -3,7 +3,7 @@ import { ApiClient } from '../api/ApiClient';
 import type { Flow } from '../components/Flow/types/Flow';
 
 const api = new ApiClient(
-  import.meta.env.VITE_API_URL,
+  `${import.meta.env.VITE_API_URL}/api`,
   () => localStorage.getItem('token')
 );
 

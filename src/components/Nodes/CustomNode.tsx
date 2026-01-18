@@ -231,12 +231,17 @@ export const CustomNode = memo(function CustomNode({ id, data, selected }: NodeP
     </div>
   );
 }, (prevProps, nextProps) => {
-  
-  return (
-    prevProps.id === nextProps.id &&
-    prevProps.selected === nextProps.selected &&
-    prevProps.data.label === nextProps.data.label &&
-    prevProps.data.subtitle === nextProps.data.subtitle &&
-    prevProps.data.icon === nextProps.data.icon
-  );
+  // Retorna true si los props son IGUALES (para EVITAR re-render)
+  // Retorna false si los props son DIFERENTES (para HACER re-render)
+  if (
+    prevProps.id !== nextProps.id ||
+    prevProps.selected !== nextProps.selected ||
+    prevProps.data.label !== nextProps.data.label ||
+    prevProps.data.subtitle !== nextProps.data.subtitle ||
+    prevProps.data.icon !== nextProps.data.icon ||
+    prevProps.data.color !== nextProps.data.color
+  ) {
+    return false; // Re-render
+  }
+  return true; // No re-render
 });

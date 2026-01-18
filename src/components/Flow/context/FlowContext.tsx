@@ -411,6 +411,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import {
   useNodesState,
@@ -479,12 +480,31 @@ export function FlowProvider({ children }: FlowProviderProps) {
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
 
+  // Ref para mantener los nodos sin triggerear re-renders innecesarios
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+
+  // Actualizar los refs cuando cambian
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
+
   const [centerOnNodeFn, setCenterOnNodeFn] =
     useState<((nodeId: string) => void) | null>(null);
 
   
   const onNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes) => {
+      setNodes((nds) => {
+        const updated = applyNodeChanges(changes, nds);
+        nodesRef.current = updated;
+        return updated;
+      });
+    },
     [setNodes]
   );
 
@@ -586,6 +606,11 @@ export function FlowProvider({ children }: FlowProviderProps) {
     [addNode, deleteNode, duplicateNode]
   );
 
+  const saveToLocalStorage = useCallback(() => {
+    localStorage.setItem(LS_KEY, JSON.stringify({ nodes: nodesRef.current, edges: edgesRef.current }));
+  }, []);
+
+  // Exponer la función de guardado en el contexto
   const contextValue = useMemo(
     () => ({
       nodes,
@@ -599,6 +624,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
       onEdgesChange,
       centerOnNode,
       setCenterOnNode,
+      saveToLocalStorage,
     }),
     [
       nodes,
@@ -612,13 +638,16 @@ export function FlowProvider({ children }: FlowProviderProps) {
       onEdgesChange,
       centerOnNode,
       setCenterOnNode,
+      saveToLocalStorage,
     ]
   );
 
-  
+  // Guardar cuando el componente se desmonta
   useEffect(() => {
-    localStorage.setItem(LS_KEY, JSON.stringify({ nodes, edges }));
-  }, [nodes, edges]);
+    return () => {
+      saveToLocalStorage();
+    };
+  }, [saveToLocalStorage]);
 
   return (
     <FlowActionsContext.Provider value={actionsValue}>
