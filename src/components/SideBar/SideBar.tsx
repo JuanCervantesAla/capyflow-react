@@ -76,13 +76,12 @@ export function Sidebar() {
             <ActionButton
               icon={<IconPlayerPlay size={16} />}
               onClick={() =>
-                addNode(
+                addAndCenter(
                   {
                     label: "Manual Trigger",
                     subtitle: "Trigger",
-                    icon: IconPlayerPlay,
-                  },
-                  "custom"
+                    icon: "IconPlayerPlay",
+                  }
                 )
               }
             >
@@ -92,13 +91,12 @@ export function Sidebar() {
             <ActionButton
               icon={<IconClock size={16} />}
               onClick={() =>
-                addNode(
+                addAndCenter(
                   {
                     label: "Schedule",
                     subtitle: "Trigger",
-                    icon: IconClock,
-                  },
-                  "custom"
+                    icon: "IconClock",
+                  }
                 )
               }
             >
@@ -108,13 +106,12 @@ export function Sidebar() {
             <ActionButton
               icon={<IconWebhook size={16} />}
               onClick={() =>
-                addNode(
+                addAndCenter(
                   {
                     label: "WebHook",
                     subtitle: "Trigger",
-                    icon: IconWebhook,
-                  },
-                  "custom"
+                    icon: "IconWebhook",
+                  }
                 )
               }
             >
@@ -124,13 +121,12 @@ export function Sidebar() {
             <ActionButton
               icon={<IconFileUpload size={16} />}
               onClick={() =>
-                addNode(
+                addAndCenter(
                   {
                     label: "File Uploader",
                     subtitle: "Trigger",
-                    icon: IconFileUpload,
-                  },
-                  "custom"
+                    icon: "IconFileUpload",
+                  }
                 )
               }
             >
@@ -155,13 +151,12 @@ export function Sidebar() {
             <ActionButton
               icon={<IconBrain size={16} />}
               onClick={() =>
-                addNode(
+                addAndCenter(
                   {
                     label: "GPT Node",
                     subtitle: "AI",
-                    icon: IconBrain,
-                  },
-                  "custom"
+                    icon: "IconBrain",
+                  }
                 )
               }
             >
@@ -186,13 +181,12 @@ export function Sidebar() {
             <ActionButton
               icon={<IconGitBranch size={16} />}
               onClick={() =>
-                addNode(
+                addAndCenter(
                   {
                     label: "IF",
                     subtitle: "Conditional",
-                    icon: IconGitBranch,
-                  },
-                  "custom"
+                    icon: "IconGitBranch",
+                  }
                 )
               }
             >

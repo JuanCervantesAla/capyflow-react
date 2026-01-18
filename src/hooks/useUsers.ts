@@ -3,7 +3,7 @@ import { ApiClient } from '../api/ApiClient';
 import type { User } from '../components/Flow/types/User';
 import { useNavigate } from 'react-router-dom';
 
-const api = new ApiClient(import.meta.env.VITE_API_URL, () => localStorage.getItem('token'));
+const api = new ApiClient(`${import.meta.env.VITE_API_URL}/api`, () => localStorage.getItem('token'));
 
 export function useUsers() {
   const [user, setUser] = useState<User | null>(null);
@@ -31,9 +31,8 @@ export function useUsers() {
   const register = async (name: string, email: string, password: string) => {
     setError(null);
 
-
     try {
-      const response = await api.post<{ message: string }>('/api/register', {
+      const response = await api.post<{ message: string }>('/register', {
         name,
         email,
         password,

@@ -38,8 +38,8 @@ function FlowInternals() {
   return null;
 }
 
-export function FlowCanvas() {
-  const { setNodes, nodes, edges, setEdges, onNodesChange, onEdgesChange } = useContext(FlowContext);
+export function FlowCanvas({ flowId }: { flowId: string }) {
+  const { setNodes, nodes, edges, setEdges, onNodesChange, onEdgesChange, saveToLocalStorage } = useContext(FlowContext);
   const [isLocked, setIsLocked] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -48,44 +48,50 @@ export function FlowCanvas() {
   const [isDragging, setIsDragging] = useState(false);
 
   const onMoveStart = useCallback(() => setIsDragging(true), []);
-  const onMoveEnd = useCallback(() => setIsDragging(false), []);
+  const onMoveEnd = useCallback(() => {
+    setIsDragging(false);
+    // Guardar cambios cuando termina de arrastrar
+    saveToLocalStorage();
+  }, [saveToLocalStorage]);
 
   const handleSelectionChange = useCallback(({ nodes: selectedNodes }) => {
     setSelectedNode(selectedNodes.length > 0 ? selectedNodes[0] : null);
   }, []);
 
   const handleZoomIn = useCallback(() => {
-    
+    const rf = useReactFlow();
+    rf.zoomIn();
   }, []);
   const handleZoomOut = useCallback(() => {
-    
+    const rf = useReactFlow();
+    rf.zoomOut();
   }, []);
-  const handleZoomChange = useCallback(() => {
-    
-  }, []);
+  const handleZoomChange = useCallback(() => {}, []);
   const handleFitView = useCallback(() => {
-    
+    const rf = useReactFlow();
+    rf.fitView();
   }, []);
   const handleResetZoom = useCallback(() => {
-    
+    const rf = useReactFlow();
+    rf.setCenter(0, 0, { zoom: 0.5 });
   }, []);
   const handleToggleLock = useCallback(() => setIsLocked((prev) => !prev), []);
   const handleToggleGrid = useCallback(() => setShowGrid((prev) => !prev), []);
   const handleScreenshot = useCallback(() => console.log("Screenshot"), []);
 
   const defaultEdgeOptions = useMemo(() => ({
-  type: "customEdge",
-  animated: !isDragging,
-  style: {
-    stroke: theme.colors.accent.primary,
-    strokeWidth: 2,
-    opacity: 0.6,
-  },
-  markerEnd: {
-    type: "arrowclosed",
-    color: theme.colors.accent.primary,
-  },
-}), [theme.colors.accent.primary, isDragging]);
+    type: "customEdge",
+    animated: true,
+    style: {
+      stroke: theme.colors.accent.primary,
+      strokeWidth: 2,
+      opacity: 0.6,
+    },
+    markerEnd: {
+      type: "arrowclosed",
+      color: theme.colors.accent.primary,
+    },
+  }), [theme.colors.accent.primary]);
 
   const onConnect = useCallback(
     (connection) => {
@@ -114,6 +120,7 @@ export function FlowCanvas() {
         height: "100%",
         position: "relative",
         background: theme.colors.background.primary,
+        display: "flex",
       }}
     >
       <ReactFlow
@@ -127,10 +134,9 @@ export function FlowCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onSelectionChange={handleSelectionChange}
-        defaultEdgeOptions={defaultEdgeOptions}
         fitView
         onConnect={onConnect}
-        style={{ background: theme.colors.background.primary }}
+        style={{ background: theme.colors.background.primary, flex: 1 }}
         minZoom={0.5}
         maxZoom={2}
         deleteKeyCode={["Backspace", "Delete"]}
@@ -140,7 +146,7 @@ export function FlowCanvas() {
         zoomOnDoubleClick={false}
         defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
       >
-                <FlowInternals />
+        <FlowInternals />
         
         <Background
           color={theme.colors.border.primary}
@@ -166,24 +172,23 @@ export function FlowCanvas() {
           />
         </Panel>
 
-          {!isDragging && (
-            <MiniMap
-              nodeColor={(node) =>
-                node.selected
-                  ? theme.colors.accent.primary
-                  : theme.colors.background.tertiary
-              }
-              maskColor="rgba(243,244,246,0.8)"
-              style={{
-                background: theme.colors.background.secondary,
-                border: `1px solid ${theme.colors.border.primary}`,
-                borderRadius: 8,
-                boxShadow: theme.effects.shadowMd,
-              }}
-              position="bottom-right"
-            />
-          )}
-
+        {!isDragging && (
+          <MiniMap
+            nodeColor={(node) =>
+              node.selected
+                ? theme.colors.accent.primary
+                : theme.colors.background.tertiary
+            }
+            maskColor="rgba(243,244,246,0.8)"
+            style={{
+              background: theme.colors.background.secondary,
+              border: `1px solid ${theme.colors.border.primary}`,
+              borderRadius: 8,
+              boxShadow: theme.effects.shadowMd,
+            }}
+            position="bottom-right"
+          />
+        )}
 
       </ReactFlow>
       {selectedNode && (

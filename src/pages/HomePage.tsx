@@ -16,7 +16,7 @@ export function HomePage() {
   const [flowName, setFlowName] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { flows } = useFlows();
+  const { flows, createFlow } = useFlows();
 
   useEffect(() => {
     const stored = localStorage.getItem("currentFlow");
@@ -43,8 +43,21 @@ export function HomePage() {
     setModalOpen(false);
   };
 
-  const handleCreateFlow = () => {
-    setModalOpen(false);
+  const handleCreateFlow = async () => {
+    const flowName = prompt("Nombre del nuevo flujo:");
+    if (!flowName) return;
+
+    try {
+      const newFlow = await createFlow(flowName, "");
+      
+      localStorage.setItem("currentFlow", JSON.stringify(newFlow));
+      setFlowId(newFlow.id);
+      setFlowName(newFlow.name);
+      setModalOpen(false);
+    } catch (error) {
+      console.error("Error creating flow:", error);
+      alert("Error al crear el flujo");
+    }
   };
 
   return (
