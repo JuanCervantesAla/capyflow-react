@@ -17,6 +17,7 @@
     "@fontsource/merriweather": "^5.2.11",
     "@mantine/core": "^8.3.9",
     "@mantine/hooks": "^8.3.9",
+    "@mantine/notifications": "^8.3.13",
     "@tabler/icons-react": "^3.35.0",
     "@xyflow/react": "^12.9.3",
     "motion": "^12.23.25",

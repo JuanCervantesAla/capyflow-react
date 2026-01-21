@@ -1,6 +1,6 @@
 import { BaseEdge, getSmoothStepPath } from "@xyflow/react";
-import { useTheme } from "../../theme/ThemeContext";
-import { memo, useMemo } from "react";
+import { memo } from "react";
+import { getThemeColors } from "../../theme/themeCache";
 
 export const CustomEdge = memo(
   function CustomEdge({ id, sourceX, sourceY, targetX, targetY, selected }) {
@@ -12,28 +12,27 @@ export const CustomEdge = memo(
       borderRadius: 16,
     });
 
-    const { theme } = useTheme();
+    const colors = getThemeColors();
+    const stroke = selected ? colors.edgeSelectedColor : colors.edgeColor;
 
-    const edgeStyle = useMemo(
-      () => ({
-        stroke: selected ? theme.colors.selection.border : theme.colors.accent.primary,
-        strokeWidth: selected ? 2.8 : 2.4,
-        // Sin transición para que se mueva en tiempo real
-      }),
-      [selected, theme.colors.selection.border, theme.colors.accent.primary]
-    );
-
-    return <BaseEdge id={id} path={path} style={edgeStyle} />;
-  },
-  (prevProps, nextProps) => {
-    // Retorna true si son IGUALES (no re-render), false si son DIFERENTES (re-render)
     return (
-      prevProps.id === nextProps.id &&
-      prevProps.sourceX === nextProps.sourceX &&
-      prevProps.sourceY === nextProps.sourceY &&
-      prevProps.targetX === nextProps.targetX &&
-      prevProps.targetY === nextProps.targetY &&
-      prevProps.selected === nextProps.selected
+      <BaseEdge 
+        id={id} 
+        path={path} 
+        style={{
+          stroke,
+          strokeWidth: selected ? 2.8 : 2.4,
+          vectorEffect: 'non-scaling-stroke',
+          shapeRendering: 'geometricPrecision',
+        }} 
+      />
     );
+  },
+  (prev, next) => {
+    if (prev.selected !== next.selected) return false;
+    const dx = Math.abs(prev.sourceX - next.sourceX) + Math.abs(prev.targetX - next.targetX);
+    const dy = Math.abs(prev.sourceY - next.sourceY) + Math.abs(prev.targetY - next.targetY);
+    
+    return (dx + dy) < 0.5;
   }
 );
