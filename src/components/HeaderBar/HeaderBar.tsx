@@ -48,7 +48,7 @@ export function HeaderBar({
   onOpenFlowSelector,
 }: HeaderBarProps) {
   const { theme, toggleTheme, isDark } = useTheme();
-  const { logout } = useUsers();
+  const { logout, user, isLoading } = useUsers();
   const [opened, setOpened] = useState(false);
 
   const [editing, setEditing] = useState(false);
@@ -102,6 +102,10 @@ export function HeaderBar({
       );
     }
 
+    if (isLoading) {
+      return <div style={{ height: 64 }} />;
+    }
+    
     return (
       <ActionButton icon={icon} variant={variant} onClick={onClick}>
         {label}
@@ -259,7 +263,7 @@ export function HeaderBar({
                   radius="xl"
                   style={{ background: theme.colors.accent.primary }}
                 >
-                  <IconUser size={14} color="#fff" />
+                  {user?.name?.[0]?.toUpperCase() ?? <IconUser size={14} color="#fff" />}
                 </Avatar>
                 <IconChevronDown
                   size={12}
