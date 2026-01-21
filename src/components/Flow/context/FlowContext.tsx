@@ -1,425 +1,11 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import React, {
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useRef,
-} from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   useNodesState,
   useEdgesState,
-  type Edge,
   type Node,
-  applyNodeChanges,
-  applyEdgeChanges,
+  type Edge,
+  type NodeChange,
+  type EdgeChange,
 } from "@xyflow/react";
 import type { FlowNode, NodeData } from "../types/NodeTypes";
 import { FlowActionsContext } from "./FlowActionsContext";
@@ -430,61 +16,37 @@ interface FlowContextType {
   addNode: (
     data: Partial<NodeData>,
     type?: string,
-    onNodeAdded?: (node: FlowNode) => void
+    onNodeAdded?: (node: FlowNode) => void,
   ) => void;
   deleteNode: (id: string) => void;
   duplicateNode: (id: string) => void;
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
-  onNodesChange: (changes: any) => void;
-  onEdgesChange: (changes: any) => void;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+  onNodesChange: (changes: NodeChange[]) => void;
+  onEdgesChange: (changes: EdgeChange[]) => void;
   centerOnNode: (nodeId: string) => void;
-  setCenterOnNode: (fn: (nodeId: string) => void) => void;
+  registerCenterHandler: (fn: (nodeId: string) => void) => void;
+  saveFlow: () => Promise<void>;
+  loadFlowData: (nodes: Node[], edges: Edge[]) => void;
 }
 
-export const FlowContext = createContext<FlowContextType>({
-  nodes: [],
-  edges: [],
-  addNode: () => {},
-  deleteNode: () => {},
-  duplicateNode: () => {},
-  setNodes: () => {},
-  setEdges: () => {},
-  onNodesChange: () => {},
-  onEdgesChange: () => {},
-  centerOnNode: () => {},
-  setCenterOnNode: () => {},
-});
+export const FlowContext = createContext<FlowContextType>(
+  {} as FlowContextType,
+);
 
-interface FlowProviderProps {
+export function FlowProvider({
+  children,
+  onSave,
+}: {
   children: React.ReactNode;
-}
+  onSave?: (nodes: Node[], edges: Edge[]) => Promise<void>;
+}) {
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-const LS_KEY = "node_map";
-
-export function FlowProvider({ children }: FlowProviderProps) {
-  
-  const load = () => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return { nodes: [], edges: [] };
-      return JSON.parse(raw);
-    } catch {
-      return { nodes: [], edges: [] };
-    }
-  };
-
-  const { nodes: initialNodes = [], edges: initialEdges = [] } = load();
-
-  
-  const [nodes, setNodes] = useNodesState(initialNodes);
-  const [edges, setEdges] = useEdgesState(initialEdges);
-
-  // Ref para mantener los nodos sin triggerear re-renders innecesarios
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
 
-  // Actualizar los refs cuando cambian
   useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
@@ -493,46 +55,24 @@ export function FlowProvider({ children }: FlowProviderProps) {
     edgesRef.current = edges;
   }, [edges]);
 
-  const [centerOnNodeFn, setCenterOnNodeFn] =
-    useState<((nodeId: string) => void) | null>(null);
+  const centerOnNodeRef = useRef<(nodeId: string) => void>(() => {});
 
-  
-  const onNodesChange = useCallback(
-    (changes) => {
-      setNodes((nds) => {
-        const updated = applyNodeChanges(changes, nds);
-        nodesRef.current = updated;
-        return updated;
-      });
-    },
-    [setNodes]
-  );
-
-  const onEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [setEdges]
-  );
-
-  const centerOnNode = useCallback(
-    (nodeId: string) => {
-      centerOnNodeFn?.(nodeId);
-    },
-    [centerOnNodeFn]
-  );
-
-  const setCenterOnNode = useCallback((fn: (nodeId: string) => void) => {
-    setCenterOnNodeFn(() => fn);
+  const registerCenterHandler = useCallback((fn: (nodeId: string) => void) => {
+    centerOnNodeRef.current = fn;
   }, []);
 
-  
+  const centerOnNode = useCallback((id: string) => {
+    centerOnNodeRef.current(id);
+  }, []);
+
   const addNode = useCallback(
     (
       data: Partial<NodeData>,
       type = "custom",
-      onNodeAdded?: (node: FlowNode) => void
+      onNodeAdded?: (node: FlowNode) => void,
     ) => {
-      const newNode: FlowNode = {
-        id: `node-${Date.now()}`,
+      const node: FlowNode = {
+        id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type,
         position: {
           x: Math.random() * 400,
@@ -551,109 +91,118 @@ export function FlowProvider({ children }: FlowProviderProps) {
         },
       };
 
-      setNodes((nds) => [...nds, newNode]);
+      setNodes((n) => [...n, node]);
 
-      setTimeout(() => {
-        centerOnNode(newNode.id);
-      }, 50);
-
-      onNodeAdded?.(newNode);
+      queueMicrotask(() => {
+        centerOnNode(node.id);
+        onNodeAdded?.(node);
+      });
     },
-    [setNodes, centerOnNode]
+    [setNodes, centerOnNode],
   );
 
   const deleteNode = useCallback(
     (id: string) => {
-      setNodes((nds) => nds.filter((n) => n.id !== id));
-      setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+      setNodes((n) => n.filter((x) => x.id !== id));
+      setEdges((e) => e.filter((x) => x.source !== id && x.target !== id));
     },
-    [setNodes, setEdges]
+    [setNodes, setEdges],
   );
 
   const duplicateNode = useCallback(
     (id: string) => {
-      setNodes((nds) => {
-        const found = nds.find((n) => n.id === id);
-        if (!found) return nds;
+      const found = nodesRef.current.find((n) => n.id === id);
+      if (!found) return;
 
-        const newNode: FlowNode = {
-          ...found,
-          id: `node-${Date.now()}`,
-          position: {
-            x: found.position.x + 40,
-            y: found.position.y + 40,
-          },
-          data: {
-            ...found.data,
-            label: `${found.data.label} (copy)`,
-          },
-          selected: false,
-        };
+      const node = {
+        ...found,
+        id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        position: {
+          x: found.position.x + 40,
+          y: found.position.y + 40,
+        },
+        selected: false,
+      };
 
-        setTimeout(() => {
-          centerOnNode(newNode.id);
-        }, 50);
-
-        return [...nds, newNode];
-      });
+      setNodes((nds) => [...nds, node]);
+      queueMicrotask(() => centerOnNode(node.id));
     },
-    [setNodes, centerOnNode]
+    [setNodes, centerOnNode],
   );
 
-  
-  const actionsValue = useMemo(
-    () => ({ addNode, deleteNode, duplicateNode }),
-    [addNode, deleteNode, duplicateNode]
+  const saveFlow = useCallback(async () => {
+    if (onSave) {
+      await onSave(nodesRef.current, edgesRef.current);
+    }
+  }, [onSave]);
+
+  const loadFlowData = useCallback(
+    (n: Node[], e: Edge[]) => {
+      setNodes(n ?? []);
+      setEdges(e ?? []);
+    },
+    [setNodes, setEdges],
   );
 
-  const saveToLocalStorage = useCallback(() => {
-    localStorage.setItem(LS_KEY, JSON.stringify({ nodes: nodesRef.current, edges: edgesRef.current }));
-  }, []);
+  const functionsRef = useRef({
+    addNode,
+    deleteNode,
+    duplicateNode,
+    setNodes,
+    setEdges,
+    onNodesChange,
+    onEdgesChange,
+    centerOnNode,
+    registerCenterHandler,
+    saveFlow,
+    loadFlowData,
+  });
 
-  // Exponer la función de guardado en el contexto
-  const contextValue = useMemo(
+  useEffect(() => {
+    functionsRef.current = {
+      addNode,
+      deleteNode,
+      duplicateNode,
+      setNodes,
+      setEdges,
+      onNodesChange,
+      onEdgesChange,
+      centerOnNode,
+      registerCenterHandler,
+      saveFlow,
+      loadFlowData,
+    };
+  }, [
+    addNode,
+    deleteNode,
+    duplicateNode,
+    setNodes,
+    setEdges,
+    onNodesChange,
+    onEdgesChange,
+    centerOnNode,
+    registerCenterHandler,
+    saveFlow,
+    loadFlowData,
+  ]);
+
+  const value = useMemo(
     () => ({
       nodes,
       edges,
-      addNode,
-      deleteNode,
-      duplicateNode,
-      setNodes,
-      setEdges,
-      onNodesChange,
-      onEdgesChange,
-      centerOnNode,
-      setCenterOnNode,
-      saveToLocalStorage,
+      ...functionsRef.current,
     }),
-    [
-      nodes,
-      edges,
-      addNode,
-      deleteNode,
-      duplicateNode,
-      setNodes,
-      setEdges,
-      onNodesChange,
-      onEdgesChange,
-      centerOnNode,
-      setCenterOnNode,
-      saveToLocalStorage,
-    ]
+    [nodes, edges],
   );
 
-  // Guardar cuando el componente se desmonta
-  useEffect(() => {
-    return () => {
-      saveToLocalStorage();
-    };
-  }, [saveToLocalStorage]);
+  const actions = useMemo(
+    () => ({ addNode, deleteNode, duplicateNode }),
+    [addNode, deleteNode, duplicateNode],
+  );
 
   return (
-    <FlowActionsContext.Provider value={actionsValue}>
-      <FlowContext.Provider value={contextValue}>
-        {children}
-      </FlowContext.Provider>
+    <FlowActionsContext.Provider value={actions}>
+      <FlowContext.Provider value={value}>{children}</FlowContext.Provider>
     </FlowActionsContext.Provider>
   );
 }

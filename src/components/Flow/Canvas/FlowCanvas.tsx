@@ -1,202 +1,227 @@
-import { useCallback, useContext, useState, useEffect } from "react";
-import { ReactFlow, Background, MiniMap, Panel, addEdge, useReactFlow } from "@xyflow/react";
-import { FlowContext } from "../../Flow/context/FlowContext";
-import { CustomEdge } from "../../Edges/CustomEdge";
+import {
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  memo,
+  useRef,
+} from "react";
+import {
+  ReactFlow,
+  Background,
+  MiniMap,
+  Panel,
+  addEdge,
+  useReactFlow,
+} from "@xyflow/react";
+
+import { FlowContext } from "../context/FlowContext";
 import { CustomNode } from "../../Nodes/CustomNode";
+import { CustomEdge } from "../../Edges/CustomEdge";
 import { CustomControls } from "../../Control/CustomControls";
-import { useTheme } from "../../../theme/ThemeContext";
 import { Rightbar } from "../../Rightbar/Rightbar";
+import { useTheme } from "../../../theme/ThemeContext";
+import { FlowInternals } from "./FlowInternals";
 import "@xyflow/react/dist/style.css";
-import { useMemo } from "react";
 
-const nodeTypes = {
-  custom: CustomNode,
-};
+const nodeTypes = { custom: CustomNode };
+const edgeTypes = { customEdge: CustomEdge };
+const proOptions = { hideAttribution: true };
 
-const edgeTypes = {
-  customEdge: CustomEdge,
-};
+const MemoBackground = memo(Background);
+const MemoMiniMap = memo(MiniMap);
+const MemoPanel = memo(Panel);
 
+const GRID_SIZE = 20;
 
-function FlowInternals() {
-  const reactFlowInstance = useReactFlow();
-  const { setCenterOnNode } = useContext(FlowContext);
+const snapPosition = (value: number) =>
+  Math.round(value / GRID_SIZE) * GRID_SIZE;
 
-  useEffect(() => {
-    const centerOnNode = (nodeId: string) => {
-      reactFlowInstance.fitView({
-        nodes: [{ id: nodeId }],
-        duration: 800,
-        padding: 0.5,
-        maxZoom: 1.2,
-      });
-    };
-    
-    setCenterOnNode(centerOnNode);
-  }, [reactFlowInstance, setCenterOnNode]);
+export function FlowCanvas() {
+  const { nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange } =
+    useContext(FlowContext);
 
-  return null;
-}
-
-export function FlowCanvas({ flowId }: { flowId: string }) {
-  const { setNodes, nodes, edges, setEdges, onNodesChange, onEdgesChange, saveToLocalStorage } = useContext(FlowContext);
-  const [isLocked, setIsLocked] = useState(false);
-  const [showGrid, setShowGrid] = useState(true);
-  const [selectedNode, setSelectedNode] = useState(null);
+  const reactFlow = useReactFlow();
   const { theme } = useTheme();
 
+  const [selectedNode, setSelectedNode] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const onMoveStart = useCallback(() => setIsDragging(true), []);
+  const containerRef = useRef(null);
+
+  const onMoveStart = useCallback(() => {
+    setIsDragging(true);
+    const rf = containerRef.current?.querySelector(".react-flow");
+    rf?.classList.add("dragging");
+  }, []);
+
   const onMoveEnd = useCallback(() => {
     setIsDragging(false);
-    // Guardar cambios cuando termina de arrastrar
-    saveToLocalStorage();
-  }, [saveToLocalStorage]);
-
-  const handleSelectionChange = useCallback(({ nodes: selectedNodes }) => {
-    setSelectedNode(selectedNodes.length > 0 ? selectedNodes[0] : null);
+    const rf = containerRef.current?.querySelector(".react-flow");
+    rf?.classList.remove("dragging");
   }, []);
 
-  const handleZoomIn = useCallback(() => {
-    const rf = useReactFlow();
-    rf.zoomIn();
+  const onSelectionChange = useCallback(({ nodes }) => {
+    const next = nodes[0] ?? null;
+    setSelectedNode((prev) => {
+      if (!prev && !next) return prev;
+      if (prev?.id === next?.id) return prev;
+      return next;
+    });
   }, []);
-  const handleZoomOut = useCallback(() => {
-    const rf = useReactFlow();
-    rf.zoomOut();
-  }, []);
-  const handleZoomChange = useCallback(() => {}, []);
-  const handleFitView = useCallback(() => {
-    const rf = useReactFlow();
-    rf.fitView();
-  }, []);
-  const handleResetZoom = useCallback(() => {
-    const rf = useReactFlow();
-    rf.setCenter(0, 0, { zoom: 0.5 });
-  }, []);
-  const handleToggleLock = useCallback(() => setIsLocked((prev) => !prev), []);
-  const handleToggleGrid = useCallback(() => setShowGrid((prev) => !prev), []);
-  const handleScreenshot = useCallback(() => console.log("Screenshot"), []);
-
-  const defaultEdgeOptions = useMemo(() => ({
-    type: "customEdge",
-    animated: true,
-    style: {
-      stroke: theme.colors.accent.primary,
-      strokeWidth: 2,
-      opacity: 0.6,
-    },
-    markerEnd: {
-      type: "arrowclosed",
-      color: theme.colors.accent.primary,
-    },
-  }), [theme.colors.accent.primary]);
 
   const onConnect = useCallback(
-    (connection) => {
-      setEdges((eds) => addEdge(connection, eds));
-    },
-    [setEdges]
+    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    [setEdges],
   );
 
-  const handleCloseRightbar = useCallback(() => {
-    setSelectedNode((prev) => {
-      if (prev) {
-        setNodes((nds) =>
-          nds.map((n) =>
-            n.id === prev.id ? { ...n, selected: false } : n
-          )
-        );
-      }
-      return null;
-    });
-  }, [setNodes]);
+  const controls = useMemo(
+    () => ({
+      zoomIn: () => reactFlow.zoomIn(),
+      zoomOut: () => reactFlow.zoomOut(),
+      fitView: () => reactFlow.fitView(),
+      reset: () => reactFlow.setCenter(0, 0, { zoom: 0.5 }),
+    }),
+    [reactFlow],
+  );
+
+  const defaultEdgeOptions = useMemo(
+    () => ({
+      type: "customEdge",
+      animated: false,
+    }),
+    [],
+  );
+
+  const closeRightbar = useCallback(() => {
+    if (!selectedNode) return;
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === selectedNode.id ? { ...n, selected: false } : n,
+      ),
+    );
+    setSelectedNode(null);
+  }, [selectedNode, setNodes]);
+
+  const minimapStyle = useMemo(
+    () => ({
+      background: theme.colors.background.secondary,
+      border: `1px solid ${theme.colors.border.primary}`,
+      borderRadius: 8,
+      opacity: isDragging ? 0.3 : 1,
+      transition: "opacity 150ms ease",
+    }),
+    [
+      theme.colors.background.secondary,
+      theme.colors.border.primary,
+      isDragging,
+    ],
+  );
+
+  const nodeColor = useCallback(
+    (node) => node.data.color || theme.colors.accent.primary,
+    [theme.colors.accent.primary],
+  );
+
+  const maskColor = useMemo(
+    () => theme.colors.background.primary + "80",
+    [theme.colors.background.primary],
+  );
+
+  const onNodeDragStop = useCallback(
+    (_, node) => {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === node.id
+            ? {
+                ...n,
+                position: {
+                  x: snapPosition(node.position.x),
+                  y: snapPosition(node.position.y),
+                },
+              }
+            : n,
+        ),
+      );
+    },
+    [setNodes],
+  );
 
   return (
     <div
+      ref={containerRef}
       style={{
         width: "100%",
         height: "100%",
         position: "relative",
         background: theme.colors.background.primary,
-        display: "flex",
       }}
     >
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onMoveStart={onMoveStart}
-        onMoveEnd={onMoveEnd}
-        defaultEdgeOptions={defaultEdgeOptions}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onSelectionChange={handleSelectionChange}
-        fitView
+        onMoveStart={onMoveStart}
+        onMoveEnd={onMoveEnd}
+        onNodeDragStop={onNodeDragStop}
+        onSelectionChange={onSelectionChange}
         onConnect={onConnect}
-        style={{ background: theme.colors.background.primary, flex: 1 }}
-        minZoom={0.5}
-        maxZoom={2}
-        deleteKeyCode={["Backspace", "Delete"]}
-        selectionKeyCode={["Shift"]}
-        multiSelectionKeyCode={["Control", "Meta"]}
+        defaultEdgeOptions={defaultEdgeOptions}
+        proOptions={proOptions}
+        fitView
         panOnScroll
+        selectionOnDrag
+        panOnDrag={[1, 2]}
         zoomOnDoubleClick={false}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+        minZoom={0.1}
+        maxZoom={4}
+        deleteKeyCode="Delete"
+        elevateNodesOnSelect={false}
+        selectNodesOnDrag={false}
+        nodesDraggable={true}
+        nodesConnectable={!isDragging}
+        elementsSelectable={true}
+        autoPanOnConnect={false}
+        autoPanOnNodeDrag={false}
+        translateExtent={[
+          [-2000, -2000],
+          [2000, 2000],
+        ]}
+        zoomActivationKeyCode={null}
+        preventScrolling={true}
       >
         <FlowInternals />
-        
-        <Background
-          color={theme.colors.border.primary}
+
+        <MemoBackground
           gap={20}
           size={1}
-          style={{
-            background: theme.colors.background.primary,
-          }}
+          color={theme.colors.border.primary}
+          variant="dots"
         />
 
-        <Panel position="top-left">
-          <CustomControls
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-            onZoomChange={handleZoomChange}
-            onFitView={handleFitView}
-            onResetZoom={handleResetZoom}
-            onToggleLock={handleToggleLock}
-            onToggleGrid={handleToggleGrid}
-            onScreenshot={handleScreenshot}
-            isLocked={isLocked}
-            showGrid={showGrid}
-          />
-        </Panel>
+        <MemoPanel position="top-left">
+          <CustomControls {...controls} />
+        </MemoPanel>
 
-        {!isDragging && (
-          <MiniMap
-            nodeColor={(node) =>
-              node.selected
-                ? theme.colors.accent.primary
-                : theme.colors.background.tertiary
-            }
-            maskColor="rgba(243,244,246,0.8)"
-            style={{
-              background: theme.colors.background.secondary,
-              border: `1px solid ${theme.colors.border.primary}`,
-              borderRadius: 8,
-              boxShadow: theme.effects.shadowMd,
-            }}
-            position="bottom-right"
-          />
-        )}
-
+        <MemoMiniMap
+          position="bottom-right"
+          nodeColor={nodeColor}
+          maskColor={maskColor}
+          style={minimapStyle}
+          pannable
+          zoomable
+          nodeStrokeWidth={3}
+        />
       </ReactFlow>
-      {selectedNode && (
-        <Rightbar
-          node={selectedNode}
-          onClose={handleCloseRightbar}
-        />
-      )}
+
+      <Rightbar
+        node={selectedNode}
+        open={!!selectedNode}
+        onClose={closeRightbar}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { Modal, Select, Button, Stack, Text, Divider } from "@mantine/core";
 import { useFlows } from "../../hooks/useFlows";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 interface FlowSelectorModalProps {
   opened: boolean;
@@ -20,9 +20,12 @@ export function FlowSelectorModal({
     if (opened) {
       fetchFlowsList();
     }
-  }, [opened]);
+  }, [opened, fetchFlowsList]);
 
-  console.log("Flows:", flows);
+  const flowOptions = useMemo(
+    () => flows.map((f) => ({ value: f.id, label: f.name })),
+    [flows]
+  );
 
   return (
     <Modal
@@ -38,12 +41,12 @@ export function FlowSelectorModal({
         <Text size="sm">Seleccionar flujo existente</Text>
 
         <Select
-          data={flows.map((f) => ({ value: f.id, label: f.name }))}
+          data={flowOptions}
           value={selectedFlowId}
           onChange={setSelectedFlowId}
           placeholder="Selecciona un flujo"
           comboboxProps={{
-            withinPortal: false, // Renderiza dentro del Modal, no en un portal separado
+            withinPortal: false,
           }}
         />
 

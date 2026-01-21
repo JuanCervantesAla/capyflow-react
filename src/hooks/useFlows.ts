@@ -3,7 +3,7 @@ import { ApiClient } from '../api/ApiClient';
 import type { Flow } from '../components/Flow/types/Flow';
 
 const api = new ApiClient(
-  `${import.meta.env.VITE_API_URL}/api`,
+  `${import.meta.env.VITE_API_URL}`,
   () => localStorage.getItem('token')
 );
 
@@ -39,18 +39,32 @@ export function useFlows() {
     });
   };
 
+  const loadFlow = async (flowId: string) => {
+    setLoading(true);
+    try {
+      const data = await api.get<any>(`/flows/${flowId}`);
+      setError(null);
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchFlowsList = async () => {
-  setLoading(true);
-  try {
-    const data = await api.get<Flow[]>('/flows');
-    setFlows(data);
-    setError(null);
-  } catch (err: any) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const data = await api.get<Flow[]>('/flows');
+      setFlows(data);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const updateFlow = async (id: string, data: Partial<Flow>) => {
     return await api.put<Flow>(`/flows/${id}`, data);
@@ -68,6 +82,7 @@ export function useFlows() {
     fetchFlowsList,
     createFlow,
     saveFlowData,
+    loadFlow,
     updateFlow,
   };
 }
