@@ -1,50 +1,60 @@
-import { useState } from 'react';
-import { ApiClient } from '../api/ApiClient';
-import type { User } from '../components/Flow/types/User';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-
-const api = new ApiClient(`${import.meta.env.VITE_API_URL}`, () => localStorage.getItem('token'));
+import { loginRequest,registerRequest,getMeRequest } from '../api/User/users.api';
 
 export function useUsers() {
-  const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const login = async (email: string, password: string) => {
-    try {
-      const data = await api.post<{ token: string; user: User }>('/login', { email, password });
+  const userQuery = useQuery({
+    queryKey: ['me'],
+    queryFn: getMeRequest,
+    enabled: !!localStorage.getItem('token'),
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: ({
+      email,
+      password,
+    }: {
+      email: string;
+      password: string;
+    }) => loginRequest(email, password),
+    onSuccess: (data) => {
       localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-  
+      queryClient.setQueryData(['me'], data.user);
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: ({
+      name,
+      email,
+      password,
+    }: {
+      name: string;
+      email: string;
+      password: string;
+    }) => registerRequest(name, email, password),
+  });
+
   const logout = () => {
     localStorage.clear();
+    queryClient.clear();
     navigate('/login');
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    setError(null);
+  return {
+    user: userQuery.data,
+    isLoading: userQuery.isLoading,
+    isError: userQuery.isError,
 
-    try {
-      const response = await api.post<{ message: string }>('/register', {
-        name,
-        email,
-        password,
-      });
+    login: loginMutation.mutateAsync,
+    loginError: loginMutation.error,
 
-      return response;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    }
+    register: registerMutation.mutateAsync,
+    registerError: registerMutation.error,
+
+    logout,
   };
-
-  //TODO: ADD ALL USER METHODS, GET USER, ETC...
-
-  return { user, error, login, register, logout };
 }
