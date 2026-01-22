@@ -43,7 +43,7 @@ export class ApiClient {
 
     if (!res.ok) {
       throw new ApiError(
-        data?.message || 'Request failed',
+        data?.error || data?.message || 'Request failed',
         res.status,
         data
       );

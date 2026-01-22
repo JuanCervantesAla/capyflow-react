@@ -37,25 +37,7 @@ function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
       return;
     }
 
-    saveFlow(
-      { flowId, nodes, edges },
-      {
-        onSuccess: () => {
-          showNotification({
-            title: "Guardado exitoso",
-            message: "El flujo se ha guardado correctamente",
-            color: "green",
-          });
-        },
-        onError: (error) => {
-          showNotification({
-            title: "❌ Error",
-            message: error.message || "No se pudo guardar el flujo",
-            color: "red",
-          });
-        },
-      }
-    );
+    saveFlow({ flowId, nodes, edges });
   };
 
   return (

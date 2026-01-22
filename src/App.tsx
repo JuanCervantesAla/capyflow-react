@@ -1,6 +1,8 @@
 import { MantineProvider } from "@mantine/core";
-import { ThemeProvider } from "./theme/ThemeContext";
+import { Notifications } from "@mantine/notifications";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import { ThemeProvider } from "./theme/ThemeContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import { HomePage } from "./pages/HomePage";
@@ -9,6 +11,13 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 export default function App() {
   return (
     <MantineProvider>
+      <Notifications
+        position="top-right"
+        zIndex={1000}
+        autoClose={4000}
+        limit={3}
+      />
+
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
