@@ -1,15 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { loginRequest,registerRequest,getMeRequest } from '../api/User/users.api';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { loginRequest, registerRequest, getMeRequest } from "../api/User/users.api";
+import { toastSuccess, toastError } from "../lib/toast";
+import { ApiError } from "../api/ApiClient";
 
 export function useUsers() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const userQuery = useQuery({
-    queryKey: ['me'],
+    queryKey: ["me"],
     queryFn: getMeRequest,
-    enabled: !!localStorage.getItem('token'),
+    enabled: !!localStorage.getItem("token"),
   });
 
   const loginMutation = useMutation({
@@ -20,9 +22,21 @@ export function useUsers() {
       email: string;
       password: string;
     }) => loginRequest(email, password),
+
     onSuccess: (data) => {
-      localStorage.setItem('token', data.token);
-      queryClient.setQueryData(['me'], data.user);
+      localStorage.setItem("token", data.token);
+      queryClient.setQueryData(["me"], data.user);
+
+      toastSuccess(data.message || "Log in");
+      navigate("/home");
+    },
+
+    onError: (error) => {
+      if (error instanceof ApiError) {
+        toastError(error.data?.error || error.message);
+      } else {
+        toastError("Unexpected error while log in");
+      }
     },
   });
 
@@ -36,12 +50,26 @@ export function useUsers() {
       email: string;
       password: string;
     }) => registerRequest(name, email, password),
+
+    onSuccess: (data) => {
+      toastSuccess(data.message || "Sign up");
+      navigate("/login");
+    },
+
+    onError: (error) => {
+      if (error instanceof ApiError) {
+        toastError(error.data?.error || error.message);
+      } else {
+        toastError("Failed to sign up");
+      }
+    },
   });
 
   const logout = () => {
     localStorage.clear();
     queryClient.clear();
-    navigate('/login');
+    navigate("/login");
+    toastSuccess("Logged out");
   };
 
   return {
