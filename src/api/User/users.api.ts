@@ -14,7 +14,7 @@ export const registerRequest = (
   email: string,
   password: string
 ) =>
-  api.post<{ message: string }>('/register', {
+  api.post<{ message: string; token: string; user: User }>('/register', {
     name,
     email,
     password,

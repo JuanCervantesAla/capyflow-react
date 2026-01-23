@@ -52,8 +52,13 @@ export function useUsers() {
     }) => registerRequest(name, email, password),
 
     onSuccess: (data) => {
+      localStorage.setItem("token", data.token);
+
+      queryClient.setQueryData(["me"], data.user);
+
       toastSuccess(data.message || "Sign up");
-      navigate("/login");
+
+      navigate("/home");
     },
 
     onError: (error) => {
@@ -64,6 +69,7 @@ export function useUsers() {
       }
     },
   });
+
 
   const logout = () => {
     localStorage.clear();
@@ -82,6 +88,7 @@ export function useUsers() {
 
     register: registerMutation.mutateAsync,
     registerError: registerMutation.error,
+    isRegistering: registerMutation.isPending,
 
     logout,
   };
