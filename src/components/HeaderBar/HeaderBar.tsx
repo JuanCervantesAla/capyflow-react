@@ -27,7 +27,7 @@ import { IconButton } from "../UI/IconButton";
 import { useTheme } from "../../theme/ThemeContext";
 import { useUsers } from "../../hooks/useUsers";
 import { useMediaQuery } from "@mantine/hooks";
-import miLogo from '../../assets/logo.png';
+import miLogo from '../../assets/logo2.png';
 import { useState, useEffect } from "react";
 
 interface HeaderBarProps {
