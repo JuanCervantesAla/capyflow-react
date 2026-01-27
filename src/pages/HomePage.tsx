@@ -6,6 +6,7 @@ import { Sidebar } from "../components/SideBar/SideBar";
 import { FlowCanvas } from "../components/Flow/Canvas/FlowCanvas";
 import { FlowProvider, FlowContext } from "../components/Flow/context/FlowContext";
 import { FlowSelectorModal } from "../components/UI/FlowSelectorModal";
+import { CreateFlowModal } from "../components/UI/CreateFlowModal";
 import { useFlows } from "../hooks/useFlows";
 import { useFlow } from "../hooks/useFlow";
 import { useCreateFlow } from "../hooks/mutations/Flow/useCreateFlow";
@@ -17,8 +18,7 @@ function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
   const { nodes, edges, loadFlowData } = useContext(FlowContext);
-  const { mutate: saveFlow, isPending } = useSaveFlow();
-  
+  const { mutate: saveFlow } = useSaveFlow();
   const { data: flowData, isLoading } = useFlow(flowId);
 
   useEffect(() => {
@@ -72,17 +72,17 @@ function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
 export function HomePage() {
   const [flowId, setFlowId] = useState<string | null>(null);
   const [flowName, setFlowName] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: flows = [] } = useFlows();
-  const { mutateAsync: createFlow } = useCreateFlow();
-
+  const { mutateAsync: createFlow, isPending } = useCreateFlow();
   const flowContext = useContext(FlowContext);
 
   useEffect(() => {
     const stored = localStorage.getItem("currentFlow");
     if (!stored) {
-      setModalOpen(true);
+      setSelectorOpen(true);
       return;
     }
 
@@ -91,7 +91,7 @@ export function HomePage() {
       setFlowId(flow.id);
       setFlowName(flow.name);
     } catch {
-      setModalOpen(true);
+      setSelectorOpen(true);
     }
   }, []);
 
@@ -99,22 +99,29 @@ export function HomePage() {
     const flow = flows.find((f) => f.id === id);
     if (!flow) return;
 
-    localStorage.setItem("currentFlow", JSON.stringify({ id: flow.id, name: flow.name }));
+    localStorage.setItem(
+      "currentFlow",
+      JSON.stringify({ id: flow.id, name: flow.name })
+    );
+
     setFlowId(flow.id);
     setFlowName(flow.name);
-    setModalOpen(false);
+    setSelectorOpen(false);
   };
 
-  const handleCreateFlow = async () => {
-    const name = prompt("Nombre del nuevo flujo:");
-    if (!name) return;
-
+  const handleConfirmCreateFlow = async (name: string) => {
     const newFlow = await createFlow({ name, description: "" });
 
-    localStorage.setItem("currentFlow", JSON.stringify({ id: newFlow.id, name: newFlow.name }));
+    localStorage.setItem(
+      "currentFlow",
+      JSON.stringify({ id: newFlow.id, name: newFlow.name })
+    );
+
     setFlowId(newFlow.id);
     setFlowName(newFlow.name);
-    setModalOpen(false);
+
+    setCreateOpen(false);
+    setSelectorOpen(false);
 
     flowContext?.loadFlowData?.([], []);
   };
@@ -122,9 +129,23 @@ export function HomePage() {
   return (
     <>
       <FlowSelectorModal
-        opened={modalOpen}
+        opened={selectorOpen && !createOpen}
         onSelectFlow={handleSelectFlow}
-        onCreateFlow={handleCreateFlow}
+        onCreateFlow={() => {
+          setSelectorOpen(false);
+          setCreateOpen(true);
+        }}
+        onClose={() => setSelectorOpen(false)}
+      />
+
+      <CreateFlowModal
+        opened={createOpen}
+        onClose={() => {
+          setCreateOpen(false);
+          setSelectorOpen(true);
+        }}
+        onCreate={handleConfirmCreateFlow}
+        loading={isPending}
       />
 
       <ReactFlowProvider>
@@ -132,7 +153,7 @@ export function HomePage() {
           <HomePageContent
             flowId={flowId}
             flowName={flowName}
-            onOpenFlowSelector={() => setModalOpen(true)}
+            onOpenFlowSelector={() => setSelectorOpen(true)}
           />
         </FlowProvider>
       </ReactFlowProvider>
