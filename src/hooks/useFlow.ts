@@ -9,6 +9,8 @@ export function useFlow(flowId: string | null) {
     queryKey: flowId ? queryKeys.flow(flowId) : ["flow", "null"],
     queryFn: ({ signal }) => fetchFlow(flowId!, signal),
     enabled: !!flowId,
+    staleTime: 0, // Always refetch when query becomes stale
+    gcTime: 5 * 60 * 1000, // Cache for 5 minutes
 
     onError: (error) => {
       if (error instanceof ApiError) {

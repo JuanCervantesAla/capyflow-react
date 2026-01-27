@@ -18,11 +18,16 @@ export function useSaveFlow() {
       saveFlowDataRequest(flowId, nodes, edges),
 
     onSuccess: (data, { flowId }) => {
-      toastSuccess(data.message);
+      toastSuccess(data.message || "Flow saved successfully");
 
-      queryClient.invalidateQueries({
-        queryKey: [...queryKeys.flows, flowId],
-        refetchActive: false,
+      // Refetch flows list to ensure fresh data
+      queryClient.refetchQueries({
+        queryKey: queryKeys.flows,
+      });
+
+      // Refetch specific flow query immediately
+      queryClient.refetchQueries({
+        queryKey: queryKeys.flow(flowId),
       });
     },
 
