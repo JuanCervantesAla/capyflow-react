@@ -1,65 +1,55 @@
-import { Paper, Text, Group, CloseButton } from "@mantine/core";
+import { Drawer, Text, Stack } from "@mantine/core";
 import { useTheme } from "../../theme/ThemeContext";
-import { useEffect, useState } from "react";
+import { NodeParameterEditor } from "../Flow/Canvas/NodeParameterEditor";
 
 interface RightbarProps {
   node: any;
   onClose: () => void;
+  opened: boolean;
 }
 
-export function Rightbar({ node, onClose }: RightbarProps) {
+export function Rightbar({ node, onClose, opened }: RightbarProps) {
   const { theme } = useTheme();
-  const [visible, setVisible] = useState(false);
-  const [shouldRender, setShouldRender] = useState(!!node);
 
-  useEffect(() => {
-    if (node) {
-      setShouldRender(true);
-      setTimeout(() => setVisible(true), 10);
-    } else {
-      setVisible(false);
-      setTimeout(() => setShouldRender(false), 300);
-    }
-  }, [node]);
-
-  if (!shouldRender) return null;
+  const nodeParameters = node?.data?.parameters || [];
 
   return (
-    <Paper
-      shadow="md"
-      p="md"
-      style={{
-        position: "fixed",
-        top: 64,
-        right: 0,
-        width: 320,
-        height: "calc(100vh - 64px)",
-        background: theme.colors.background.secondary,
-        borderLeft: `1px solid ${theme.colors.border.primary}`,
-        zIndex: 100,
-        display: "flex",
-        flexDirection: "column",
-        transition: "transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.2s",
-        transform: visible ? "translateX(0)" : "translateX(100%)",
-        opacity: visible ? 1 : 0,
+    <Drawer
+      opened={opened}
+      onClose={onClose}
+      title="Información del Nodo"
+      position="right"
+      size="sm"
+      overlayProps={{ backgroundOpacity: 0.1 }}
+      styles={{
+        content: {
+          background: theme.colors.background.secondary,
+        },
       }}
     >
-      <Group justify="space-between" align="center" mb="md">
-        <Text fw={700} size="lg">
-          Node Info
-        </Text>
-        <CloseButton
-          onClick={() => {
-            setVisible(false);
-            setTimeout(onClose, 300); 
-          }}
-        />
-      </Group>
-      <Text size="sm" c={theme.colors.text.secondary}>
-        <b>ID:</b> {node?.id}
-        <br />
-        <b>Label:</b> {node?.data?.label}
-      </Text>
-    </Paper>
+      <Stack gap="md">
+        <div>
+          <Text fw={600} size="sm">
+            {node?.data?.label || "Sin etiqueta"}
+          </Text>
+          <Text size="xs" c="dimmed">
+            ID: {node?.id}
+          </Text>
+          {node?.data?.type && (
+            <Text size="xs" c="dimmed">
+              Tipo: {node?.data?.type}
+            </Text>
+          )}
+        </div>
+
+        {nodeParameters.length > 0 && (
+          <NodeParameterEditor
+            nodeId={node.id}
+            nodeLabel={node.data?.label}
+            parameters={nodeParameters}
+          />
+        )}
+      </Stack>
+    </Drawer>
   );
 }

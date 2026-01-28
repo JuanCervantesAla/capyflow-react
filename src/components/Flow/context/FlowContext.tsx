@@ -2,7 +2,6 @@ import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   useNodesState,
   useEdgesState,
-  type Node,
   type Edge,
   type NodeChange,
   type EdgeChange,
@@ -11,7 +10,7 @@ import type { FlowNode, NodeData } from "../types/NodeTypes";
 import { FlowActionsContext } from "./FlowActionsContext";
 
 interface FlowContextType {
-  nodes: Node[];
+  nodes: FlowNode[];
   edges: Edge[];
   addNode: (
     data: Partial<NodeData>,
@@ -20,14 +19,14 @@ interface FlowContextType {
   ) => void;
   deleteNode: (id: string) => void;
   duplicateNode: (id: string) => void;
-  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setNodes: React.Dispatch<React.SetStateAction<FlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   centerOnNode: (nodeId: string) => void;
   registerCenterHandler: (fn: (nodeId: string) => void) => void;
   saveFlow: () => Promise<void>;
-  loadFlowData: (nodes: Node[], edges: Edge[]) => void;
+  loadFlowData: (nodes: FlowNode[], edges: Edge[]) => void;
 }
 
 export const FlowContext = createContext<FlowContextType>(
@@ -39,20 +38,24 @@ export function FlowProvider({
   onSave,
 }: {
   children: React.ReactNode;
-  onSave?: (nodes: Node[], edges: Edge[]) => Promise<void>;
+  onSave?: (nodes: FlowNode[], edges: Edge[]) => Promise<void>;
 }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodesInternal, onNodesChange] = useNodesState([]);
+  const [edges, setEdgesInternal, onEdgesChange] = useEdgesState([]);
 
-  const nodesRef = useRef(nodes);
-  const edgesRef = useRef(edges);
+  // Create type-safe wrappers
+  const setNodes = setNodesInternal as React.Dispatch<React.SetStateAction<FlowNode[]>>;
+  const setEdges = setEdgesInternal as React.Dispatch<React.SetStateAction<Edge[]>>;
+
+  const nodesRef = useRef<FlowNode[]>(nodes as FlowNode[]);
+  const edgesRef = useRef<Edge[]>(edges as Edge[]);
 
   useEffect(() => {
-    nodesRef.current = nodes;
+    nodesRef.current = nodes as FlowNode[];
   }, [nodes]);
 
   useEffect(() => {
-    edgesRef.current = edges;
+    edgesRef.current = edges as Edge[];
   }, [edges]);
 
   const centerOnNodeRef = useRef<(nodeId: string) => void>(() => {});
@@ -82,6 +85,7 @@ export function FlowProvider({
           label: data.label ?? "Node",
           subtitle: data.subtitle ?? "",
           icon: data.icon ?? "IconBolt",
+          category: data.category ?? "",
           parameters: data.parameters ?? [],
           inputs: data.inputs ?? [],
           outputs: data.outputs ?? [],
@@ -91,7 +95,7 @@ export function FlowProvider({
         },
       };
 
-      setNodes((n) => [...n, node]);
+      setNodes((n: FlowNode[]) => [...n, node] as FlowNode[]);
 
       queueMicrotask(() => {
         centerOnNode(node.id);
@@ -103,28 +107,28 @@ export function FlowProvider({
 
   const deleteNode = useCallback(
     (id: string) => {
-      setNodes((n) => n.filter((x) => x.id !== id));
-      setEdges((e) => e.filter((x) => x.source !== id && x.target !== id));
+      setNodes((n: FlowNode[]) => n.filter((x) => x.id !== id));
+      setEdges((e: Edge[]) => e.filter((x) => x.source !== id && x.target !== id));
     },
     [setNodes, setEdges],
   );
 
   const duplicateNode = useCallback(
     (id: string) => {
-      const found = nodesRef.current.find((n) => n.id === id);
+      const found = (nodesRef.current as FlowNode[]).find((n) => n.id === id);
       if (!found) return;
 
       const node = {
         ...found,
         id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         position: {
-          x: found.position.x + 40,
-          y: found.position.y + 40,
+          x: (found.position?.x as number) + 40 || 0,
+          y: (found.position?.y as number) + 40 || 0,
         },
         selected: false,
-      };
+      } as FlowNode;
 
-      setNodes((nds) => [...nds, node]);
+      setNodes((nds: FlowNode[]) => [...nds, node]);
       queueMicrotask(() => centerOnNode(node.id));
     },
     [setNodes, centerOnNode],
@@ -132,14 +136,14 @@ export function FlowProvider({
 
   const saveFlow = useCallback(async () => {
     if (onSave) {
-      await onSave(nodesRef.current, edgesRef.current);
+      await onSave(nodesRef.current as FlowNode[], edgesRef.current);
     }
   }, [onSave]);
 
   const loadFlowData = useCallback(
-    (n: Node[], e: Edge[]) => {
-      setNodes(n ?? []);
-      setEdges(e ?? []);
+    (n: FlowNode[], e: Edge[]) => {
+      setNodes((n ?? []) as FlowNode[]);
+      setEdges((e ?? []) as Edge[]);
     },
     [setNodes, setEdges],
   );
@@ -188,11 +192,21 @@ export function FlowProvider({
 
   const value = useMemo(
     () => ({
-      nodes,
+      nodes: nodes as FlowNode[],
       edges,
-      ...functionsRef.current,
+      addNode,
+      deleteNode,
+      duplicateNode,
+      setNodes,
+      setEdges,
+      onNodesChange: onNodesChange as (changes: NodeChange[]) => void,
+      onEdgesChange: onEdgesChange as (changes: EdgeChange[]) => void,
+      centerOnNode,
+      registerCenterHandler,
+      saveFlow,
+      loadFlowData,
     }),
-    [nodes, edges],
+    [nodes, edges, addNode, deleteNode, duplicateNode, setNodes, setEdges, onNodesChange, onEdgesChange, centerOnNode, registerCenterHandler, saveFlow, loadFlowData],
   );
 
   const actions = useMemo(

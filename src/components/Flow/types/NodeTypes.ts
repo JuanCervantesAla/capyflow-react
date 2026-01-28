@@ -1,5 +1,29 @@
 import type { Node as ReactFlowNode, Edge as ReactFlowEdge } from "@xyflow/react";
 
+export interface NodeData extends Record<string, unknown> {
+  label: string;
+  subtitle?: string;
+  icon?: string;
+  color?: string;
+  category?: string;
+  description?: string;
+  parameters?: any[];
+  inputs?: any[];
+  outputs?: any[];
+  status?: string;
+  lastRun?: string | null;
+  errorMessage?: string;
+  executionTimeMs?: number;
+  disabled?: boolean;
+  retryOnFail?: boolean;
+  retries?: number;
+  version?: string;
+  nodeTypeId?: string;
+  type?: string;
+}
+
+export type FlowNode = ReactFlowNode<NodeData>;
+
 interface BackendNode {
   id: string;
   flowId?: string;
@@ -34,32 +58,35 @@ interface BackendEdge {
   label?: string;
 }
 
-export function transformNodeForBackend(node: ReactFlowNode): BackendNode {
-  return {
+export function transformNodeForBackend(node: FlowNode): BackendNode {
+  const data = node.data || {};
+  const backendNode: BackendNode = {
     id: node.id,
     type: node.type || "custom",
     position: JSON.stringify(node.position),
-    label: node.data.label || "Node",
-    subtitle: node.data.subtitle || "",
-    icon: node.data.icon || "IconBolt",
-    color: node.data.color || "#4c6ef5",
-    category: node.data.category || "",
-    description: node.data.description || "",
-    parameters: node.data.parameters ? JSON.stringify(node.data.parameters) : "[]",
-    inputs: node.data.inputs ? JSON.stringify(node.data.inputs) : "[]",
-    outputs: node.data.outputs ? JSON.stringify(node.data.outputs) : "[]",
-    status: node.data.status || "idle",
-    lastRun: node.data.lastRun || null,
-    errorMessage: node.data.errorMessage || "",
-    executionTimeMs: node.data.executionTimeMs || 0,
-    disabled: node.data.disabled || false,
-    retryOnFail: node.data.retryOnFail || false,
-    retries: node.data.retries || 0,
-    version: node.data.version || "1.0",
+    label: (data.label as string) || "Node",
+    subtitle: (data.subtitle as string) || "",
+    icon: (data.icon as string) || "IconBolt",
+    color: (data.color as string) || "#4c6ef5",
+    category: (data.category as string) || "",
+    description: (data.description as string) || "",
+    parameters: data.parameters ? JSON.stringify(data.parameters) : "[]",
+    inputs: data.inputs ? JSON.stringify(data.inputs) : "[]",
+    outputs: data.outputs ? JSON.stringify(data.outputs) : "[]",
+    status: (data.status as string) || "idle",
+    lastRun: (data.lastRun as string | null) || null,
+    errorMessage: (data.errorMessage as string) || "",
+    executionTimeMs: (data.executionTimeMs as number) || 0,
+    disabled: (data.disabled as boolean) || false,
+    retryOnFail: (data.retryOnFail as boolean) || false,
+    retries: (data.retries as number) || 0,
+    version: (data.version as string) || "1.0",
   };
+  
+  return backendNode;
 }
 
-export function transformEdgeForBackend(edge: ReactFlowEdge): BackendEdge {
+export function transformEdgeForBackend(edge: ReactFlowEdge<any>): BackendEdge {
   return {
     id: edge.id,
     source: edge.source,
@@ -70,7 +97,16 @@ export function transformEdgeForBackend(edge: ReactFlowEdge): BackendEdge {
   };
 }
 
-export function transformNodeFromBackend(backendNode: any): ReactFlowNode {
+export function transformNodeFromBackend(backendNode: any): FlowNode {
+  // Fix: Si category está vacío pero subtitle es una categoría válida, usar subtitle como category
+  let category = backendNode.category || "";
+  const validCategories = ["trigger", "ai", "data", "logic", "io", "integration"];
+  
+  if (!category && backendNode.subtitle && validCategories.includes(backendNode.subtitle.toLowerCase())) {
+    category = backendNode.subtitle.toLowerCase();
+    console.warn(`Nodo ${backendNode.id}: category vacía, usando subtitle '${backendNode.subtitle}' como category`);
+  }
+  
   return {
     id: backendNode.id,
     type: backendNode.type || "custom",
@@ -82,7 +118,7 @@ export function transformNodeFromBackend(backendNode: any): ReactFlowNode {
       subtitle: backendNode.subtitle,
       icon: backendNode.icon,
       color: backendNode.color,
-      category: backendNode.category,
+      category: category,
       description: backendNode.description,
       parameters: backendNode.parameters 
         ? (typeof backendNode.parameters === "string" 
