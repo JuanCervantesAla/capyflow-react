@@ -14,8 +14,20 @@ export function useSaveFlow() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ flowId, nodes, edges }: SaveFlowPayload) =>
-      saveFlowDataRequest(flowId, nodes, edges),
+    mutationFn: ({ flowId, nodes, edges }: SaveFlowPayload) => {
+      console.log("💾 Enviando flujo al backend:", {
+        flowId,
+        nodesCount: nodes.length,
+        nodes: nodes.map(n => ({
+          id: n.id,
+          label: n.data?.label,
+          category: n.data?.category,
+          subtitle: n.data?.subtitle,
+        })),
+        edgesCount: edges.length,
+      });
+      return saveFlowDataRequest(flowId, nodes, edges);
+    },
 
     onSuccess: (data, { flowId }) => {
       toastSuccess(data.message || "Flow saved successfully");

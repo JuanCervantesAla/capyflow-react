@@ -37,7 +37,7 @@ const GRID_SIZE = 20;
 const snapPosition = (value: number) =>
   Math.round(value / GRID_SIZE) * GRID_SIZE;
 
-export function FlowCanvas() {
+export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) => void }) {
   const { nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange } =
     useContext(FlowContext);
 
@@ -66,9 +66,12 @@ export function FlowCanvas() {
     setSelectedNode((prev) => {
       if (!prev && !next) return prev;
       if (prev?.id === next?.id) return prev;
+      if (next && onNodeSelected) {
+        onNodeSelected(next);
+      }
       return next;
     });
-  }, []);
+  }, [onNodeSelected]);
 
   const onConnect = useCallback(
     (connection) => setEdges((eds) => addEdge(connection, eds)),
