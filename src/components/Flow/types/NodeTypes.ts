@@ -62,7 +62,7 @@ export function transformNodeForBackend(node: FlowNode): BackendNode {
   const data = node.data || {};
   const backendNode: BackendNode = {
     id: node.id,
-    type: node.type || "custom",
+    type: (data.type as string) || node.type || "custom",
     position: JSON.stringify(node.position),
     label: (data.label as string) || "Node",
     subtitle: (data.subtitle as string) || "",
