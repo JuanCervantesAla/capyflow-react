@@ -86,6 +86,7 @@ export function FlowProvider({
           subtitle: data.subtitle ?? "",
           icon: data.icon ?? "IconBolt",
           category: data.category ?? "",
+          type: data.type ?? "custom",
           parameters: data.parameters ?? [],
           inputs: data.inputs ?? [],
           outputs: data.outputs ?? [],

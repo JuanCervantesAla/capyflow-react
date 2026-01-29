@@ -7,6 +7,7 @@ import { Rightbar } from "../components/Rightbar/Rightbar";
 import { FlowContext } from "../components/Flow/context/FlowContext";
 import { useExecuteFlow } from "../hooks/mutations/Flow/useExecuteFlow";
 import { useSaveFlow } from "../hooks/mutations/Flow/useSaveFlow";
+import { useFlow } from "../hooks/useFlow";
 import type { ExecutionResult } from "../hooks/mutations/Flow/useExecuteFlow";
 
 export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
@@ -23,6 +24,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   };
 
   const flowContext = useContext(FlowContext);
+  const { data: flowData } = useFlow(flowId);
   const { mutateAsync: executeFlow, isPending: isExecuting } = useExecuteFlow({
     onSuccess: (data: ExecutionResult) => {
       setExecutionResult(data);
@@ -31,6 +33,30 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   });
 
   const { mutateAsync: saveFlow } = useSaveFlow();
+
+  // Cargar flujo cuando flowId cambia
+  useEffect(() => {
+  if (!flowContext?.loadFlowData) return;
+
+  console.log("useEffect: flowId =", flowId, "flowData =", flowData);
+
+  if (!flowId) {
+    // Nuevo flujo - limpiar canvas inmediatamente
+    console.log("Limpiando canvas para nuevo flujo");
+    flowContext.loadFlowData([], []);
+    clearNode();
+    return;
+  }
+
+  // Si flowData está disponible, cargar nodos y edges
+  if (flowData?.nodes !== undefined || flowData?.edges !== undefined) {
+    console.log("Cargando flujo:", flowData);
+    flowContext.loadFlowData(flowData?.nodes || [], flowData?.edges || []);
+    clearNode();
+  } else {
+    console.log("Esperando a que flowData cargue...");
+  }
+}, [flowId, flowData]);
 
   useEffect(() => {
     const handler = () => {

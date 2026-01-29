@@ -24,7 +24,16 @@ import { useTheme } from "../../../theme/ThemeContext";
 import { FlowInternals } from "./FlowInternals";
 import "@xyflow/react/dist/style.css";
 
-const nodeTypes = { custom: CustomNode };
+const nodeTypes = {
+  custom: CustomNode,
+  'manual-trigger': CustomNode,
+  'set-data': CustomNode,
+  'transform-data': CustomNode,
+  'json-parser': CustomNode,
+  'if-condition': CustomNode,
+  'http-request': CustomNode,
+  'webhook-trigger': CustomNode,
+};
 const edgeTypes = { customEdge: CustomEdge };
 const proOptions = { hideAttribution: true };
 
