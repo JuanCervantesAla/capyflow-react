@@ -36,10 +36,25 @@ export class ApiClient {
       signal: options.signal,
     });
 
+    if (res.status === 204 || res.headers.get('content-length') === '0') {
+      if (!res.ok) {
+        throw new ApiError('Request failed', res.status);
+      }
+      return {} as T;
+    }
+
     const contentType = res.headers.get('content-type');
     const isJson = contentType?.includes('application/json');
 
-    const data = isJson ? await res.json() : await res.text();
+    let data;
+    try {
+      data = isJson ? await res.json() : await res.text();
+    } catch (e) {
+      if (!res.ok) {
+        throw new ApiError('Request failed', res.status);
+      }
+      return {} as T;
+    }
 
     if (!res.ok) {
       throw new ApiError(

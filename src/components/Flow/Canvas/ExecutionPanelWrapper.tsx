@@ -10,11 +10,13 @@ const WIDTH = 360;
 const COLLAPSED = 48;
 
 export function ExecutionPanelWrapper({
+  flowId,
   collapsed,
   onToggle,
   result,
   isLoading,
 }: {
+  flowId?: string;
   collapsed: boolean;
   onToggle: () => void;
   result: any;
@@ -46,14 +48,15 @@ export function ExecutionPanelWrapper({
         }}
       >
         {collapsed ? (
-          <IconChevronLeft />
+          <IconChevronLeft size={16} />
         ) : (
-          <IconChevronRight />
+          <IconChevronRight size={16} />
         )}
       </ActionIcon>
 
-      {!collapsed && (
+      {!collapsed && flowId && (
         <ExecutionResultPanel
+          flowId={flowId}
           result={result}
           isLoading={isLoading}
         />
