@@ -144,6 +144,9 @@ export function FlowCanvas({
     () => ({
       type: "customEdge",
       animated: false,
+      deletable: true,
+      focusable: true,
+      selectable: true,
     }),
     [],
   );
@@ -234,6 +237,8 @@ export function FlowCanvas({
         nodesDraggable
         nodesConnectable={!isDragging}
         elementsSelectable
+        edgesFocusable
+        edgesReconnectable
         autoPanOnConnect={false}
         autoPanOnNodeDrag={false}
         translateExtent={[

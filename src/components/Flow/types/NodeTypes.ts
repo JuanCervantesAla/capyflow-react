@@ -58,6 +58,8 @@ interface BackendEdge {
   flowId?: string;
   source: string;
   target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
   type?: string;
   animated: boolean;
   label?: string;
@@ -96,6 +98,8 @@ export function transformEdgeForBackend(edge: ReactFlowEdge<any>): BackendEdge {
     id: edge.id,
     source: edge.source,
     target: edge.target,
+    sourceHandle: edge.sourceHandle || "",
+    targetHandle: edge.targetHandle || "",
     type: edge.type || "customEdge",
     animated: edge.animated || false,
     label: edge.label?.toString() || "",
@@ -164,6 +168,8 @@ export function transformEdgeFromBackend(backendEdge: any): ReactFlowEdge<any> {
     id: backendEdge.id,
     source: backendEdge.source,
     target: backendEdge.target,
+    sourceHandle: backendEdge.sourceHandle || undefined,
+    targetHandle: backendEdge.targetHandle || undefined,
     type: backendEdge.type || "customEdge",
     animated: backendEdge.animated || false,
     label: backendEdge.label || "",

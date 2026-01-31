@@ -45,7 +45,7 @@ export function useExecutionUpdates(flowId?: string) {
                         update.status === 'error' ? 'error' : 'idle';
           
           updateNodeExecutionStatus(nodeId, status, {
-            error: update.message,
+            error: status === 'error' ? update.message : undefined,
             output: update.data,
           });
 
@@ -64,7 +64,7 @@ export function useExecutionUpdates(flowId?: string) {
                   nodeId: nodeId,
                   status: status,
                   output: update.data,
-                  error: update.message,
+                  error: status === 'error' ? update.message : undefined,
                   startedAt: new Date().toISOString(),
                   durationMs: 0,
                 },

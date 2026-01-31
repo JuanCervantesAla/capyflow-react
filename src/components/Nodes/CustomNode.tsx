@@ -238,7 +238,49 @@ export const CustomNode = memo(
           </div>
         </div>
 
-        <Handle type="source" position={Position.Bottom} style={handle} />
+        {/* Handles de salida especiales para if-condition */}
+        {(data as NodeData).type === 'if-condition' ? (
+          <>
+            <Handle 
+              type="source" 
+              position={Position.Bottom} 
+              id="true"
+              style={{ ...handle, left: '35%', background: '#10b981' }} 
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: -20,
+              left: '35%',
+              transform: 'translateX(-50%)',
+              fontSize: '10px',
+              fontWeight: 600,
+              color: '#10b981',
+              pointerEvents: 'none',
+            }}>
+              TRUE
+            </div>
+            <Handle 
+              type="source" 
+              position={Position.Bottom} 
+              id="false"
+              style={{ ...handle, left: '65%', background: '#f43f5e' }} 
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: -20,
+              left: '65%',
+              transform: 'translateX(-50%)',
+              fontSize: '10px',
+              fontWeight: 600,
+              color: '#f43f5e',
+              pointerEvents: 'none',
+            }}>
+              FALSE
+            </div>
+          </>
+        ) : (
+          <Handle type="source" position={Position.Bottom} style={handle} />
+        )}
       </div>
     );
   }

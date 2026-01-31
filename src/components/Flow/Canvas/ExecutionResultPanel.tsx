@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   Card,
   Badge,
@@ -17,6 +17,7 @@ import {
 import { IconCheck, IconX, IconClock, IconCopy } from "@tabler/icons-react";
 import { useTheme } from "../../../theme/ThemeContext";
 import { ExecutionHistoryPanel } from "./ExecutionHistoryPanel";
+import { FlowContext } from "../context/FlowContext";
 
 interface ExecutionResultPanelProps {
   flowId: string;
@@ -30,6 +31,7 @@ export function ExecutionResultPanel({
   isLoading = false,
 }: ExecutionResultPanelProps) {
   const { theme } = useTheme();
+  const { nodes } = useContext(FlowContext);
   const [activeTab, setActiveTab] = useState<"current" | "history">("current");
 
   return (
@@ -52,7 +54,7 @@ export function ExecutionResultPanel({
               </Text>
             </Box>
           ) : (
-            <CurrentExecutionContent result={result} isLoading={isLoading} theme={theme} />
+            <CurrentExecutionContent result={result} isLoading={isLoading} theme={theme} nodes={nodes} />
           )}
         </Tabs.Panel>
 
@@ -64,7 +66,12 @@ export function ExecutionResultPanel({
   );
 }
 
-function CurrentExecutionContent({ result, isLoading, theme }: any) {
+function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
+  // Crear mapa de nodeId a label
+  const nodeLabels = nodes?.reduce((acc: any, node: any) => {
+    acc[node.id] = node.data?.label || node.id;
+    return acc;
+  }, {}) || {};
 
   return (
     <ScrollArea style={{ height: "100%" }} type="auto">
@@ -164,7 +171,7 @@ function CurrentExecutionContent({ result, isLoading, theme }: any) {
                               <IconClock size={14} color="#94a3b8" />
                             )}
                             <Text size="xs" fw={500} title={nodeId}>
-                              {nodeId}
+                              {nodeLabels[nodeId] || nodeId}
                             </Text>
                           </Group>
                           <Badge size="xs" variant="dot">
