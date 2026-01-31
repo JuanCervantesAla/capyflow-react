@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { HeaderBar } from "../components/HeaderBar/HeaderBar";
 import { Sidebar } from "../components/SideBar/SideBar";
 import { FlowCanvas } from "../components/Flow/Canvas/FlowCanvas";
@@ -18,51 +18,63 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [rightbarOpened, setRightbarOpened] = useState(false);
 
-  const clearNode = () => {
-    setSelectedNode(null);
-    setRightbarOpened(false);
-  };
+  // 👉 NUEVO FLAG
+  const [ignoreNextSelection, setIgnoreNextSelection] = useState(false);
+  const deselectAllRef = useRef<(() => void) | null>(null);
 
   const flowContext = useContext(FlowContext);
   const { data: flowData } = useFlow(flowId);
-  const { mutateAsync: executeFlow, isPending: isExecuting } = useExecuteFlow({
-    onSuccess: (data: ExecutionResult) => {
-      setExecutionResult(data);
-      setExecutionCollapsed(false);
-    },
-  });
+
+  const { mutateAsync: executeFlow, isPending: isExecuting } =
+    useExecuteFlow({});
 
   const { mutateAsync: saveFlow } = useSaveFlow();
 
-  // Cargar flujo cuando flowId cambia
+  const handleCloseRightbar = () => {
+    setIgnoreNextSelection(true);
+    
+    if (deselectAllRef.current) {
+      deselectAllRef.current();
+    }
+    
+    setSelectedNode(null);
+    setRightbarOpened(false);
+
+    setTimeout(() => {
+      setIgnoreNextSelection(false);
+    }, 50);
+  };
+
   useEffect(() => {
-  if (!flowContext?.loadFlowData) return;
+    if (!flowContext?.loadFlowData) return;
 
-  console.log("useEffect: flowId =", flowId, "flowData =", flowData);
+    if (!flowId) {
+      flowContext.loadFlowData([], []);
+      handleCloseRightbar();
+      return;
+    }
 
-  if (!flowId) {
-    // Nuevo flujo - limpiar canvas inmediatamente
-    console.log("Limpiando canvas para nuevo flujo");
-    flowContext.loadFlowData([], []);
-    clearNode();
-    return;
-  }
-
-  // Si flowData está disponible, cargar nodos y edges
-  if (flowData?.nodes !== undefined || flowData?.edges !== undefined) {
-    console.log("Cargando flujo:", flowData);
-    flowContext.loadFlowData(flowData?.nodes || [], flowData?.edges || []);
-    clearNode();
-  } else {
-    console.log("Esperando a que flowData cargue...");
-  }
-}, [flowId, flowData]);
+    if (
+      (flowData as any)?.nodes !== undefined ||
+      (flowData as any)?.edges !== undefined
+    ) {
+      flowContext.loadFlowData(
+        (flowData as any)?.nodes || [],
+        (flowData as any)?.edges || []
+      );
+      handleCloseRightbar();
+    }
+  }, [flowId, flowData]);
 
   useEffect(() => {
     const handler = () => {
       const small = window.innerWidth < 1024;
       setSidebarCollapsed(small);
       setExecutionCollapsed(small);
+
+      if (small) {
+        handleCloseRightbar();
+      }
     };
 
     handler();
@@ -72,29 +84,32 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
 
   const handleSave = async () => {
     if (!flowId || !flowContext) return;
-    try {
-      await saveFlow({
-        flowId,
-        nodes: flowContext.nodes,
-        edges: flowContext.edges,
-      });
-    } catch (error) {
-      console.error("Failed to save flow:", error);
-    }
+
+    await saveFlow({
+      flowId,
+      nodes: flowContext.nodes,
+      edges: flowContext.edges,
+    });
   };
 
   const handleExecute = async () => {
     if (!flowId) return;
-    try {
-      await executeFlow(flowId);
-    } catch (error) {
-      console.error("Failed to execute flow:", error);
-    }
+    await executeFlow(flowId);
   };
 
   const handleNodeSelected = (node: any) => {
+    if (ignoreNextSelection) return;
+
     setSelectedNode(node);
     setRightbarOpened(true);
+  };
+
+  const handleExecutionUpdate = (data: any) => {
+    setExecutionResult(data);
+
+    if (data.status !== "idle" && executionCollapsed && !rightbarOpened) {
+      setExecutionCollapsed(false);
+    }
   };
 
   return (
@@ -113,22 +128,29 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         />
 
         <div style={{ flex: 1, position: "relative" }}>
-          {flowId && <FlowCanvas onNodeSelected={handleNodeSelected} />}
+          {flowId && (
+            <FlowCanvas
+              onNodeSelected={handleNodeSelected}
+              onExecutionUpdate={handleExecutionUpdate}
+              onDeselectAll={deselectAllRef as any}
+            />
+          )}
         </div>
 
+        <Rightbar
+          node={selectedNode}
+          open={rightbarOpened}
+          onClose={handleCloseRightbar}
+        />
+
         <ExecutionPanelWrapper
+          flowId={flowId}
           collapsed={executionCollapsed}
           onToggle={() => setExecutionCollapsed((v) => !v)}
           result={executionResult}
           isLoading={isExecuting}
         />
       </div>
-
-      <Rightbar 
-        node={selectedNode} 
-        onClose={clearNode} 
-        opened={rightbarOpened}
-      />
     </div>
   );
 }

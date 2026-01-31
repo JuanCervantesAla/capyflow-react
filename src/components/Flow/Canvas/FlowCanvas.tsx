@@ -5,7 +5,10 @@ import {
   useState,
   memo,
   useRef,
+  useEffect,
+  type MutableRefObject,
 } from "react";
+import { useParams } from "react-router-dom";
 import {
   ReactFlow,
   Background,
@@ -14,26 +17,31 @@ import {
   addEdge,
   useReactFlow,
 } from "@xyflow/react";
-
+import type { Connection } from "@xyflow/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { FlowContext } from "../context/FlowContext";
 import { CustomNode } from "../../Nodes/CustomNode";
 import { CustomEdge } from "../../Edges/CustomEdge";
 import { CustomControls } from "../../Control/CustomControls";
-import { Rightbar } from "../../Rightbar/Rightbar";
 import { useTheme } from "../../../theme/ThemeContext";
 import { FlowInternals } from "./FlowInternals";
+import { useWebSocket } from "../../../hooks/useWebSocket";
+import { queryKeys } from "../../../lib/queryKeys";
 import "@xyflow/react/dist/style.css";
+import { useExecutionUpdates } from '../../../hooks/useExecutionUpdates';
 
 const nodeTypes = {
   custom: CustomNode,
-  'manual-trigger': CustomNode,
-  'set-data': CustomNode,
-  'transform-data': CustomNode,
-  'json-parser': CustomNode,
-  'if-condition': CustomNode,
-  'http-request': CustomNode,
-  'webhook-trigger': CustomNode,
-};
+  "manual-trigger": CustomNode,
+  "set-data": CustomNode,
+  "transform-data": CustomNode,
+  "json-parser": CustomNode,
+  "if-condition": CustomNode,
+  "http-request": CustomNode,
+  "webhook-trigger": CustomNode,
+  log: CustomNode,
+} as any;
+
 const edgeTypes = { customEdge: CustomEdge };
 const proOptions = { hideAttribution: true };
 
@@ -46,17 +54,54 @@ const GRID_SIZE = 20;
 const snapPosition = (value: number) =>
   Math.round(value / GRID_SIZE) * GRID_SIZE;
 
-export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) => void }) {
+
+export function FlowCanvas({
+  onNodeSelected,
+  onExecutionUpdate,
+  onDeselectAll,
+}: {
+  onNodeSelected?: (node: any) => void;
+  onExecutionUpdate?: (data: any) => void;
+  onDeselectAll?: MutableRefObject<(() => void) | null>;
+}) {
   const { nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange } =
     useContext(FlowContext);
 
   const reactFlow = useReactFlow();
   const { theme } = useTheme();
+  const queryClient = useQueryClient();
 
-  const [selectedNode, setSelectedNode] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const { id: flowId } = useParams<{ id: string }>();
+
+  const { executionData } = useExecutionUpdates(flowId);
+
+  useEffect(() => {
+    if (onExecutionUpdate && executionData.status !== 'idle') {
+      onExecutionUpdate(executionData);
+    }
+  }, [executionData, onExecutionUpdate]);
+
+  useEffect(() => {
+    if (onDeselectAll) {
+      const deselectAll = () => {
+        setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+      };
+      onDeselectAll.current = deselectAll;
+    }
+  }, [onDeselectAll, setNodes]);
+
+  useWebSocket({
+    onUpdate: (update) => {
+      if (update.type === "complete" && update.flowId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.executions.byFlow(update.flowId),
+        });
+      }
+    },
+  });
 
   const onMoveStart = useCallback(() => {
     setIsDragging(true);
@@ -70,20 +115,18 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
     rf?.classList.remove("dragging");
   }, []);
 
-  const onSelectionChange = useCallback(({ nodes }) => {
-    const next = nodes[0] ?? null;
-    setSelectedNode((prev) => {
-      if (!prev && !next) return prev;
-      if (prev?.id === next?.id) return prev;
-      if (next && onNodeSelected) {
-        onNodeSelected(next);
+  const onSelectionChange = useCallback(
+    ({ nodes }: { nodes: any[] }) => {
+      const node = nodes[0] ?? null;
+      if (node && onNodeSelected) {
+        onNodeSelected(node);
       }
-      return next;
-    });
-  }, [onNodeSelected]);
+    },
+    [onNodeSelected],
+  );
 
   const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
     [setEdges],
   );
 
@@ -105,16 +148,6 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
     [],
   );
 
-  const closeRightbar = useCallback(() => {
-    if (!selectedNode) return;
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === selectedNode.id ? { ...n, selected: false } : n,
-      ),
-    );
-    setSelectedNode(null);
-  }, [selectedNode, setNodes]);
-
   const minimapStyle = useMemo(
     () => ({
       background: theme.colors.background.secondary,
@@ -131,7 +164,12 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
   );
 
   const nodeColor = useCallback(
-    (node) => node.data.color || theme.colors.accent.primary,
+    (node: any) =>
+      node.data?.status === "success"
+        ? "#10b981"
+        : node.data?.status === "error"
+        ? "#f43f5e"
+        : node.data?.color || theme.colors.accent.primary,
     [theme.colors.accent.primary],
   );
 
@@ -141,7 +179,7 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
   );
 
   const onNodeDragStop = useCallback(
-    (_, node) => {
+    (_: any, node: any) => {
       setNodes((nds) =>
         nds.map((n) =>
           n.id === node.id
@@ -193,9 +231,9 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
         deleteKeyCode="Delete"
         elevateNodesOnSelect={false}
         selectNodesOnDrag={false}
-        nodesDraggable={true}
+        nodesDraggable
         nodesConnectable={!isDragging}
-        elementsSelectable={true}
+        elementsSelectable
         autoPanOnConnect={false}
         autoPanOnNodeDrag={false}
         translateExtent={[
@@ -203,7 +241,7 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
           [2000, 2000],
         ]}
         zoomActivationKeyCode={null}
-        preventScrolling={true}
+        preventScrolling
       >
         <FlowInternals />
 
@@ -211,7 +249,6 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
           gap={20}
           size={1}
           color={theme.colors.border.primary}
-          variant="dots"
         />
 
         <MemoPanel position="top-left">
@@ -228,12 +265,6 @@ export function FlowCanvas({ onNodeSelected }: { onNodeSelected?: (node: any) =>
           nodeStrokeWidth={3}
         />
       </ReactFlow>
-
-      <Rightbar
-        node={selectedNode}
-        open={!!selectedNode}
-        onClose={closeRightbar}
-      />
     </div>
   );
 }
