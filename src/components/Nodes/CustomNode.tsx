@@ -36,14 +36,16 @@ function getCachedIcon(iconName: string) {
 
 const stylesCache = new Map<string, any>();
 
-const getStyles = (selected: boolean) => {
-  const key = selected ? 'selected' : 'normal';
+const getStyles = (selected: boolean, nodeColor?: string) => {
+  // const key = selected ? 'selected' : 'normal';
+  const key = `${selected}-${nodeColor || "default"}`;
   
   if (stylesCache.has(key)) {
     return stylesCache.get(key);
   }
   
   const colors = getThemeColors();
+  const finalColor = nodeColor || colors.edgeColor;
   const styles = {
     node: {
       borderRadius: 10,
@@ -64,7 +66,7 @@ const getStyles = (selected: boolean) => {
       width: 40,
       height: 40,
       borderRadius: "50%",
-      background: colors.edgeColor,
+      background: finalColor,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -79,7 +81,7 @@ const getStyles = (selected: boolean) => {
     handle: {
       width: 12,
       height: 12,
-      background: colors.edgeColor,
+      background: finalColor,
       borderRadius: "50%",
       border: `2px solid ${colors.bgPrimary}`,
     },
@@ -113,8 +115,8 @@ export const CustomNode = memo(
     const timeoutRef = useRef<number>();
 
     const { node, topBar, icon, content, handle, actionBtn, colors } = useMemo(
-      () => getStyles(!!selected),
-      [selected]
+      () => getStyles(!!selected, data.color),
+      [selected, data.color]
     );
 
     useEffect(() => {
