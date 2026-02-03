@@ -7,7 +7,7 @@ export interface NodeData extends Record<string, unknown> {
   color?: string;
   category?: string;
   description?: string;
-  parameters?: any[];
+  parameters?: Record<string, any>;
   inputs?: any[];
   outputs?: any[];
   status?: string;
@@ -20,6 +20,11 @@ export interface NodeData extends Record<string, unknown> {
   version?: string;
   nodeTypeId?: string;
   type?: string;
+  
+  executionStatus?: 'idle' | 'running' | 'success' | 'error';
+  executionError?: string;
+  executionDuration?: number;
+  executionOutput?: any;
 }
 
 export type FlowNode = ReactFlowNode<NodeData>;
@@ -70,7 +75,7 @@ export function transformNodeForBackend(node: FlowNode): BackendNode {
     color: (data.color as string) || "#4c6ef5",
     category: (data.category as string) || "",
     description: (data.description as string) || "",
-    parameters: data.parameters ? JSON.stringify(data.parameters) : "[]",
+    parameters: data.parameters ? JSON.stringify(data.parameters) : "{}",
     inputs: data.inputs ? JSON.stringify(data.inputs) : "[]",
     outputs: data.outputs ? JSON.stringify(data.outputs) : "[]",
     status: (data.status as string) || "idle",
@@ -98,62 +103,69 @@ export function transformEdgeForBackend(edge: ReactFlowEdge<any>): BackendEdge {
 }
 
 export function transformNodeFromBackend(backendNode: any): FlowNode {
-  // Fix: Si category está vacío pero subtitle es una categoría válida, usar subtitle como category
-  let category = backendNode.category || "";
-  const validCategories = ["trigger", "ai", "data", "logic", "io", "integration"];
-  
-  if (!category && backendNode.subtitle && validCategories.includes(backendNode.subtitle.toLowerCase())) {
-    category = backendNode.subtitle.toLowerCase();
-    console.warn(`Nodo ${backendNode.id}: category vacía, usando subtitle '${backendNode.subtitle}' como category`);
+  let position = { x: 0, y: 0 };
+  try {
+    position = JSON.parse(backendNode.position || '{"x":0,"y":0}');
+  } catch (e) {
+    console.error("Error parsing position:", e);
   }
-  
+
+  let parameters = {};
+  try {
+    parameters = JSON.parse(backendNode.parameters || '{}');
+  } catch (e) {
+    console.error("Error parsing parameters:", e);
+  }
+
+  let inputs = [];
+  try {
+    inputs = JSON.parse(backendNode.inputs || '[]');
+  } catch (e) {
+    console.error("Error parsing inputs:", e);
+  }
+
+  let outputs = [];
+  try {
+    outputs = JSON.parse(backendNode.outputs || '[]');
+  } catch (e) {
+    console.error("Error parsing outputs:", e);
+  }
+
   return {
     id: backendNode.id,
-    type: backendNode.type || "custom",
-    position: typeof backendNode.position === "string" 
-      ? JSON.parse(backendNode.position) 
-      : backendNode.position,
+    type: "custom",
+    position,
     data: {
-      label: backendNode.label,
-      subtitle: backendNode.subtitle,
-      icon: backendNode.icon,
-      color: backendNode.color,
-      category: category,
-      description: backendNode.description,
-      parameters: backendNode.parameters 
-        ? (typeof backendNode.parameters === "string" 
-          ? JSON.parse(backendNode.parameters) 
-          : backendNode.parameters)
-        : [],
-      inputs: backendNode.inputs 
-        ? (typeof backendNode.inputs === "string" 
-          ? JSON.parse(backendNode.inputs) 
-          : backendNode.inputs)
-        : [],
-      outputs: backendNode.outputs 
-        ? (typeof backendNode.outputs === "string" 
-          ? JSON.parse(backendNode.outputs) 
-          : backendNode.outputs)
-        : [],
-      status: backendNode.status,
-      lastRun: backendNode.lastRun,
-      errorMessage: backendNode.errorMessage,
-      executionTimeMs: backendNode.executionTimeMs,
-      disabled: backendNode.disabled,
-      retryOnFail: backendNode.retryOnFail,
-      retries: backendNode.retries,
-      version: backendNode.version,
+      label: backendNode.label || "Node",
+      subtitle: backendNode.subtitle || "",
+      icon: backendNode.icon || "IconBolt",
+      color: backendNode.color || "#4c6ef5",
+      category: backendNode.category || "",
+      description: backendNode.description || "",
+      type: backendNode.type || "custom",
+      parameters,
+      inputs,
+      outputs,
+      status: backendNode.status || "idle",
+      lastRun: backendNode.lastRun || null,
+      errorMessage: backendNode.errorMessage || "",
+      executionTimeMs: backendNode.executionTimeMs || 0,
+      disabled: backendNode.disabled || false,
+      retryOnFail: backendNode.retryOnFail || false,
+      retries: backendNode.retries || 0,
+      version: backendNode.version || "1.0",
+      nodeTypeId: backendNode.nodeTypeId,
     },
   };
 }
 
-export function transformEdgeFromBackend(backendEdge: any): ReactFlowEdge {
+export function transformEdgeFromBackend(backendEdge: any): ReactFlowEdge<any> {
   return {
     id: backendEdge.id,
     source: backendEdge.source,
     target: backendEdge.target,
     type: backendEdge.type || "customEdge",
     animated: backendEdge.animated || false,
-    label: backendEdge.label,
+    label: backendEdge.label || "",
   };
 }

@@ -34,6 +34,12 @@ export function useExecuteFlow(options?: UseExecuteFlowOptions) {
     mutationFn: (flowId: string) => executeFlowRequest(flowId),
 
     onSuccess: (data) => {
+      if (!data || Object.keys(data).length === 0) {
+        toastSuccess("Execution started");
+        options?.onSuccess?.(data, "", undefined);
+        return;
+      }
+
       if (data.status === "success") {
         toastSuccess(`Flujo ejecutado exitosamente en ${data.durationMs}ms`);
       } else {

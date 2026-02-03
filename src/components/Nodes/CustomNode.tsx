@@ -1,4 +1,4 @@
-import { Text } from "@mantine/core";
+import { Text, Group } from "@mantine/core";
 import { Modal, Button } from "@mantine/core";
 import { Handle, Position } from "@xyflow/react";
 import { IconTrash, IconCopy } from "@tabler/icons-react";
@@ -8,6 +8,7 @@ import type { NodeProps } from "@xyflow/react";
 import type { NodeData } from "../../components/Flow/types/NodeTypes";
 import { getIconComponent } from "../../utils/iconLoader";
 import { getThemeColors } from "../../theme/themeCache";
+import { NodeExecutionStatus } from "./NodeExecutionStatus";
 
 if (typeof window !== "undefined" && !document.getElementById("node-styles")) {
   const style = document.createElement("style");
@@ -17,6 +18,10 @@ if (typeof window !== "undefined" && !document.getElementById("node-styles")) {
       0% { opacity: 0; transform: translate(10px, -10px) scale(0.4); }
       60% { opacity: 1; transform: translate(-3px, 3px) scale(1.15); }
       100% { transform: translate(0, 0) scale(1); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     .delete-appear { animation: popOut 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
     .delete-hide { opacity: 0; transform: scale(0.6); transition: 0.2s ease; pointer-events: none; }
@@ -36,9 +41,12 @@ function getCachedIcon(iconName: string) {
 
 const stylesCache = new Map<string, any>();
 
-const getStyles = (selected: boolean, nodeColor?: string) => {
-  // const key = selected ? 'selected' : 'normal';
-  const key = `${selected}-${nodeColor || "default"}`;
+const getStyles = (
+  selected: boolean,
+  status: string,
+  nodeColor?: string
+) => {
+  const key = `${selected}-${status}-${nodeColor || "default"}`;
   
   if (stylesCache.has(key)) {
     return stylesCache.get(key);
@@ -46,21 +54,41 @@ const getStyles = (selected: boolean, nodeColor?: string) => {
   
   const colors = getThemeColors();
   const finalColor = nodeColor || colors.edgeColor;
+  let borderColor = colors.borderPrimary;
+  let topBarColor = colors.bgTertiary;
+  
+  if (status === 'running') {
+    borderColor = '#3b82f6';
+    topBarColor = '#3b82f6';
+  } else if (status === 'success') {
+    borderColor = '#10b981';
+    topBarColor = '#10b981';
+  } else if (status === 'error') {
+    borderColor = '#ef4444';
+    topBarColor = '#ef4444';
+  }
+  
+  if (selected) {
+    borderColor = colors.edgeSelectedColor;
+  }
+  
   const styles = {
     node: {
       borderRadius: 10,
       overflow: "hidden",
       border: selected 
         ? `2px solid ${colors.edgeSelectedColor}`
-        : `1px solid ${colors.borderPrimary}`,
+        : `1px solid ${borderColor}`,
       boxShadow: selected 
         ? "0 0 12px rgba(59,130,246,0.35)"
+        : status === 'running'
+        ? "0 0 8px rgba(59,130,246,0.3)"
         : "0 1px 3px rgba(0,0,0,0.50)",
       background: selected ? colors.bgPrimary : colors.bgSecondary,
     },
     topBar: {
       height: 6,
-      background: selected ? colors.edgeSelectedColor : colors.bgTertiary,
+      background: selected ? colors.edgeSelectedColor : topBarColor,
     },
     icon: {
       width: 40,
@@ -74,6 +102,11 @@ const getStyles = (selected: boolean, nodeColor?: string) => {
     },
     content: {
       padding: 12,
+      display: "flex",
+      flexDirection: 'column' as const,
+      gap: 8,
+    },
+    mainContent: {
       display: "flex",
       alignItems: "center",
       gap: 12,
@@ -106,17 +139,31 @@ const getStyles = (selected: boolean, nodeColor?: string) => {
 };
 
 export const CustomNode = memo(
-  function CustomNode({ id, data, selected }: NodeProps<NodeData>) {
-    const Icon = getCachedIcon(data.icon);
+  function CustomNode({ id, data, selected }: NodeProps) {
+    const Icon = getCachedIcon((data as NodeData).icon || 'IconBolt');
     const { deleteNode, duplicateNode } = useFlowActions();
     
     const [showDelete, setShowDelete] = useState(selected);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const timeoutRef = useRef<number>();
+    const timeoutRef = useRef<number | undefined>(undefined);
 
-    const { node, topBar, icon, content, handle, actionBtn, colors } = useMemo(
-      () => getStyles(!!selected, data.color),
-      [selected, data.color]
+    const {
+      node,
+      topBar,
+      icon,
+      content,
+      mainContent,
+      handle,
+      actionBtn,
+      colors,
+    } = useMemo(
+      () =>
+        getStyles(
+          !!selected,
+          (data as NodeData).executionStatus || "idle",
+          (data as NodeData).color
+        ),
+      [selected, (data as NodeData).executionStatus, (data as NodeData).color]
     );
 
     useEffect(() => {
@@ -129,13 +176,13 @@ export const CustomNode = memo(
     }, [selected]);
 
     const handleDelete = useCallback(() => {
-      deleteNode(id);
+      deleteNode(id as string);
       setConfirmOpen(false);
     }, [deleteNode, id]);
 
     const handleDuplicate = useCallback((e: React.MouseEvent) => {
       e.stopPropagation();
-      duplicateNode(id);
+      duplicateNode(id as string);
     }, [duplicateNode, id]);
 
     const handleOpenConfirm = useCallback((e: React.MouseEvent) => {
@@ -150,78 +197,67 @@ export const CustomNode = memo(
     return (
       <div style={{ width: 240, position: "relative" }}>
         {confirmOpen && (
-          <Modal
-            opened={confirmOpen}
-            onClose={handleCloseConfirm}
-            title="¿Eliminar nodo?"
-            centered
-            size="sm"
-          >
-            <Text>¿Estás seguro de que quieres eliminar este nodo?</Text>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
-              <Button variant="default" onClick={handleCloseConfirm}>
-                Cancelar
-              </Button>
-              <Button color="red" onClick={handleDelete}>
-                Eliminar
-              </Button>
-            </div>
+          <Modal opened={confirmOpen} onClose={handleCloseConfirm} title="Confirmar eliminación" size="sm">
+            <Text size="sm">¿Estás seguro de que deseas eliminar este nodo?</Text>
+            <Group mt="md" justify="flex-end">
+              <Button variant="default" onClick={handleCloseConfirm}>Cancelar</Button>
+              <Button color="red" onClick={handleDelete}>Eliminar</Button>
+            </Group>
           </Modal>
         )}
 
         {showDelete && (
-          <>
-            <button
-              onClick={handleOpenConfirm}
-              className={`node-action-btn ${selected ? "delete-appear" : "delete-hide"}`}
-              style={{ ...actionBtn, position: "absolute", top: -22, right: -22 }}
-              title="Eliminar nodo"
-            >
-              <IconTrash size={18} color={colors.edgeColor} />
-            </button>
-
-            <button
+          <div style={{ position: "absolute", top: -50, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8 }}>
+            <div
+              style={actionBtn}
               onClick={handleDuplicate}
-              className={`node-action-btn ${selected ? "delete-appear" : "delete-hide"}`}
-              style={{ ...actionBtn, position: "absolute", top: -22, left: -22 }}
-              title="Duplicar nodo"
+              className={selected ? "delete-appear node-action-btn" : "delete-hide"}
             >
-              <IconCopy size={18} color={colors.edgeColor} />
-            </button>
-          </>
+              <IconCopy size={18} color={colors.textPrimary} />
+            </div>
+            <div
+              style={actionBtn}
+              onClick={handleOpenConfirm}
+              className={selected ? "delete-appear node-action-btn" : "delete-hide"}
+            >
+              <IconTrash size={18} color={colors.errorColor} />
+            </div>
+          </div>
         )}
+
+        <Handle type="target" position={Position.Top} style={handle} />
 
         <div style={node}>
           <div style={topBar} />
-
           <div style={content}>
-            <div style={icon}>
-              <Icon size={22} color="#fff" />
+            <div style={mainContent}>
+              <div style={icon}>
+                <Icon size={22} color={colors.textPrimary} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={500} truncate="end">
+                  {(data as NodeData).label}
+                </Text>
+                {(data as NodeData).subtitle && (
+                  <Text size="xs" c="dimmed" truncate="end">
+                    {(data as NodeData).subtitle}
+                  </Text>
+                )}
+              </div>
             </div>
-
-            <div>
-              <Text fw={700} size="sm" style={{ color: colors.textPrimary }}>
-                {data.label}
-              </Text>
-              <Text size="xs" style={{ color: colors.textSecondary }}>
-                {data.subtitle || "Task"}
-              </Text>
-            </div>
+            
+            {(data as NodeData).executionStatus && (data as NodeData).executionStatus !== 'idle' && (
+              <NodeExecutionStatus 
+                status={(data as NodeData).executionStatus as any}
+                error={(data as NodeData).executionError}
+                durationMs={(data as NodeData).executionDuration}
+              />
+            )}
           </div>
         </div>
 
-        <Handle type="target" position={Position.Left} style={handle} />
-        <Handle type="source" position={Position.Right} style={handle} />
+        <Handle type="source" position={Position.Bottom} style={handle} />
       </div>
-    );
-  },
-  (prev, next) => {
-    return (
-      prev.id === next.id &&
-      prev.selected === next.selected &&
-      prev.data.label === next.data.label &&
-      prev.data.subtitle === next.data.subtitle &&
-      prev.data.icon === next.data.icon
     );
   }
 );
