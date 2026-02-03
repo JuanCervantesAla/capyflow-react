@@ -7,6 +7,7 @@ interface ActionButtonProps {
   children: React.ReactNode;
   variant?: "primary" | "secondary";
   onClick?: () => void;
+  hoverColor?: string;
 }
 
 export const ActionButton: FC<ActionButtonProps> = ({
@@ -14,6 +15,7 @@ export const ActionButton: FC<ActionButtonProps> = ({
   children,
   variant = "secondary",
   onClick,
+  hoverColor,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const isPrimary = variant === "primary";
@@ -33,8 +35,8 @@ export const ActionButton: FC<ActionButtonProps> = ({
         background: isPrimary
           ? theme.colors.accent.primary
           : (isHovered ? theme.colors.background.tertiary : theme.colors.background.secondary),
-        border: `1px solid ${isPrimary ? theme.colors.accent.primary : (isHovered ? theme.colors.accent.primary : theme.colors.border.primary)}`,
-        color: isPrimary ? "#fff" : (isHovered ? theme.colors.accent.primary : theme.colors.text.secondary),
+        border: `1px solid ${isPrimary ? theme.colors.accent.primary : (isHovered ? (hoverColor || theme.colors.accent.primary) : theme.colors.border.primary)}`,
+        color: isPrimary ? "#fff" : (isHovered ? (hoverColor || theme.colors.accent.primary) : theme.colors.text.secondary),
         transition: "all 0.2s ease",
       }}
     >

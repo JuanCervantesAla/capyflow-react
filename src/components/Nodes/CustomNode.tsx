@@ -41,15 +41,19 @@ function getCachedIcon(iconName: string) {
 
 const stylesCache = new Map<string, any>();
 
-const getStyles = (selected: boolean, status: string) => {
-  const key = `${selected ? 'selected' : 'normal'}-${status}`;
+const getStyles = (
+  selected: boolean,
+  status: string,
+  nodeColor?: string
+) => {
+  const key = `${selected}-${status}-${nodeColor || "default"}`;
   
   if (stylesCache.has(key)) {
     return stylesCache.get(key);
   }
   
   const colors = getThemeColors();
-  
+  const finalColor = nodeColor || colors.edgeColor;
   let borderColor = colors.borderPrimary;
   let topBarColor = colors.bgTertiary;
   
@@ -90,7 +94,7 @@ const getStyles = (selected: boolean, status: string) => {
       width: 40,
       height: 40,
       borderRadius: "50%",
-      background: colors.edgeColor,
+      background: finalColor,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -110,7 +114,7 @@ const getStyles = (selected: boolean, status: string) => {
     handle: {
       width: 12,
       height: 12,
-      background: colors.edgeColor,
+      background: finalColor,
       borderRadius: "50%",
       border: `2px solid ${colors.bgPrimary}`,
     },
@@ -143,9 +147,23 @@ export const CustomNode = memo(
     const [confirmOpen, setConfirmOpen] = useState(false);
     const timeoutRef = useRef<number | undefined>(undefined);
 
-    const { node, topBar, icon, content, mainContent, handle, actionBtn, colors } = useMemo(
-      () => getStyles(!!selected, (data as NodeData).executionStatus || 'idle'),
-      [selected, (data as NodeData).executionStatus]
+    const {
+      node,
+      topBar,
+      icon,
+      content,
+      mainContent,
+      handle,
+      actionBtn,
+      colors,
+    } = useMemo(
+      () =>
+        getStyles(
+          !!selected,
+          (data as NodeData).executionStatus || "idle",
+          (data as NodeData).color
+        ),
+      [selected, (data as NodeData).executionStatus, (data as NodeData).color]
     );
 
     useEffect(() => {
