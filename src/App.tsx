@@ -1,6 +1,6 @@
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { ThemeProvider } from "./theme/ThemeContext";
 import LoginPage from "./pages/LoginPage";
@@ -21,6 +21,7 @@ export default function App() {
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route
@@ -31,6 +32,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

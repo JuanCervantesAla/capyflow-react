@@ -16,16 +16,19 @@ export const CustomEdge = memo(
     const stroke = selected ? colors.edgeSelectedColor : colors.edgeColor;
 
     return (
-      <BaseEdge 
-        id={id} 
-        path={path} 
-        style={{
-          stroke,
-          strokeWidth: selected ? 2.8 : 2.4,
-          vectorEffect: 'non-scaling-stroke',
-          shapeRendering: 'geometricPrecision',
-        }} 
-      />
+      <>
+        <BaseEdge 
+          id={id} 
+          path={path} 
+          style={{
+            stroke,
+            strokeWidth: selected ? 2.8 : 2.4,
+            vectorEffect: 'non-scaling-stroke',
+            shapeRendering: 'geometricPrecision',
+          }} 
+          interactionWidth={20}
+        />
+      </>
     );
   },
   (prev, next) => {

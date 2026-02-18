@@ -39,6 +39,7 @@ const nodeTypes = {
   "if-condition": CustomNode,
   "http-request": CustomNode,
   "webhook-trigger": CustomNode,
+  "loop": CustomNode,
   log: CustomNode,
 } as any;
 
@@ -144,6 +145,9 @@ export function FlowCanvas({
     () => ({
       type: "customEdge",
       animated: false,
+      deletable: true,
+      focusable: true,
+      selectable: true,
     }),
     [],
   );
@@ -234,6 +238,8 @@ export function FlowCanvas({
         nodesDraggable
         nodesConnectable={!isDragging}
         elementsSelectable
+        edgesFocusable
+        edgesReconnectable
         autoPanOnConnect={false}
         autoPanOnNodeDrag={false}
         translateExtent={[
