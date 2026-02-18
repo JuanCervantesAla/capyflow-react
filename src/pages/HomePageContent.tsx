@@ -18,7 +18,6 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [rightbarOpened, setRightbarOpened] = useState(false);
 
-  // 👉 NUEVO FLAG
   const [ignoreNextSelection, setIgnoreNextSelection] = useState(false);
   const deselectAllRef = useRef<(() => void) | null>(null);
 
@@ -141,6 +140,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
           node={selectedNode}
           open={rightbarOpened}
           onClose={handleCloseRightbar}
+          flowId={flowId}
         />
 
         <ExecutionPanelWrapper

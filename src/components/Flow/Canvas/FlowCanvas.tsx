@@ -39,6 +39,7 @@ const nodeTypes = {
   "if-condition": CustomNode,
   "http-request": CustomNode,
   "webhook-trigger": CustomNode,
+  "loop": CustomNode,
   log: CustomNode,
 } as any;
 

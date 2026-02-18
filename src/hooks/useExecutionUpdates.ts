@@ -2,6 +2,7 @@ import { useContext, useState, useCallback } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { FlowContext } from '../components/Flow/context/FlowContext';
 import type { WebSocketExecutionUpdate } from '../components/Flow/types/Execution';
+import { showToast } from '../lib/toast';
 
 interface ExecutionData {
   executionId?: string;
@@ -77,14 +78,24 @@ export function useExecutionUpdates(flowId?: string) {
         break;
 
       case 'complete':
-        setExecutionData(prev => ({
-          ...prev,
-          status: 'success',
-          completedAt: new Date().toISOString(),
-          durationMs: prev.startedAt 
+        setExecutionData(prev => {
+          const durationMs = prev.startedAt 
             ? new Date().getTime() - new Date(prev.startedAt).getTime()
-            : 0,
-        }));
+            : 0;
+          
+          showToast(
+            'Ejecución completada', 
+            `Flujo ejecutado exitosamente en ${durationMs}ms`,
+            'success'
+          );
+          
+          return {
+            ...prev,
+            status: 'success',
+            completedAt: new Date().toISOString(),
+            durationMs,
+          };
+        });
         break;
 
       case 'error':
@@ -98,6 +109,23 @@ export function useExecutionUpdates(flowId?: string) {
             : 0,
         }));
         console.error('Error en ejecución:', update.message);
+        showToast('Error en la ejecución', update.message || 'Error desconocido', 'error');
+        break;
+
+      case 'execution-error':
+        setExecutionData(prev => ({
+          ...prev,
+          status: 'error',
+          completedAt: new Date().toISOString(),
+          errorMessage: update.message,
+        }));
+        console.error('Error de validación:', update.message);
+        const details = (update.data as any)?.details;
+        showToast(
+          'Error de validación del flujo', 
+          `${update.message}\n\n${details || ''}`,
+          'error'
+        );
         break;
     }
   }, [flowId, resetExecutionStates, updateNodeExecutionStatus]);

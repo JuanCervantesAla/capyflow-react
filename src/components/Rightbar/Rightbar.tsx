@@ -3,6 +3,7 @@ import { Text, Box, ScrollArea, ActionIcon } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { NodeParameterEditor } from "../Flow/config/NodeParameterEditor";
 import { FlowContext } from "../Flow/context/FlowContext";
+import { WebhookPanel } from "../Flow/WebhookPanel/WebhookPanel";
 import type { FlowNode } from "../Flow/types/NodeTypes";
 import { useTheme } from "../../theme/ThemeContext";
 
@@ -12,12 +13,14 @@ interface RightbarProps {
   node: FlowNode | null;
   open: boolean;
   onClose: () => void;
+  flowId: string | null;
 }
 
 export const Rightbar = memo(function Rightbar({
   node,
   open,
   onClose,
+  flowId,
 }: RightbarProps) {
   const { updateNodeParameters } = useContext(FlowContext);
   const { theme } = useTheme();
@@ -76,6 +79,14 @@ export const Rightbar = memo(function Rightbar({
               </Box>
 
               <ScrollArea style={{ flex: 1 }} px="md" py="md">
+                {/* Webhook Panel - mostrar solo si es webhook-trigger */}
+                {node.data.type === 'webhook-trigger' && flowId && (
+                  <WebhookPanel 
+                    flowId={flowId} 
+                    isVisible={true} 
+                  />
+                )}
+
                 <NodeParameterEditor
                   nodeId={node.id}
                   nodeLabel={node.data.label}

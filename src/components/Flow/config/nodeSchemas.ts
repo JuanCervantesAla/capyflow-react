@@ -68,7 +68,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'http-request': {
     type: 'http-request',
     displayName: 'HTTP Request',
-    description: 'Realiza una petición HTTP',
+    description: 'Realiza peticiones HTTP a APIs externas con retry automático',
     category: 'actions',
     parameters: [
       {
@@ -76,22 +76,13 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         key: 'url',
         type: 'string',
         required: true,
-        placeholder: 'https://api.example.com/endpoint',
-        description: 'URL completa del endpoint',
-        validation: (value) => {
-          if (!value) return 'La URL es requerida';
-          try {
-            new URL(value);
-            return null;
-          } catch {
-            return 'URL inválida';
-          }
-        },
+        placeholder: 'https://api.example.com/users/{{userId}}',
+        description: 'URL del endpoint. Usa {{variable}} para interpolar valores',
       },
       {
         name: 'Method',
         key: 'method',
-        type: 'http-method',
+        type: 'select',
         required: true,
         defaultValue: 'GET',
         options: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
@@ -100,18 +91,19 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
       {
         name: 'Headers',
         key: 'headers',
-        type: 'http-headers',
+        type: 'keyvalue',
         required: false,
         defaultValue: {},
-        description: 'Headers personalizados',
+        description: 'Headers HTTP (Authorization, Content-Type, etc)',
       },
       {
         name: 'Body',
         key: 'body',
         type: 'json',
         required: false,
-        placeholder: '{\n  "key": "value"\n}',
-        description: 'Cuerpo de la petición (JSON)',
+        defaultValue: {},
+        placeholder: '{\n  "email": "{{email}}",\n  "name": "{{nombre}}"\n}',
+        description: 'Cuerpo JSON para POST/PUT/PATCH',
       },
       {
         name: 'Timeout (ms)',
@@ -120,6 +112,33 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 30000,
         description: 'Timeout de la petición en milisegundos',
+      },
+      {
+        name: 'Max Retries',
+        key: 'maxRetries',
+        type: 'number',
+        required: false,
+        defaultValue: 0,
+        placeholder: '0',
+        description: 'Número de reintentos en caso de fallo (0 = sin retry, máx: 10)',
+      },
+      {
+        name: 'Retry Delay (ms)',
+        key: 'retryDelay',
+        type: 'number',
+        required: false,
+        defaultValue: 1000,
+        placeholder: '1000',
+        description: 'Delay inicial entre reintentos en ms (se incrementa exponencialmente)',
+      },
+      {
+        name: 'Backoff Multiplier',
+        key: 'backoffMultiplier',
+        type: 'number',
+        required: false,
+        defaultValue: 2.0,
+        placeholder: '2.0',
+        description: 'Multiplicador para backoff exponencial (1.0 = constante, 2.0 = duplica cada vez)',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -133,6 +152,19 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
           return 'El body debe ser un JSON válido';
         }
       }
+
+      if (params.maxRetries && (params.maxRetries < 0 || params.maxRetries > 10)) {
+        return 'Max Retries debe estar entre 0 y 10';
+      }
+
+      if (params.retryDelay && params.retryDelay < 100) {
+        return 'Retry Delay debe ser al menos 100ms';
+      }
+
+      if (params.backoffMultiplier && (params.backoffMultiplier < 1.0 || params.backoffMultiplier > 5.0)) {
+        return 'Backoff Multiplier debe estar entre 1.0 y 5.0';
+      }
+
       return null;
     },
   },
@@ -214,24 +246,161 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'transform-data': {
     type: 'transform-data',
     displayName: 'Transform Data',
-    description: 'Transforma datos usando expresiones',
+    description: 'Extrae, renombra y transforma campos de datos',
     category: 'data',
     parameters: [
       {
         name: 'Transformations',
         key: 'transformations',
-        type: 'key-value',
+        type: 'json',
         required: true,
-        description: 'Mapeo de campos: nuevo_campo -> expresión',
-        defaultValue: {},
+        description: 'Array de transformaciones a aplicar',
+        placeholder: JSON.stringify([
+          {
+            source: "body.name",
+            target: "userName",
+            operation: "extract"
+          },
+          {
+            source: "body.email",
+            target: "userEmail",
+            operation: "extract"
+          },
+          {
+            source: "body.id",
+            target: "userId",
+            operation: "extract"
+          }
+        ], null, 2),
+        defaultValue: [],
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.transformations || typeof params.transformations !== 'object') {
-        return 'Las transformaciones deben ser un objeto';
+      if (!params.transformations || !Array.isArray(params.transformations)) {
+        return 'Las transformaciones deben ser un array';
       }
-      if (Object.keys(params.transformations).length === 0) {
+      if (params.transformations.length === 0) {
         return 'Debes definir al menos una transformación';
+      }
+      // Validar cada transformación
+      for (const t of params.transformations) {
+        if (!t.source || !t.target || !t.operation) {
+          return 'Cada transformación debe tener source, target y operation';
+        }
+        const validOps = ['extract', 'rename', 'default', 'calculate', 'concat'];
+        if (!validOps.includes(t.operation)) {
+          return `Operación inválida: ${t.operation}. Debe ser una de: ${validOps.join(', ')}`;
+        }
+      }
+      return null;
+    },
+  },
+
+  'loop': {
+    type: 'loop',
+    displayName: 'Loop/ForEach',
+    description: 'Itera sobre un array y aplica operaciones',
+    category: 'control',
+    parameters: [
+      {
+        name: 'Array Source',
+        key: 'arraySource',
+        type: 'string',
+        required: true,
+        placeholder: 'body.users',
+        description: 'Path al array en el contexto (ej: body.users, items)',
+      },
+      {
+        name: 'Operation',
+        key: 'operation',
+        type: 'select',
+        required: true,
+        defaultValue: 'forEach',
+        options: ['forEach', 'map', 'filter'],
+        description: 'Tipo de operación a realizar',
+      },
+      {
+        name: 'Map Expression',
+        key: 'mapExpression',
+        type: 'string',
+        required: false,
+        placeholder: '{{item.name}}',
+        description: 'Para "map": expresión a aplicar a cada item (usa {{item}} y {{index}})',
+      },
+      {
+        name: 'Filter Expression',
+        key: 'filterExpr',
+        type: 'string',
+        required: false,
+        placeholder: '{{item.age}} > 18',
+        description: 'Para "filter": condición que debe cumplir cada item',
+      },
+      {
+        name: 'Item Variable',
+        key: 'itemVariable',
+        type: 'string',
+        required: false,
+        defaultValue: 'item',
+        placeholder: 'item',
+        description: 'Nombre de la variable para cada item (default: item)',
+      },
+      {
+        name: 'Index Variable',
+        key: 'indexVariable',
+        type: 'string',
+        required: false,
+        defaultValue: 'index',
+        placeholder: 'index',
+        description: 'Nombre de la variable para el índice (default: index)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.arraySource || params.arraySource.trim() === '') {
+        return 'El array source es requerido';
+      }
+      if (params.operation === 'map' && (!params.mapExpression || params.mapExpression.trim() === '')) {
+        return 'La expresión map es requerida para la operación "map"';
+      }
+      if (params.operation === 'filter' && (!params.filterExpr || params.filterExpr.trim() === '')) {
+        return 'La expresión filter es requerida para la operación "filter"';
+      }
+      return null;
+    },
+  },
+
+  'delay': {
+    type: 'delay',
+    displayName: 'Delay/Wait',
+    description: 'Pausa la ejecución por un tiempo determinado',
+    category: 'control',
+    parameters: [
+      {
+        name: 'Duration (ms)',
+        key: 'duration',
+        type: 'number',
+        required: true,
+        defaultValue: 1000,
+        placeholder: '1000',
+        description: 'Tiempo de espera en milisegundos (min: 100ms, max: 300000ms = 5min)',
+      },
+      {
+        name: 'Reason',
+        key: 'reason',
+        type: 'string',
+        required: false,
+        placeholder: 'Wait for API rate limit reset',
+        description: 'Descripción opcional del motivo del delay (para logging)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.duration || params.duration <= 0) {
+        return 'La duración debe ser mayor a 0ms';
+      }
+      if (params.duration > 300000) {
+        return 'La duración máxima es 300000ms (5 minutos)';
+      }
+      if (params.duration < 100) {
+        return 'La duración mínima es 100ms';
       }
       return null;
     },
@@ -274,15 +443,24 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'webhook-trigger': {
     type: 'webhook-trigger',
     displayName: 'Webhook Trigger',
-    description: 'Inicia el flow mediante webhook',
+    description: 'Recibe peticiones HTTP externas para iniciar el flow',
     category: 'triggers',
     parameters: [
       {
-        name: 'Webhook ID',
-        key: 'webhookId',
+        name: 'Validation Enabled',
+        key: 'validationEnabled',
+        type: 'boolean',
+        required: false,
+        defaultValue: false,
+        description: 'Habilitar validación de firma del webhook',
+      },
+      {
+        name: 'Secret',
+        key: 'secret',
         type: 'string',
         required: false,
-        description: 'ID del webhook (se genera automáticamente)',
+        placeholder: 'webhook-secret-key',
+        description: 'Secret para validar firma del webhook (opcional)',
       },
     ],
   },

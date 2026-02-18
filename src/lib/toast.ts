@@ -15,3 +15,19 @@ export function toastError(message: string) {
     color: "red",
   });
 }
+
+export function showToast(title: string, message: string, type: 'success' | 'error' | 'info' | 'warning') {
+  const colorMap = {
+    success: 'green',
+    error: 'red',
+    info: 'blue',
+    warning: 'yellow',
+  };
+  
+  showNotification({
+    title,
+    message,
+    color: colorMap[type],
+    autoClose: type === 'error' ? 10000 : 5000,
+  });
+}
