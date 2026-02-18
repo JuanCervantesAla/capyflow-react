@@ -253,7 +253,6 @@ export const CustomNode = memo(
           </div>
         )}
 
-        {/* Etiqueta INPUT en la parte superior */}
         {(data as NodeData).type !== 'manual-trigger' && (data as NodeData).category !== 'trigger' && (
           <div style={{
             ...handleLabel,
@@ -266,7 +265,6 @@ export const CustomNode = memo(
           </div>
         )}
 
-        {/* Handle de entrada (target) - solo si no es trigger */}
         {(data as NodeData).type !== 'manual-trigger' && (data as NodeData).category !== 'trigger' && (
           <Handle 
             type="target" 
@@ -305,7 +303,6 @@ export const CustomNode = memo(
           </div>
         </div>
 
-        {/* Handles de salida especiales para if-condition */}
         {(data as NodeData).type === 'if-condition' ? (
           <>
             <div style={{
@@ -344,7 +341,6 @@ export const CustomNode = memo(
           </>
         ) : (
           <>
-            {/* Etiqueta OUTPUT en la parte inferior */}
             <div style={{
               ...handleLabel,
               bottom: -20,

@@ -4,10 +4,13 @@ import { Sidebar } from "../components/SideBar/SideBar";
 import { FlowCanvas } from "../components/Flow/Canvas/FlowCanvas";
 import { ExecutionPanelWrapper } from "../components/Flow/Canvas/ExecutionPanelWrapper";
 import { Rightbar } from "../components/Rightbar/Rightbar";
+import { AIGenerateModal } from "../components/UI/AIGenerateModal";
 import { FlowContext } from "../components/Flow/context/FlowContext";
 import { useExecuteFlow } from "../hooks/mutations/Flow/useExecuteFlow";
 import { useSaveFlow } from "../hooks/mutations/Flow/useSaveFlow";
 import { useFlow } from "../hooks/useFlow";
+import { useAIGeneration } from "../hooks/useAIGeneration";
+import { toastSuccess } from "../lib/toast";
 import type { ExecutionResult } from "../hooks/mutations/Flow/useExecuteFlow";
 
 export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
@@ -17,12 +20,14 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
     useState<ExecutionResult | null>(null);
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [rightbarOpened, setRightbarOpened] = useState(false);
+  const [aiModalOpened, setAiModalOpened] = useState(false);
 
   const [ignoreNextSelection, setIgnoreNextSelection] = useState(false);
   const deselectAllRef = useRef<(() => void) | null>(null);
 
   const flowContext = useContext(FlowContext);
   const { data: flowData } = useFlow(flowId);
+  const { generateFlow, isGenerating } = useAIGeneration();
 
   const { mutateAsync: executeFlow, isPending: isExecuting } =
     useExecuteFlow({});
@@ -111,13 +116,40 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
     }
   };
 
+  const handleAIGenerate = async (description: string, apiKey?: string) => {
+    try {
+      await generateFlow(description, apiKey, (generatedFlow) => {
+        // Cargar el flujo generado en el canvas
+        if (flowContext?.loadFlowData) {
+          flowContext.loadFlowData(
+            generatedFlow.nodes || [],
+            generatedFlow.edges || []
+          );
+          toastSuccess(
+            `Flujo "${generatedFlow.name}" generado. No olvides guardarlo.`
+          );
+        }
+      });
+    } catch (error) {
+      console.error('Error generando flujo:', error);
+    }
+  };
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <AIGenerateModal
+        opened={aiModalOpened}
+        onClose={() => setAiModalOpened(false)}
+        onGenerate={handleAIGenerate}
+        loading={isGenerating}
+      />
+      
       <HeaderBar
         workflowName={flowName}
         onOpenFlowSelector={onOpenFlowSelector}
         onSave={handleSave}
         onRun={handleExecute}
+        onAIGenerate={() => setAiModalOpened(true)}
       />
 
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
