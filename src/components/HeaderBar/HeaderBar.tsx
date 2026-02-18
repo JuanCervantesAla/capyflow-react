@@ -21,10 +21,11 @@ import {
   IconSun,
   IconPencil,
   IconFolderOpen,
+  IconSparkles,
 } from "@tabler/icons-react";
 import { ActionButton } from "../UI/ActionButton";
 import { IconButton } from "../UI/IconButton";
-import { useTheme } from "../../theme/ThemeContext";
+import { useTheme, useThemeActions } from "../../theme/ThemeContext";
 import { useUsers } from "../../hooks/useUsers";
 import { useMediaQuery } from "@mantine/hooks";
 import miLogo from '../../assets/logo2.png';
@@ -37,6 +38,7 @@ interface HeaderBarProps {
   onExport?: () => void;
   onSettings?: () => void;
   onOpenFlowSelector?: () => void;
+  onAIGenerate?: () => void;
 }
 
 export function HeaderBar({
@@ -46,8 +48,10 @@ export function HeaderBar({
   onExport = () => {},
   onSettings = () => {},
   onOpenFlowSelector,
+  onAIGenerate,
 }: HeaderBarProps) {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { theme } = useTheme();
+  const { toggleTheme, isDark } = useThemeActions();
   const { logout, user, isLoading } = useUsers();
   const [opened, setOpened] = useState(false);
 
@@ -191,6 +195,16 @@ export function HeaderBar({
           </UnstyledButton>
         </Group>
         <Group gap={8} wrap="nowrap">
+          {onAIGenerate && (
+            <Tooltip label="Generar con IA" withArrow>
+              {renderActionButton(
+                <IconSparkles size={16} />,
+                "IA",
+                onAIGenerate,
+                "primary"
+              )}
+            </Tooltip>
+          )}
           {onOpenFlowSelector && (
             <Tooltip label="Cambiar flujo" withArrow>
               {renderActionButton(

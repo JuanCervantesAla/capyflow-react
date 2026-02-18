@@ -1,170 +1,3 @@
-import { Text, Group } from "@mantine/core";
-import { Modal, Button } from "@mantine/core";
-import { Handle, Position } from "@xyflow/react";
-import { IconTrash, IconCopy } from "@tabler/icons-react";
-import { useEffect, useState, useCallback, memo, useRef, useMemo } from "react";
-import { useFlowActions } from "../Flow/context/FlowActionsContext";
-import type { NodeProps } from "@xyflow/react";
-import type { NodeData } from "../../components/Flow/types/NodeTypes";
-import { getIconComponent } from "../../utils/iconLoader";
-import { getThemeColors } from "../../theme/themeCache";
-import { NodeExecutionStatus } from "./NodeExecutionStatus";
-
-if (typeof window !== "undefined" && !document.getElementById("node-styles")) {
-  const style = document.createElement("style");
-  style.id = "node-styles";
-  style.innerHTML = `
-    @keyframes popOut {
-      0% { opacity: 0; transform: translate(10px, -10px) scale(0.4); }
-      60% { opacity: 1; transform: translate(-3px, 3px) scale(1.15); }
-      100% { transform: translate(0, 0) scale(1); }
-    }
-    @keyframes handlePulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-      50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
-    }
-    @keyframes handlePulseGreen {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-      50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
-    }
-    .delete-appear { animation: popOut 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-    .delete-hide { opacity: 0; transform: scale(0.6); transition: 0.2s ease; pointer-events: none; }
-    .node-action-btn { transition: transform 0.15s ease; }
-    .node-action-btn:hover { transform: scale(1.14) !important; }
-    .handle-target:hover { transform: scale(1.3) !important; animation: handlePulse 1.5s infinite !important; }
-    .handle-source:hover { transform: scale(1.3) !important; animation: handlePulseGreen 1.5s infinite !important; }
-    .node-container:hover .handle-label { opacity: 1; }
-  `;
-  document.head.appendChild(style);
-}
-
-const iconCache = new Map();
-function getCachedIcon(iconName: string) {
-  if (!iconCache.has(iconName)) {
-    iconCache.set(iconName, getIconComponent(iconName));
-  }
-  return iconCache.get(iconName);
-}
-
-const stylesCache = new Map<string, any>();
-
-const getStyles = (
-  selected: boolean,
-  status: string,
-  nodeColor?: string
-) => {
-  const key = `${selected}-${status}-${nodeColor || "default"}`;
-
-  if (stylesCache.has(key)) {
-    return stylesCache.get(key);
-  }
-
-  const colors = getThemeColors();
-  const finalColor = nodeColor || colors.edgeColor;
-
-  let borderColor = colors.borderPrimary;
-  let topBarColor = colors.bgTertiary;
-
-  if (status === "running") {
-    borderColor = "#3b82f6";
-    topBarColor = "#3b82f6";
-  } else if (status === "success") {
-    borderColor = "#10b981";
-    topBarColor = "#10b981";
-  } else if (status === "error") {
-    borderColor = "#ef4444";
-    topBarColor = "#ef4444";
-  }
-
-  if (selected) {
-    borderColor = colors.edgeSelectedColor;
-  }
-
-  const styles = {
-    node: {
-      borderRadius: 10,
-      overflow: "hidden",
-      border: selected
-        ? `2px solid ${colors.edgeSelectedColor}`
-        : `1px solid ${borderColor}`,
-      boxShadow: selected
-        ? "0 0 12px rgba(59,130,246,0.35)"
-        : status === "running"
-        ? "0 0 8px rgba(59,130,246,0.3)"
-        : "0 1px 3px rgba(0,0,0,0.50)",
-      background: selected ? colors.bgPrimary : colors.bgSecondary,
-    },
-    topBar: {
-      height: 6,
-      background: selected ? colors.edgeSelectedColor : topBarColor,
-    },
-    icon: {
-      width: 40,
-      height: 40,
-      borderRadius: "50%",
-      background: finalColor,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-    },
-    content: {
-      padding: 12,
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: 8,
-    },
-    mainContent: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-    },
-    handleTarget: {
-      width: 14,
-      height: 14,
-      background: "#3b82f6",
-      borderRadius: "50%",
-      border: `2px solid ${colors.bgPrimary}`,
-      transition: "all 0.2s ease",
-    },
-    handleSource: {
-      width: 14,
-      height: 14,
-      background: "#10b981",
-      borderRadius: "50%",
-      border: `2px solid ${colors.bgPrimary}`,
-      transition: "all 0.2s ease",
-    },
-    handleLabel: {
-      position: "absolute" as const,
-      fontSize: "9px",
-      fontWeight: 600,
-      textTransform: "uppercase" as const,
-      letterSpacing: "0.5px",
-      pointerEvents: "none" as const,
-      opacity: 0.7,
-      transition: "opacity 0.2s ease",
-    },
-    actionBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: "50%",
-      background: colors.bgTertiary,
-      border: `1px solid ${colors.borderPrimary}`,
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      cursor: "pointer",
-      zIndex: 999,
-      boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
-    },
-    colors,
-  };
-
-  stylesCache.set(key, styles);
-  return styles;
-};
-
 export const CustomNode = memo(function CustomNode({
   id,
   data,
@@ -223,8 +56,12 @@ export const CustomNode = memo(function CustomNode({
     [duplicateNode, id]
   );
 
+  const nodeData = data as NodeData;
+
   return (
     <div style={{ width: 240, position: "relative" }} className="node-container">
+      
+      {/* ACTION BUTTONS */}
       {showDelete && (
         <div
           style={{
@@ -239,19 +76,39 @@ export const CustomNode = memo(function CustomNode({
           <div style={actionBtn} onClick={handleDuplicate}>
             <IconCopy size={18} color={colors.textPrimary} />
           </div>
+
           <div style={actionBtn} onClick={handleDelete}>
             <IconTrash size={18} color={colors.errorColor} />
           </div>
         </div>
       )}
 
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={handleTarget}
-        className="handle-target"
-      />
+      {/* INPUT HANDLE (condicional para triggers) */}
+      {nodeData.type !== "manual-trigger" &&
+        nodeData.category !== "trigger" && (
+          <>
+            <div
+              style={{
+                ...handleLabel,
+                top: -18,
+                left: "50%",
+                transform: "translateX(-50%)",
+                color: "#3b82f6",
+              }}
+            >
+              ▼ INPUT
+            </div>
 
+            <Handle
+              type="target"
+              position={Position.Top}
+              style={handleTarget}
+              className="handle-target"
+            />
+          </>
+        )}
+
+      {/* NODE BODY */}
       <div style={node}>
         <div style={topBar} />
         <div style={content}>
@@ -259,24 +116,85 @@ export const CustomNode = memo(function CustomNode({
             <div style={icon}>
               <Icon size={22} color={colors.textPrimary} />
             </div>
-            <Text size="sm">{(data as NodeData).label}</Text>
+            <Text size="sm">{nodeData.label}</Text>
           </div>
 
-          {(data as NodeData).executionStatus &&
-            (data as NodeData).executionStatus !== "idle" && (
+          {nodeData.executionStatus &&
+            nodeData.executionStatus !== "idle" && (
               <NodeExecutionStatus
-                status={(data as NodeData).executionStatus as any}
+                status={nodeData.executionStatus as any}
               />
             )}
         </div>
-      </div>
 
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={handleSource}
-        className="handle-source"
-      />
+        {/* OUTPUTS */}
+        {nodeData.type === "if-condition" ? (
+          <>
+            {/* TRUE */}
+            <div
+              style={{
+                ...handleLabel,
+                bottom: -20,
+                left: "35%",
+                transform: "translateX(-50%)",
+                color: "#10b981",
+              }}
+            >
+              ▼ TRUE
+            </div>
+
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              id="true"
+              style={{ ...handleSource, left: "35%", background: "#10b981" }}
+              className="handle-source"
+            />
+
+            {/* FALSE */}
+            <div
+              style={{
+                ...handleLabel,
+                bottom: -20,
+                left: "65%",
+                transform: "translateX(-50%)",
+                color: "#f43f5e",
+              }}
+            >
+              ▼ FALSE
+            </div>
+
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              id="false"
+              style={{ ...handleSource, left: "65%", background: "#f43f5e" }}
+              className="handle-source"
+            />
+          </>
+        ) : (
+          <>
+            <div
+              style={{
+                ...handleLabel,
+                bottom: -20,
+                left: "50%",
+                transform: "translateX(-50%)",
+                color: "#10b981",
+              }}
+            >
+              ▼ OUTPUT
+            </div>
+
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              style={handleSource}
+              className="handle-source"
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 });
