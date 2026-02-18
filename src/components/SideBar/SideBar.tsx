@@ -38,10 +38,15 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
     }, {} as Record<string, typeof nodeTypes>);
   }, [nodeTypes]);
 
-  const addAndCenter = (nodeData: any) =>
-    addNode(nodeData, "custom", (node) => {
-      reactFlow.setCenter(node.position.x, node.position.y, { zoom: 1 });
-    });
+  const addAndCenter = (nodeData: any) => {
+    addNode(
+      nodeData, // 👈 ya trae color correcto
+      "custom",
+      (node) => {
+        reactFlow.setCenter(node.position.x, node.position.y, { zoom: 1 });
+      }
+    );
+  };
 
   /* ------------------ CONTENIDO ------------------ */
   const content = () => {
@@ -103,7 +108,26 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
                     return (
                       <ActionButton
                         key={nodeType.id}
+                        // icon={
+                        //   <Box style={{ position: "relative" }}>
+                        //     <Box
+                        //       style={{
+                        //         position: "absolute",
+                        //         top: "50%",
+                        //         left: "50%",
+                        //         transform: "translate(-50%, -50%)",
+                        //         width: 24,
+                        //         height: 24,
+                        //         borderRadius: "50%",
+                        //         backgroundColor: nodeType.color,
+                        //         zIndex: 0,
+                        //       }}
+                        //     />
+                        //     <Icon size={16} style={{ position: "relative", zIndex: 1 }} />
+                        //   </Box>
+                        // }
                         icon={<Icon size={16} />}
+                        hoverColor={nodeType.color}
                         onClick={() =>
                           addAndCenter({
                             label: nodeType.name,
