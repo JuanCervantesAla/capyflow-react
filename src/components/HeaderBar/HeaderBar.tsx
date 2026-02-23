@@ -22,6 +22,8 @@ import {
   IconPencil,
   IconFolderOpen,
   IconSparkles,
+  IconWand,
+  IconKey,
 } from "@tabler/icons-react";
 import { ActionButton } from "../UI/ActionButton";
 import { IconButton } from "../UI/IconButton";
@@ -39,6 +41,8 @@ interface HeaderBarProps {
   onSettings?: () => void;
   onOpenFlowSelector?: () => void;
   onAIGenerate?: () => void;
+  onAIRepair?: () => void;
+  onOpenAPIKeySettings?: () => void;
 }
 
 export function HeaderBar({
@@ -49,6 +53,8 @@ export function HeaderBar({
   onSettings = () => {},
   onOpenFlowSelector,
   onAIGenerate,
+  onAIRepair,
+  onOpenAPIKeySettings,
 }: HeaderBarProps) {
   const { theme } = useTheme();
   const { toggleTheme, isDark } = useThemeActions();
@@ -205,6 +211,16 @@ export function HeaderBar({
               )}
             </Tooltip>
           )}
+          {onAIRepair && (
+            <Tooltip label="Reparar flujo con IA" withArrow>
+              {renderActionButton(
+                <IconWand size={16} />,
+                "Reparar",
+                onAIRepair,
+                "secondary"
+              )}
+            </Tooltip>
+          )}
           {onOpenFlowSelector && (
             <Tooltip label="Cambiar flujo" withArrow>
               {renderActionButton(
@@ -296,6 +312,14 @@ export function HeaderBar({
               <Menu.Item leftSection={<IconUser size={14} />}>
                 Profile
               </Menu.Item>
+              {onOpenAPIKeySettings && (
+                <Menu.Item 
+                  leftSection={<IconKey size={14} />}
+                  onClick={onOpenAPIKeySettings}
+                >
+                  API Key Settings
+                </Menu.Item>
+              )}
               <Menu.Item leftSection={<IconPalette size={14} />}>
                 Theme
               </Menu.Item>

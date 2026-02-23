@@ -6,6 +6,20 @@ export interface AIGenerateFlowRequest {
   apiKey?: string;
 }
 
+export interface AIRepairFlowRequest {
+  flow: any;
+  issues?: string;
+  apiKey?: string;
+}
+
+export interface AIRepairFlowResponse {
+  success: boolean;
+  flow?: AIGeneratedFlow;
+  fixes?: string[];
+  error?: string;
+  rawResponse?: string;
+}
+
 export interface AIGeneratedFlow {
   flowName: string;
   flowDescription: string;
@@ -20,15 +34,10 @@ export interface AIGenerateFlowResponse {
   rawResponse?: string;
 }
 
-/**
- * Genera un flujo usando IA (OpenAI/ChatGPT)
- * Esta puede ser una llamada directa o a través de tu backend
- */
 export async function generateFlowWithAI(
   request: AIGenerateFlowRequest
 ): Promise<AIGenerateFlowResponse> {
   try {
-    // Opción 1: Llamar a tu backend que actúa como proxy
     const response = await api.post<AIGenerateFlowResponse>(
       '/ai/generate-flow',
       request
@@ -43,17 +52,12 @@ export async function generateFlowWithAI(
   }
 }
 
-/**
- * Genera un flujo usando Google Gemini API desde el frontend
- * Gemini ofrece tier gratuito generoso (15 requests/min) sin tarjeta de crédito
- */
 export async function generateFlowWithOpenAI(
   description: string,
   systemPrompt: string,
   apiKey: string
 ): Promise<AIGenerateFlowResponse> {
   try {
-    // Combinar system prompt con descripción para Gemini
     const fullPrompt = `${systemPrompt}\n\nDescripción del usuario:\n${description}\n\nResponde SOLO con JSON válido, sin texto adicional.`;
 
     const response = await fetch(
@@ -93,10 +97,8 @@ export async function generateFlowWithOpenAI(
       throw new Error('No content in Gemini response');
     }
 
-    // Intentar parsear el JSON
     let flow: AIGeneratedFlow;
     try {
-      // Limpiar el contenido si viene con markdown
       const cleanContent = content
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
@@ -107,7 +109,6 @@ export async function generateFlowWithOpenAI(
       throw new Error('Failed to parse AI-generated flow');
     }
 
-    // Validar estructura básica
     if (!flow.nodes || !Array.isArray(flow.nodes)) {
       throw new Error('Invalid flow structure: missing nodes array');
     }
@@ -130,21 +131,16 @@ export async function generateFlowWithOpenAI(
   }
 }
 
-/**
- * Valida que el flujo generado sea válido para CapyFlow
- */
 export function validateGeneratedFlow(flow: AIGeneratedFlow): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
 
-  // Validar que hay nodos
   if (!flow.nodes || flow.nodes.length === 0) {
     errors.push('El flujo no tiene nodos');
   }
 
-  // Validar que el primer nodo es un trigger
   if (flow.nodes && flow.nodes.length > 0) {
     const firstNode = flow.nodes[0];
     const triggerTypes = ['manual-trigger', 'webhook-trigger'];
@@ -153,7 +149,6 @@ export function validateGeneratedFlow(flow: AIGeneratedFlow): {
     }
   }
 
-  // Validar IDs únicos de nodos
   if (flow.nodes) {
     const nodeIds = flow.nodes.map((n) => n.id);
     const uniqueIds = new Set(nodeIds);
@@ -162,7 +157,6 @@ export function validateGeneratedFlow(flow: AIGeneratedFlow): {
     }
   }
 
-  // Validar edges
   if (flow.edges) {
     const nodeIds = new Set(flow.nodes?.map((n) => n.id) || []);
     for (const edge of flow.edges) {
@@ -180,3 +174,22 @@ export function validateGeneratedFlow(flow: AIGeneratedFlow): {
     errors,
   };
 }
+
+export async function repairFlowWithAI(
+  request: AIRepairFlowRequest
+): Promise<AIRepairFlowResponse> {
+  try {
+    const response = await api.post<AIRepairFlowResponse>(
+      '/ai/repair-flow',
+      request
+    );
+    return response;
+  } catch (error: any) {
+    console.error('Error repairing flow with AI:', error);
+    return {
+      success: false,
+      error: error.message || error.data?.error || 'Failed to repair flow with AI',
+    };
+  }
+}
+

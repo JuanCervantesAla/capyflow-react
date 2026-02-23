@@ -22,3 +22,13 @@ export const registerRequest = (
 
 export const getMeRequest = () =>
   api.get<User>('/me');
+
+export const getGeminiAPIKey = () =>
+  api.get<{ apiKey: string | null; hasKey: boolean }>('/user/api-key');
+
+export const saveGeminiAPIKey = (apiKey: string) =>
+  api.post<{ message: string; success: boolean }>('/user/api-key', { apiKey });
+
+export const deleteGeminiAPIKey = () =>
+  api.delete<{ message: string; success: boolean }>('/user/api-key');
+
