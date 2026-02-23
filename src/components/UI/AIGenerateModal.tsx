@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Modal,
   Stack,
@@ -17,13 +17,16 @@ import {
   IconAlertCircle,
   IconKey,
   IconSettings,
+  IconCheck,
 } from '@tabler/icons-react';
 import { useTheme } from '../../theme/ThemeContext';
+import { getGeminiAPIKey } from '../../api/User/users.api';
 
 interface AIGenerateModalProps {
   opened: boolean;
   onClose: () => void;
   onGenerate: (description: string, apiKey?: string) => Promise<void>;
+  onOpenSettings?: () => void;
   loading?: boolean;
 }
 
@@ -31,6 +34,7 @@ export function AIGenerateModal({
   opened,
   onClose,
   onGenerate,
+  onOpenSettings,
   loading = false,
 }: AIGenerateModalProps) {
   const { theme } = useTheme();
@@ -38,6 +42,26 @@ export function AIGenerateModal({
   const [useCustomKey, setUseCustomKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [hasStoredKey, setHasStoredKey] = useState(false);
+  const [checkingKey, setCheckingKey] = useState(false);
+
+  useEffect(() => {
+    if (opened) {
+      checkForStoredKey();
+    }
+  }, [opened]);
+
+  const checkForStoredKey = async () => {
+    setCheckingKey(true);
+    try {
+      const response = await getGeminiAPIKey();
+      setHasStoredKey(response.hasKey);
+    } catch (error) {
+      console.error('Error checking for API key:', error);
+    } finally {
+      setCheckingKey(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!description.trim()) return;
@@ -88,7 +112,67 @@ export function AIGenerateModal({
       }}
     >
       <Stack gap="md">
-        {/* Información */}
+        {checkingKey ? (
+          <Alert icon={<Loader size={16} />} color="blue" variant="light">
+            <Text size="sm">Verificando configuración...</Text>
+          </Alert>
+        ) : hasStoredKey ? (
+          <Alert
+            icon={<IconCheck size={16} />}
+            title="API Key configurada"
+            color="green"
+            variant="light"
+          >
+            <Group justify="space-between">
+              <Text size="sm">
+                Usarás tu API key guardada. No necesitas ingresar una nueva.
+              </Text>
+              {onOpenSettings && (
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  onClick={() => {
+                    onOpenSettings();
+                    handleClose();
+                  }}
+                >
+                  Cambiar
+                </Button>
+              )}
+            </Group>
+          </Alert>
+        ) : (
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Configura tu API key"
+            color="yellow"
+            variant="light"
+          >
+            <Stack gap="xs">
+              <Text size="sm">
+                Para generar flujos con IA, necesitas una API key de Google Gemini
+                (100% gratis).
+              </Text>
+              {onOpenSettings && (
+                <Button
+                  size="xs"
+                  variant="light"
+                  leftSection={<IconKey size={14} />}
+                  onClick={() => {
+                    onOpenSettings();
+                    handleClose();
+                  }}
+                >
+                  Configurar API Key permanentemente
+                </Button>
+              )}
+              <Text size="xs" c="dimmed">
+                O usa una key temporal en las opciones avanzadas ↓
+              </Text>
+            </Stack>
+          </Alert>
+        )}
+
         <Alert
           icon={<IconSparkles size={16} />}
           title="Describe tu flujo en lenguaje natural"
@@ -101,7 +185,6 @@ export function AIGenerateModal({
           </Text>
         </Alert>
 
-        {/* Campo principal de descripción */}
         <Textarea
           label="¿Qué flujo quieres crear?"
           placeholder="Ejemplo: Quiero un flujo que reciba datos por webhook, valide si el status es 'success' y registre el resultado..."
@@ -119,7 +202,6 @@ export function AIGenerateModal({
           }}
         />
 
-        {/* Ejemplos */}
         <Stack gap="xs">
           <Text size="sm" fw={500} c="dimmed">
             Ejemplos de descripciones:
@@ -142,7 +224,6 @@ export function AIGenerateModal({
           ))}
         </Stack>
 
-        {/* Opciones avanzadas */}
         <Button
           variant="subtle"
           size="xs"
@@ -216,7 +297,6 @@ export function AIGenerateModal({
           </Stack>
         </Collapse>
 
-        {/* Botones de acción */}
         <Group justify="flex-end" mt="md">
           <Button variant="subtle" onClick={handleClose} disabled={loading}>
             Cancelar
@@ -227,7 +307,10 @@ export function AIGenerateModal({
             }
             onClick={handleGenerate}
             disabled={
-              !description.trim() || (useCustomKey && !apiKey.trim()) || loading
+              !description.trim() || 
+              (!hasStoredKey && !useCustomKey) ||
+              (useCustomKey && !apiKey.trim()) || 
+              loading
             }
             style={{
               background: theme.colors.accent.primary,
