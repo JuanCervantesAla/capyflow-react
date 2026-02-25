@@ -464,6 +464,431 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
       },
     ],
   },
+
+  'gemini': {
+    type: 'gemini',
+    displayName: 'Gemini',
+    description: 'Interactúa con Google Gemini para generar texto, análisis y respuestas inteligentes',
+    category: 'ai',
+    parameters: [
+      {
+        name: 'Prompt',
+        key: 'prompt',
+        type: 'textarea',
+        required: true,
+        placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
+        description: 'El prompt o pregunta para el modelo Gemini',
+      },
+      {
+        name: 'API Key',
+        key: 'apiKey',
+        type: 'string',
+        required: false,
+        placeholder: 'Deja vacío para usar tu API key guardada',
+        description: 'API Key de Google Gemini (opcional si ya configuraste una en tu perfil)',
+      },
+      {
+        name: 'Temperature',
+        key: 'temperature',
+        type: 'number',
+        required: false,
+        defaultValue: 0.7,
+        placeholder: '0.7',
+        description: 'Creatividad de las respuestas (0 = determinístico, 2 = muy creativo)',
+      },
+      {
+        name: 'Max Tokens',
+        key: 'maxTokens',
+        type: 'number',
+        required: false,
+        defaultValue: 1024,
+        placeholder: '1024',
+        description: 'Máximo número de tokens en la respuesta (1-8192)',
+      },
+      {
+        name: 'System Prompt',
+        key: 'systemPrompt',
+        type: 'textarea',
+        required: false,
+        placeholder: 'Eres un asistente experto en...',
+        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.prompt || params.prompt.trim() === '') {
+        return 'El prompt es requerido';
+      }
+      if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 2)) {
+        return 'Temperature debe estar entre 0 y 2';
+      }
+      if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 8192)) {
+        return 'Max Tokens debe estar entre 1 y 8192';
+      }
+      return null;
+    },
+  },
+
+  'gpt': {
+    type: 'gpt',
+    displayName: 'GPT',
+    description: 'Usa OpenAI GPT-4 para generación de texto, reasoning y tareas complejas',
+    category: 'ai',
+    parameters: [
+      {
+        name: 'Prompt',
+        key: 'prompt',
+        type: 'textarea',
+        required: true,
+        placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
+        description: 'El prompt o pregunta para el modelo GPT',
+      },
+      {
+        name: 'API Key',
+        key: 'apiKey',
+        type: 'string',
+        required: true,
+        placeholder: 'sk-...',
+        description: 'API Key de OpenAI (obtén una en https://platform.openai.com)',
+      },
+      {
+        name: 'Model',
+        key: 'model',
+        type: 'select',
+        required: false,
+        defaultValue: 'gpt-4o-mini',
+        options: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+        description: 'Modelo de GPT a utilizar',
+      },
+      {
+        name: 'Temperature',
+        key: 'temperature',
+        type: 'number',
+        required: false,
+        defaultValue: 0.7,
+        placeholder: '0.7',
+        description: 'Creatividad de las respuestas (0 = determinístico, 2 = muy creativo)',
+      },
+      {
+        name: 'Max Tokens',
+        key: 'maxTokens',
+        type: 'number',
+        required: false,
+        defaultValue: 1024,
+        placeholder: '1024',
+        description: 'Máximo número de tokens en la respuesta (1-16384)',
+      },
+      {
+        name: 'System Prompt',
+        key: 'systemPrompt',
+        type: 'textarea',
+        required: false,
+        placeholder: 'You are a helpful assistant...',
+        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.prompt || params.prompt.trim() === '') {
+        return 'El prompt es requerido';
+      }
+      if (!params.apiKey || params.apiKey.trim() === '') {
+        return 'La API Key de OpenAI es requerida';
+      }
+      if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 2)) {
+        return 'Temperature debe estar entre 0 y 2';
+      }
+      if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 16384)) {
+        return 'Max Tokens debe estar entre 1 y 16384';
+      }
+      return null;
+    },
+  },
+
+  'claude': {
+    type: 'claude',
+    displayName: 'Claude',
+    description: 'Anthropic Claude para análisis profundo, escritura y tareas de razonamiento',
+    category: 'ai',
+    parameters: [
+      {
+        name: 'Prompt',
+        key: 'prompt',
+        type: 'textarea',
+        required: true,
+        placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
+        description: 'El prompt o pregunta para el modelo Claude',
+      },
+      {
+        name: 'API Key',
+        key: 'apiKey',
+        type: 'string',
+        required: true,
+        placeholder: 'sk-ant-...',
+        description: 'API Key de Anthropic (obtén una en https://console.anthropic.com)',
+      },
+      {
+        name: 'Model',
+        key: 'model',
+        type: 'select',
+        required: false,
+        defaultValue: 'claude-3-5-sonnet-20241022',
+        options: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+        description: 'Modelo de Claude a utilizar',
+      },
+      {
+        name: 'Temperature',
+        key: 'temperature',
+        type: 'number',
+        required: false,
+        defaultValue: 0.7,
+        placeholder: '0.7',
+        description: 'Creatividad de las respuestas (0 = determinístico, 1 = muy creativo)',
+      },
+      {
+        name: 'Max Tokens',
+        key: 'maxTokens',
+        type: 'number',
+        required: false,
+        defaultValue: 1024,
+        placeholder: '1024',
+        description: 'Máximo número de tokens en la respuesta (1-8192)',
+      },
+      {
+        name: 'System Prompt',
+        key: 'systemPrompt',
+        type: 'textarea',
+        required: false,
+        placeholder: 'You are a helpful assistant...',
+        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.prompt || params.prompt.trim() === '') {
+        return 'El prompt es requerido';
+      }
+      if (!params.apiKey || params.apiKey.trim() === '') {
+        return 'La API Key de Anthropic es requerida';
+      }
+      if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 1)) {
+        return 'Temperature debe estar entre 0 y 1 para Claude';
+      }
+      if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 8192)) {
+        return 'Max Tokens debe estar entre 1 y 8192';
+      }
+      return null;
+    },
+  },
+
+  'filter': {
+    type: 'filter',
+    displayName: 'Filter',
+    description: 'Filtra arrays según condiciones específicas',
+    category: 'data',
+    parameters: [
+      {
+        name: 'Input Data',
+        key: 'inputData',
+        type: 'json',
+        required: true,
+        placeholder: '[{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]',
+        description: 'Array de datos a filtrar',
+      },
+      {
+        name: 'Mode',
+        key: 'mode',
+        type: 'select',
+        required: true,
+        defaultValue: 'keep',
+        options: ['keep', 'remove'],
+        description: 'Mantener o remover elementos que coincidan',
+      },
+      {
+        name: 'Field',
+        key: 'field',
+        type: 'string',
+        required: false,
+        placeholder: 'age',
+        description: 'Campo a evaluar (dejar vacío para evaluar el elemento completo)',
+      },
+      {
+        name: 'Operator',
+        key: 'operator',
+        type: 'select',
+        required: true,
+        defaultValue: 'equals',
+        options: ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith', 'greaterThan', 'lessThan', 'greaterOrEqual', 'lessOrEqual', 'isEmpty', 'isNotEmpty'],
+        description: 'Operador de comparación',
+      },
+      {
+        name: 'Value',
+        key: 'value',
+        type: 'string',
+        required: false,
+        placeholder: '25',
+        description: 'Valor con el que comparar',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.inputData) {
+        return 'Input Data es requerido';
+      }
+      if (!params.operator) {
+        return 'Operator es requerido';
+      }
+      return null;
+    },
+  },
+
+  'split': {
+    type: 'split',
+    displayName: 'Split',
+    description: 'Divide arrays en elementos o lotes individuales',
+    category: 'data',
+    parameters: [
+      {
+        name: 'Input Data',
+        key: 'inputData',
+        type: 'json',
+        required: true,
+        placeholder: '[1, 2, 3, 4, 5]',
+        description: 'Array de datos a dividir',
+      },
+      {
+        name: 'Mode',
+        key: 'mode',
+        type: 'select',
+        required: true,
+        defaultValue: 'items',
+        options: ['items', 'batches', 'field'],
+        description: 'Tipo de división: items (individual), batches (lotes), field (extraer campo)',
+      },
+      {
+        name: 'Batch Size',
+        key: 'batchSize',
+        type: 'number',
+        required: false,
+        defaultValue: 1,
+        placeholder: '1',
+        description: 'Tamaño de cada lote (solo para mode=batches)',
+      },
+      {
+        name: 'Field',
+        key: 'field',
+        type: 'string',
+        required: false,
+        placeholder: 'id',
+        description: 'Campo a extraer de cada elemento (solo para mode=field)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.inputData) {
+        return 'Input Data es requerido';
+      }
+      if (!params.mode) {
+        return 'Mode es requerido';
+      }
+      if (params.mode === 'batches' && (!params.batchSize || params.batchSize < 1)) {
+        return 'Batch Size debe ser al menos 1 para mode=batches';
+      }
+      if (params.mode === 'field' && !params.field) {
+        return 'Field es requerido para mode=field';
+      }
+      return null;
+    },
+  },
+
+  'merge': {
+    type: 'merge',
+    displayName: 'Merge',
+    description: 'Combina múltiples entradas en una salida unificada',
+    category: 'data',
+    parameters: [
+      {
+        name: 'Input 1',
+        key: 'input1',
+        type: 'json',
+        required: true,
+        placeholder: '[1, 2, 3]',
+        description: 'Primera entrada a combinar',
+      },
+      {
+        name: 'Input 2',
+        key: 'input2',
+        type: 'json',
+        required: true,
+        placeholder: '[4, 5, 6]',
+        description: 'Segunda entrada a combinar',
+      },
+      {
+        name: 'Mode',
+        key: 'mode',
+        type: 'select',
+        required: true,
+        defaultValue: 'append',
+        options: ['append', 'combine', 'merge'],
+        description: 'Tipo de combinación: append (unir arrays), combine (objeto con entradas), merge (fusionar objetos)',
+      },
+      {
+        name: 'Input 3',
+        key: 'input3',
+        type: 'json',
+        required: false,
+        placeholder: '[7, 8, 9]',
+        description: 'Tercera entrada (opcional)',
+      },
+      {
+        name: 'Input 4',
+        key: 'input4',
+        type: 'json',
+        required: false,
+        placeholder: '[10, 11, 12]',
+        description: 'Cuarta entrada (opcional)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.input1) {
+        return 'Input 1 es requerido';
+      }
+      if (!params.input2) {
+        return 'Input 2 es requerido';
+      }
+      if (!params.mode) {
+        return 'Mode es requerido';
+      }
+      return null;
+    },
+  },
+
+  'function': {
+    type: 'function',
+    displayName: 'Function',
+    description: 'Ejecuta código JavaScript personalizado para transformaciones complejas',
+    category: 'data',
+    parameters: [
+      {
+        name: 'Input Data',
+        key: 'inputData',
+        type: 'json',
+        required: false,
+        placeholder: '{"key": "value"}',
+        description: 'Datos de entrada (accesibles como "input" en el código)',
+      },
+      {
+        name: 'JavaScript Code',
+        key: 'code',
+        type: 'textarea',
+        required: true,
+        defaultValue: 'return input;',
+        placeholder: '// Transforma los datos\nreturn input.map(x => x * 2);',
+        description: 'Código JavaScript. Usa "input" para los datos de entrada, "context" para el contexto del flow. Debe retornar un valor.',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.code || params.code.trim() === '') {
+        return 'El código JavaScript es requerido';
+      }
+      return null;
+    },
+  },
 };
 
 export function getNodeSchema(nodeType: string): NodeTypeSchema | null {

@@ -244,9 +244,19 @@ function FlowCanvasComponent({
         <FlowInternals />
 
         <MemoBackground
-          gap={20}
+          variant="lines"
+          gap={50}
           size={1}
-          color="#CECEC8"
+          color="#2d343608"
+          lineWidth={1}
+        />
+        
+        <MemoBackground
+          variant="lines"
+          gap={250}
+          size={1}
+          color="#2d343612"
+          lineWidth={1.5}
         />
 
         <MemoPanel position="top-left">

@@ -35,7 +35,7 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
     }, {} as Record<string, typeof nodeTypes>);
   }, [nodeTypes]);
 
-  const categoryOrder = ["trigger", "data", "io", "logic", "control"];
+  const categoryOrder = ["trigger", "ai", "data", "io", "logic", "control"];
   const sortedCategories = useMemo(() => {
     return Object.entries(groupedNodeTypes).sort((a, b) => {
       const indexA = categoryOrder.indexOf(a[0].toLowerCase());
