@@ -219,16 +219,6 @@ export const CustomNode = memo(
       }
     }, [selected, showDelete]);
 
-    const handleDelete = useCallback(() => {
-      deleteNode(id as string);
-      setConfirmOpen(false);
-    }, [deleteNode, id]);
-
-    const handleDuplicate = useCallback((e: React.MouseEvent) => {
-      e.stopPropagation();
-      duplicateNode(id as string);
-    }, [duplicateNode, id]);
-
     const handleOpenConfirm = useCallback((e: React.MouseEvent) => {
       e.stopPropagation();
       setConfirmOpen(true);
@@ -237,6 +227,19 @@ export const CustomNode = memo(
     const handleCloseConfirm = useCallback(() => {
       setConfirmOpen(false);
     }, []);
+
+    const handleDelete = useCallback(() => {
+      deleteNode(id as string);
+      setConfirmOpen(false);
+    }, [deleteNode, id]);
+
+    const handleDuplicate = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        duplicateNode(id as string);
+      },
+      [duplicateNode, id]
+    );
 
     const hasPrevPort = nodeData.type !== 'manual-trigger' && nodeData.category !== 'trigger';
     const hasNextPort = true;

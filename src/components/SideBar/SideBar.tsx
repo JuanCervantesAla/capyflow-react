@@ -25,7 +25,6 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
   const reactFlow = useReactFlow();
   const { data: nodeTypes, isLoading, error } = useNodeTypes();
 
-  /* ------------------ Agrupar nodos ------------------ */
   const groupedNodeTypes = useMemo(() => {
     if (!nodeTypes) return {};
     return nodeTypes.reduce((acc, nodeType) => {
@@ -36,7 +35,6 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
     }, {} as Record<string, typeof nodeTypes>);
   }, [nodeTypes]);
 
-  // Orden de categorías según el mockup
   const categoryOrder = ["trigger", "data", "io", "logic", "control"];
   const sortedCategories = useMemo(() => {
     return Object.entries(groupedNodeTypes).sort((a, b) => {
@@ -53,7 +51,6 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
       reactFlow.setCenter(node.position.x, node.position.y, { zoom: 1 });
     });
 
-  /* ------------------ CONTENIDO ------------------ */
   const content = () => {
     if (isLoading) {
       return (
@@ -143,7 +140,6 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
     );
   };
 
-  /* ------------------ SIDEBAR ------------------ */
   return (
     <Box
       style={{
@@ -156,7 +152,6 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
         overflow: "hidden",
       }}
     >
-      {/* Botón colapsar */}
       <ActionIcon
         variant="subtle"
         size="sm"
@@ -172,7 +167,6 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
         {isCollapsed ? <IconChevronRight size={18} /> : <IconChevronLeft size={18} />}
       </ActionIcon>
 
-      {/* Contenido */}
       {!isCollapsed && content()}
     </Box>
   );
