@@ -27,21 +27,35 @@ export const ActionButton: FC<ActionButtonProps> = ({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 8,
-        padding: "8px 16px",
-        borderRadius: theme.borderRadius.sm,
+        gap: 10,
+        padding: "6px 12px",
+        borderRadius: 4,
         background: isPrimary
           ? theme.colors.accent.primary
-          : (isHovered ? theme.colors.background.tertiary : theme.colors.background.secondary),
-        border: `1px solid ${isPrimary ? theme.colors.accent.primary : (isHovered ? theme.colors.accent.primary : theme.colors.border.primary)}`,
-        color: isPrimary ? "#fff" : (isHovered ? theme.colors.accent.primary : theme.colors.text.secondary),
-        transition: "all 0.2s ease",
+          : (isHovered ? "rgba(201, 135, 61, 0.1)" : "transparent"),
+        border: "none",
+        color: isPrimary ? "#fff" : (isHovered ? theme.colors.text.sidebarItemHover : theme.colors.text.sidebarItem),
+        transition: "all 0.15s ease",
+        width: "100%",
       }}
     >
-      <span style={{ display: "flex", alignItems: "center" }}>
+      <span style={{ 
+        display: "flex", 
+        alignItems: "center",
+        color: "inherit",
+        transition: "color 0.15s ease",
+      }}>
         {icon}
       </span>
-      <Text size="sm" fw={600}>
+      <Text 
+        size="14px" 
+        fw={400} 
+        style={{ 
+          flex: 1, 
+          textAlign: 'left',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+        }}
+      >
         {children}
       </Text>
     </UnstyledButton>

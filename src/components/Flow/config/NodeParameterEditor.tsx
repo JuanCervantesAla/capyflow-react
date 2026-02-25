@@ -6,6 +6,7 @@ import { getNodeSchema, validateNodeParameters, getDefaultNodeParameters } from 
 
 // Componentes de editores especializados
 function JsonEditor({ value, onChange, placeholder }: { value: string; onChange: (val: any) => void; placeholder?: string }) {
+  const { theme } = useTheme();
   const [jsonValue, setJsonValue] = useState(value);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,15 +38,22 @@ function JsonEditor({ value, onChange, placeholder }: { value: string; onChange:
           input: {
             fontFamily: 'monospace',
             fontSize: '12px',
+            border: `2px solid ${theme.colors.ink}`,
+            background: theme.colors.paper,
+            color: theme.colors.ink,
+            '&:focus': {
+              borderColor: theme.colors.ink,
+            },
           },
         }}
       />
-      {error && <Text size="xs" c="red">{error}</Text>}
+      {error && <Text size="xs" c="#f43f5e" fw={600}>{error}</Text>}
     </Stack>
   );
 }
 
 function KeyValueEditor({ value, onChange }: { value: Record<string, any>; onChange: (val: Record<string, any>) => void }) {
+  const { theme } = useTheme();
   const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(() => {
     return Object.entries(value || {}).map(([k, v]) => ({ key: k, value: String(v) }));
   });
@@ -84,6 +92,16 @@ function KeyValueEditor({ value, onChange }: { value: Record<string, any>; onCha
             value={pair.key}
             onChange={(e) => updatePair(index, 'key', e.currentTarget.value)}
             style={{ flex: 1 }}
+            styles={{
+              input: {
+                border: `2px solid ${theme.colors.ink}`,
+                background: theme.colors.paper,
+                color: theme.colors.ink,
+                '&:focus': {
+                  borderColor: theme.colors.ink,
+                },
+              },
+            }}
           />
           <TextInput
             size="xs"
@@ -91,13 +109,51 @@ function KeyValueEditor({ value, onChange }: { value: Record<string, any>; onCha
             value={pair.value}
             onChange={(e) => updatePair(index, 'value', e.currentTarget.value)}
             style={{ flex: 1 }}
+            styles={{
+              input: {
+                border: `2px solid ${theme.colors.ink}`,
+                background: theme.colors.paper,
+                color: theme.colors.ink,
+                '&:focus': {
+                  borderColor: theme.colors.ink,
+                },
+              },
+            }}
           />
-          <ActionIcon size="sm" color="red" onClick={() => removePair(index)}>
+          <ActionIcon 
+            size="sm" 
+            color="red" 
+            onClick={() => removePair(index)}
+            styles={{
+              root: {
+                color: '#f43f5e',
+                '&:hover': {
+                  background: 'rgba(244, 63, 94, 0.1)',
+                },
+              },
+            }}
+          >
             <IconTrash size={14} />
           </ActionIcon>
         </Group>
       ))}
-      <Button size="xs" variant="light" leftSection={<IconPlus size={14} />} onClick={addPair}>
+      <Button 
+        size="xs" 
+        variant="light" 
+        leftSection={<IconPlus size={14} />} 
+        onClick={addPair}
+        styles={{
+          root: {
+            border: `2px solid ${theme.colors.ink}`,
+            background: theme.colors.paper,
+            color: theme.colors.ink,
+            fontWeight: 600,
+            '&:hover': {
+              background: 'rgba(45, 52, 54, 0.05)',
+            },
+          },
+        }}
+      >
         Agregar
       </Button>
     </Stack>
@@ -158,8 +214,21 @@ export function NodeParameterEditor({
 
   if (!schema) {
     return (
-      <Stack gap="md" p="md">
-        <Alert icon={<IconAlertCircle size={16} />} color="red">
+      <Stack gap="md" p="md" style={{ background: theme.colors.paper }}>
+        <Alert 
+          icon={<IconAlertCircle size={16} />} 
+          color="red"
+          styles={{
+            root: {
+              border: `2px solid #f43f5e`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: '#f43f5e',
+              fontWeight: 600,
+            },
+          }}
+        >
           Tipo de nodo desconocido: {nodeType}
         </Alert>
       </Stack>
@@ -167,24 +236,38 @@ export function NodeParameterEditor({
   }
 
   return (
-    <Stack gap="md" p="md" style={{ borderRadius: theme.borderRadius.md }}>
+    <Stack gap="md" p="md" style={{ borderRadius: theme.borderRadius.md, background: theme.colors.paper }}>
       <div>
-        <Text fw={600} size="sm">
+        <Text fw={700} size="sm" c={theme.colors.ink}>
           {schema.displayName}
         </Text>
-        <Text size="xs" c="dimmed">
+        <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
           {schema.description}
         </Text>
       </div>
 
       {validationError && (
-        <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">
+        <Alert 
+          icon={<IconAlertCircle size={16} />} 
+          color="red" 
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid #f43f5e`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: '#f43f5e',
+              fontWeight: 600,
+            },
+          }}
+        >
           {validationError}
         </Alert>
       )}
 
       {schema.parameters.length === 0 ? (
-        <Text size="sm" c="dimmed" ta="center">
+        <Text size="sm" c={theme.colors.ink} ta="center" style={{ opacity: 0.5 }}>
           Este nodo no tiene parámetros configurables
         </Text>
       ) : (
@@ -194,12 +277,12 @@ export function NodeParameterEditor({
 
             return (
               <div key={param.key}>
-                <Text size="xs" fw={500} mb="4px">
-                  {param.name} {param.required && <span style={{ color: "red" }}>*</span>}
+                <Text size="xs" fw={600} mb="4px" c={theme.colors.ink}>
+                  {param.name} {param.required && <span style={{ color: "#f43f5e" }}>*</span>}
                 </Text>
 
                 {param.description && (
-                  <Text size="xs" c="dimmed" mb="4px">
+                  <Text size="xs" c={theme.colors.ink} mb="4px" style={{ opacity: 0.6 }}>
                     {param.description}
                   </Text>
                 )}
@@ -210,6 +293,16 @@ export function NodeParameterEditor({
                     placeholder={param.placeholder}
                     value={value || ""}
                     onChange={(e) => handleParameterChange(param.key, e.currentTarget.value)}
+                    styles={{
+                      input: {
+                        border: `2px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        '&:focus': {
+                          borderColor: theme.colors.ink,
+                        },
+                      },
+                    }}
                   />
                 )}
 
@@ -219,6 +312,16 @@ export function NodeParameterEditor({
                     placeholder={param.placeholder}
                     value={value || param.defaultValue || 0}
                     onChange={(val) => handleParameterChange(param.key, val)}
+                    styles={{
+                      input: {
+                        border: `2px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        '&:focus': {
+                          borderColor: theme.colors.ink,
+                        },
+                      },
+                    }}
                   />
                 )}
 
@@ -236,6 +339,16 @@ export function NodeParameterEditor({
                     data={param.options}
                     value={value || param.defaultValue || param.options[0]}
                     onChange={(val) => handleParameterChange(param.key, val)}
+                    styles={{
+                      input: {
+                        border: `2px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        '&:focus': {
+                          borderColor: theme.colors.ink,
+                        },
+                      },
+                    }}
                   />
                 )}
 
@@ -247,6 +360,17 @@ export function NodeParameterEditor({
                     onChange={(e) => handleParameterChange(param.key, e.currentTarget.value)}
                     minRows={3}
                     maxRows={6}
+                    styles={{
+                      input: {
+                        border: `2px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        fontFamily: 'monospace',
+                        '&:focus': {
+                          borderColor: theme.colors.ink,
+                        },
+                      },
+                    }}
                   />
                 )}
 
@@ -278,10 +402,40 @@ export function NodeParameterEditor({
       )}
 
       <Group justify="flex-end" gap="xs">
-        <Button variant="default" size="xs" onClick={onCancel} leftSection={<IconX size={14} />}>
+        <Button 
+          variant="default" 
+          size="xs" 
+          onClick={onCancel} 
+          leftSection={<IconX size={14} />}
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+              color: theme.colors.ink,
+              fontWeight: 600,
+              '&:hover': {
+                background: 'rgba(45, 52, 54, 0.05)',
+              },
+            },
+          }}
+        >
           Cancelar
         </Button>
-        <Button size="xs" onClick={handleSave} leftSection={<IconCheck size={14} />}>
+        <Button 
+          size="xs" 
+          onClick={handleSave} 
+          leftSection={<IconCheck size={14} />}
+          styles={{
+            root: {
+              background: theme.colors.ink,
+              color: theme.colors.paper,
+              fontWeight: 600,
+              '&:hover': {
+                background: '#000000',
+              },
+            },
+          }}
+        >
           Guardar
         </Button>
       </Group>

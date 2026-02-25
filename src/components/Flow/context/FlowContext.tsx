@@ -268,7 +268,6 @@ export function FlowProvider({
       onNodesChange,
       onEdgesChange,
       centerOnNode,
-      registerCenterHandler,
       saveFlow,
       loadFlowData,
       updateNodeExecutionStatus,

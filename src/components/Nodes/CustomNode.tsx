@@ -6,159 +6,165 @@ import { useEffect, useState, useCallback, memo, useRef, useMemo } from "react";
 import { useFlowActions } from "../Flow/context/FlowActionsContext";
 import type { NodeProps } from "@xyflow/react";
 import type { NodeData } from "../../components/Flow/types/NodeTypes";
-import { getIconComponent } from "../../utils/iconLoader";
 import { getThemeColors } from "../../theme/themeCache";
-import { NodeExecutionStatus } from "./NodeExecutionStatus";
 
 if (typeof window !== "undefined" && !document.getElementById("node-styles")) {
   const style = document.createElement("style");
   style.id = "node-styles";
   style.innerHTML = `
+    @keyframes statusBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
     @keyframes popOut {
       0% { opacity: 0; transform: translate(10px, -10px) scale(0.4); }
       60% { opacity: 1; transform: translate(-3px, 3px) scale(1.15); }
       100% { transform: translate(0, 0) scale(1); }
     }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    @keyframes handlePulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-      50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
-    }
-    @keyframes handlePulseGreen {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-      50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
-    }
     .delete-appear { animation: popOut 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
     .delete-hide { opacity: 0; transform: scale(0.6); transition: 0.2s ease; pointer-events: none; }
     .node-action-btn { transition: transform 0.15s ease; }
     .node-action-btn:hover { transform: scale(1.14) !important; }
-    .handle-target:hover { 
-      transform: scale(1.3) !important;
-      animation: handlePulse 1.5s infinite !important;
+    
+    .react-flow__handle {
+      transition: background 0.1s ease, transform 0.1s ease !important;
     }
-    .handle-source:hover { 
+    .react-flow__handle:hover {
+      background: #E8A020 !important;
       transform: scale(1.3) !important;
-      animation: handlePulseGreen 1.5s infinite !important;
     }
-    .node-container:hover .handle-label { opacity: 1; }
+    .react-flow__handle.handle-top:hover {
+      transform: translateY(-50%) scale(1.3) !important;
+    }
+    .react-flow__handle.handle-bottom-center:hover {
+      transform: translateX(50%) scale(1.3) !important;
+    }
+    .react-flow__handle.handle-bottom-left:hover {
+      transform: translateY(50%) scale(1.3) !important;
+    }
+    .react-flow__handle.handle-bottom-right:hover {
+      transform: translateY(50%) scale(1.3) !important;
+    }
   `;
   document.head.appendChild(style);
 }
 
-const iconCache = new Map();
-function getCachedIcon(iconName: string) {
-  if (!iconCache.has(iconName)) {
-    iconCache.set(iconName, getIconComponent(iconName));
-  }
-  return iconCache.get(iconName);
-}
-
 const stylesCache = new Map<string, any>();
 
-const getStyles = (selected: boolean, status: string) => {
-  const key = `${selected ? 'selected' : 'normal'}-${status}`;
+const getCategoryLabel = (category: string): string => {
+  const labels: Record<string, string> = {
+    trigger: "trigger",
+    data: "data",
+    io: "i / o",
+    logic: "logic",
+    control: "control",
+    ai: "ai",
+    integration: "api",
+  };
+  return labels[category] || category;
+};
+
+const getStyles = (selected: boolean, status: string, category: string, colors: ReturnType<typeof getThemeColors>) => {
+  const key = `${selected ? 'selected' : 'normal'}-${status}-${category}`;
   
   if (stylesCache.has(key)) {
     return stylesCache.get(key);
   }
   
-  const colors = getThemeColors();
-  
-  let borderColor = colors.borderPrimary;
-  let topBarColor = colors.bgTertiary;
-  
-  if (status === 'running') {
-    borderColor = '#3b82f6';
-    topBarColor = '#3b82f6';
-  } else if (status === 'success') {
-    borderColor = '#10b981';
-    topBarColor = '#10b981';
-  } else if (status === 'error') {
-    borderColor = '#ef4444';
-    topBarColor = '#ef4444';
-  }
-  
-  if (selected) {
-    borderColor = colors.edgeSelectedColor;
-  }
+  const categoryColor = colors.category[category as keyof typeof colors.category] || colors.textInk;
+  const categoryBgColor = colors.categoryBg?.[category as keyof typeof colors.categoryBg] || colors.bgNode;
+  const statusColor = colors.status?.[status as keyof typeof colors.status] || 'transparent';
   
   const styles = {
+    container: {
+      width: 200,
+      position: "relative" as const,
+    },
     node: {
-      borderRadius: 10,
-      overflow: "hidden",
-      border: selected 
-        ? `2px solid ${colors.edgeSelectedColor}`
-        : `1px solid ${borderColor}`,
-      boxShadow: selected 
-        ? "0 0 12px rgba(59,130,246,0.35)"
-        : status === 'running'
-        ? "0 0 8px rgba(59,130,246,0.3)"
-        : "0 1px 3px rgba(0,0,0,0.50)",
-      background: selected ? colors.bgPrimary : colors.bgSecondary,
+      background: colors.bgNode,
+      border: `2.5px solid ${colors.borderNode}`,
+      borderRadius: 0,
+      position: "relative" as const,
+      cursor: "pointer",
+      boxShadow: selected ? `5px 5px 0 ${colors.borderNode}` : "none",
+      transform: selected ? "translate(-3px, -3px)" : "translate(0, 0)",
     },
-    topBar: {
-      height: 6,
-      background: selected ? colors.edgeSelectedColor : topBarColor,
+    accentStrip: {
+      position: "absolute" as const,
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 5,
+      background: categoryColor,
     },
-    icon: {
-      width: 40,
-      height: 40,
+    header: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "8px 12px",
+      borderBottom: `2.5px solid ${colors.borderNode}`,
+    },
+    badge: {
+      fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: "2px",
+      textTransform: "uppercase" as const,
+      padding: "2px 7px",
+      border: `1.5px solid ${categoryColor}`,
+      background: categoryBgColor,
+      color: categoryColor,
+      lineHeight: 1.5,
+    },
+    statusContainer: {
+      display: "flex",
+      alignItems: "center",
+      gap: 5,
+    },
+    statusDot: {
+      width: 7,
+      height: 7,
       borderRadius: "50%",
-      background: colors.edgeColor,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
+      border: `1.5px solid ${colors.borderNode}`,
+      background: statusColor,
+      animation: status === 'running' ? 'statusBlink 0.7s ease-in-out infinite' : 'none',
+      boxShadow: status === 'ready' ? `0 0 5px ${statusColor}` : 
+                 status === 'running' ? `0 0 5px ${statusColor}` : 'none',
     },
-    content: {
-      padding: 12,
-      display: "flex",
-      flexDirection: 'column' as const,
-      gap: 8,
+    body: {
+      padding: "11px 12px 12px",
     },
-    mainContent: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
+    nodeName: {
+      fontFamily: "'IBM Plex Sans', sans-serif",
+      fontSize: 14,
+      fontWeight: 700,
+      letterSpacing: "-0.3px",
+      lineHeight: 1.2,
+      color: colors.textInk,
+      marginBottom: 3,
+    },
+    nodeSub: {
+      fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: 10,
+      color: colors.textMuted,
+      marginTop: 3,
     },
     handle: {
-      width: 14,
-      height: 14,
-      background: colors.edgeColor,
+      width: 11,
+      height: 11,
+      background: colors.bgSidebar,
+      border: `2.5px solid ${colors.borderNode}`,
       borderRadius: "50%",
-      border: `2px solid ${colors.bgPrimary}`,
-      transition: 'all 0.2s ease',
+      cursor: "crosshair",
+      position: "absolute" as const,
+      top: "50%",
+      transform: "translateY(-50%)",
     },
-    handleTarget: {
-      width: 14,
-      height: 14,
-      background: '#3b82f6',
-      borderRadius: "50%",
-      border: `2px solid ${colors.bgPrimary}`,
-      transition: 'all 0.2s ease',
-      boxShadow: '0 0 0 0 rgba(59, 130, 246, 0.4)',
+    handleIn: {
+      left: -7,
     },
-    handleSource: {
-      width: 14,
-      height: 14,
-      background: '#10b981',
-      borderRadius: "50%",
-      border: `2px solid ${colors.bgPrimary}`,
-      transition: 'all 0.2s ease',
-      boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.4)',
-    },
-    handleLabel: {
-      position: 'absolute' as const,
-      fontSize: '9px',
-      fontWeight: 600,
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.5px',
-      pointerEvents: 'none' as const,
-      opacity: 0.7,
-      transition: 'opacity 0.2s ease',
+    handleOut: {
+      right: -7,
     },
     actionBtn: {
       width: 36,
@@ -182,26 +188,36 @@ const getStyles = (selected: boolean, status: string) => {
 
 export const CustomNode = memo(
   function CustomNode({ id, data, selected }: NodeProps) {
-    const Icon = getCachedIcon((data as NodeData).icon || 'IconBolt');
     const { deleteNode, duplicateNode } = useFlowActions();
     
     const [showDelete, setShowDelete] = useState(selected);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const timeoutRef = useRef<number | undefined>(undefined);
 
-    const { node, topBar, icon, content, mainContent, handle, handleTarget, handleSource, handleLabel, actionBtn, colors } = useMemo(
-      () => getStyles(!!selected, (data as NodeData).executionStatus || 'idle'),
-      [selected, (data as NodeData).executionStatus]
+    const nodeData = data as NodeData;
+    const category = nodeData.category || 'trigger';
+    const executionStatus = nodeData.executionStatus || 'idle';
+
+    // Memoize theme colors once - never changes
+    const themeColors = useMemo(() => getThemeColors(), []);
+
+    // Memoize styles - only recalculate when relevant props change
+    const styles = useMemo(
+      () => getStyles(!!selected, executionStatus, category, themeColors),
+      [selected, executionStatus, category, themeColors]
     );
 
+    // Only update showDelete when actually selected changes
     useEffect(() => {
-      if (selected) {
+      if (selected && !showDelete) {
         setShowDelete(true);
-      } else {
+      } else if (!selected && showDelete) {
         timeoutRef.current = window.setTimeout(() => setShowDelete(false), 200);
-        return () => clearTimeout(timeoutRef.current);
+        return () => {
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
       }
-    }, [selected]);
+    }, [selected, showDelete]);
 
     const handleDelete = useCallback(() => {
       deleteNode(id as string);
@@ -222,8 +238,11 @@ export const CustomNode = memo(
       setConfirmOpen(false);
     }, []);
 
+    const hasPrevPort = nodeData.type !== 'manual-trigger' && nodeData.category !== 'trigger';
+    const hasNextPort = true;
+
     return (
-      <div style={{ width: 240, position: "relative" }} className="node-container">
+      <div style={styles.container}>
         {confirmOpen && (
           <Modal opened={confirmOpen} onClose={handleCloseConfirm} title="Confirmar eliminación" size="sm">
             <Text size="sm">¿Estás seguro de que deseas eliminar este nodo?</Text>
@@ -237,128 +256,126 @@ export const CustomNode = memo(
         {showDelete && (
           <div style={{ position: "absolute", top: -50, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8 }}>
             <div
-              style={actionBtn}
+              style={styles.actionBtn}
               onClick={handleDuplicate}
               className={selected ? "delete-appear node-action-btn" : "delete-hide"}
             >
-              <IconCopy size={18} color={colors.textPrimary} />
+              <IconCopy size={18} color={styles.colors.textPrimary} />
             </div>
             <div
-              style={actionBtn}
+              style={styles.actionBtn}
               onClick={handleOpenConfirm}
               className={selected ? "delete-appear node-action-btn" : "delete-hide"}
             >
-              <IconTrash size={18} color={colors.errorColor} />
+              <IconTrash size={18} color={styles.colors.errorColor} />
             </div>
           </div>
         )}
 
-        {(data as NodeData).type !== 'manual-trigger' && (data as NodeData).category !== 'trigger' && (
-          <div style={{
-            ...handleLabel,
-            top: -18,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: '#3b82f6',
-          }}>
-            ▼ INPUT
-          </div>
-        )}
-
-        {(data as NodeData).type !== 'manual-trigger' && (data as NodeData).category !== 'trigger' && (
+        {hasPrevPort && (
           <Handle 
             type="target" 
             position={Position.Top} 
-            style={handleTarget}
-            className="handle-target"
+            className="handle-top"
+            style={{
+              ...styles.handle,
+              ...styles.handleIn,
+              top: "50%",
+              left: -7,
+            }}
           />
         )}
 
-        <div style={node}>
-          <div style={topBar} />
-          <div style={content}>
-            <div style={mainContent}>
-              <div style={icon}>
-                <Icon size={22} color={colors.textPrimary} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text size="sm" fw={500} truncate="end">
-                  {(data as NodeData).label}
-                </Text>
-                {(data as NodeData).subtitle && (
-                  <Text size="xs" c="dimmed" truncate="end">
-                    {(data as NodeData).subtitle}
-                  </Text>
-                )}
-              </div>
+        <div style={styles.node}>
+          <div style={styles.accentStrip} />
+          
+          <div style={styles.header}>
+            <span style={styles.badge}>{getCategoryLabel(category)}</span>
+            <div style={styles.statusContainer}>
+              <div style={styles.statusDot} />
             </div>
-            
-            {(data as NodeData).executionStatus && (data as NodeData).executionStatus !== 'idle' && (
-              <NodeExecutionStatus 
-                status={(data as NodeData).executionStatus as any}
-                error={(data as NodeData).executionError}
-                durationMs={(data as NodeData).executionDuration}
-              />
+          </div>
+
+          <div style={styles.body}>
+            <div style={styles.nodeName}>{nodeData.label}</div>
+            {nodeData.subtitle && (
+              <div style={styles.nodeSub}>{nodeData.subtitle}</div>
             )}
           </div>
         </div>
 
-        {(data as NodeData).type === 'if-condition' ? (
-          <>
-            <div style={{
-              ...handleLabel,
-              bottom: -20,
-              left: '35%',
-              transform: 'translateX(-50%)',
-              color: '#10b981',
-            }}>
-              ▼ TRUE
-            </div>
+        {hasNextPort && (
+          nodeData.type === 'if-condition' ? (
+            <>
+              <Handle 
+                type="source" 
+                position={Position.Bottom} 
+                id="true"
+                className="handle-bottom-left"
+                style={{
+                  ...styles.handle,
+                  ...styles.handleOut,
+                  bottom: -7,
+                  right: "65%",
+                  top: "auto",
+                }}
+              />
+              <Handle 
+                type="source" 
+                position={Position.Bottom} 
+                id="false"
+                className="handle-bottom-right"
+                style={{
+                  ...styles.handle,
+                  ...styles.handleOut,
+                  bottom: -7,
+                  right: "35%",
+                  top: "auto",
+                }}
+              />
+            </>
+          ) : (
             <Handle 
               type="source" 
-              position={Position.Bottom} 
-              id="true"
-              style={{ ...handleSource, left: '35%', background: '#10b981' }}
-              className="handle-source"
+              position={Position.Bottom}
+              className="handle-bottom-center"
+              style={{
+                ...styles.handle,
+                ...styles.handleOut,
+                bottom: -7,
+                right: "50%",
+                top: "auto",
+                transform: "translateX(50%)",
+              }}
             />
-            
-            <div style={{
-              ...handleLabel,
-              bottom: -20,
-              left: '65%',
-              transform: 'translateX(-50%)',
-              color: '#f43f5e',
-            }}>
-              ▼ FALSE
-            </div>
-            <Handle 
-              type="source" 
-              position={Position.Bottom} 
-              id="false"
-              style={{ ...handleSource, left: '65%', background: '#f43f5e' }}
-              className="handle-source"
-            />
-          </>
-        ) : (
-          <>
-            <div style={{
-              ...handleLabel,
-              bottom: -20,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              color: '#10b981',
-            }}>
-              ▼ OUTPUT
-            </div>
-            <Handle 
-              type="source" 
-              position={Position.Bottom} 
-              style={handleSource}
-              className="handle-source"
-            />
-          </>
+          )
         )}
       </div>
     );
+  },
+  // Custom comparison function to prevent re-renders during drag
+  (prevProps, nextProps) => {
+    // Always re-render if these core props change
+    if (prevProps.id !== nextProps.id) return false;
+    if (prevProps.selected !== nextProps.selected) return false;
+    if (prevProps.type !== nextProps.type) return false;
+    
+    const prevData = prevProps.data as NodeData;
+    const nextData = nextProps.data as NodeData;
+    
+    // Re-render if data content changes
+    if (prevData.label !== nextData.label) return false;
+    if (prevData.subtitle !== nextData.subtitle) return false;
+    if (prevData.executionStatus !== nextData.executionStatus) return false;
+    if (prevData.executionError !== nextData.executionError) return false;
+    if (prevData.executionDuration !== nextData.executionDuration) return false;
+    if (prevData.category !== nextData.category) return false;
+    if (prevData.type !== nextData.type) return false;
+    if (prevData.icon !== nextData.icon) return false;
+    
+    // Ignore position changes (xPos, yPos) - these change during drag
+    // Ignore dragging state changes
+    
+    return true; // Props are equal, skip re-render
   }
 );

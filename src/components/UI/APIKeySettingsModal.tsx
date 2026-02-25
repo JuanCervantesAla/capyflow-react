@@ -103,124 +103,178 @@ export function APIKeySettingsModal({
     <Modal
       opened={opened}
       onClose={handleClose}
-      title={
-        <Group gap="xs">
-          <IconKey size={24} style={{ color: theme.colors.accent.primary }} />
-          <Text size="lg" fw={600}>
-            Configurar Google Gemini API Key
-          </Text>
-        </Group>
-      }
+      withCloseButton={false}
+      centered
       size="lg"
+      padding={0}
+      radius={0}
       styles={{
         content: {
-          background: theme.colors.background.primary,
-        },
-        header: {
-          background: theme.colors.background.primary,
-          borderBottom: `1px solid ${theme.colors.border.primary}`,
+          background: '#FFF8F0',
+          border: '3px solid #2d3436',
+          boxShadow: '6px 6px 0px #2d3436',
         },
         body: {
-          padding: theme.spacing.lg,
+          padding: 0,
         },
       }}
     >
+      {/* Header con fondo negro */}
+      <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
+        <Group justify="space-between" align="center">
+          <Group gap="sm">
+            <IconKey size={28} className="text-[#e8a020]" />
+            <Stack gap={2}>
+              <Text className="!text-white font-black text-lg tracking-tight uppercase">
+                API Key Settings
+              </Text>
+              <Text className="!text-white/70 text-xs font-medium">
+                ~/settings/apikey
+              </Text>
+            </Stack>
+          </Group>
+        </Group>
+      </div>
+
+      {/* Body con padding */}
+      <div className="px-6 py-6 bg-[#FFF8F0]">
       <Stack gap="md">
         {/* Información */}
-        <Alert
-          icon={<IconInfoCircle size={16} />}
-          title="¿Por qué configurar tu API key?"
-          color="blue"
-          variant="light"
-        >
-          <Text size="sm">
+        <div className="bg-[#e8f4ff] border-[2.5px] border-[#2d3436] p-4">
+          <Group gap="sm" mb="xs">
+            <IconInfoCircle size={18} className="text-[#2d3436]" />
+            <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
+              ¿Por qué configurar tu API key?
+            </Text>
+          </Group>
+          <Text size="sm" className="text-[#2d3436] font-medium">
             Al guardar tu API key de Google Gemini, no necesitarás ingresarla cada vez
             que generes o repares un flujo. Tu API key se guarda encriptada y solo tú
             puedes verla.
           </Text>
-        </Alert>
+        </div>
 
         {hasKey && (
-          <Alert
-            icon={<IconCheck size={16} />}
-            title="API Key configurada"
-            color="green"
-            variant="light"
-          >
-            <Text size="sm">
+          <div className="bg-[#e8ffe8] border-[2.5px] border-[#2d3436] p-4">
+            <Group gap="sm" mb="xs">
+              <IconCheck size={18} className="text-[#2d3436]" />
+              <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
+                API Key configurada
+              </Text>
+            </Group>
+            <Text size="sm" className="text-[#2d3436] font-medium">
               Ya tienes una API key guardada. Puedes actualizarla o eliminarla.
             </Text>
-          </Alert>
+          </div>
         )}
 
         {loading && !hasKey ? (
-          <Group justify="center" p="xl">
-            <Loader size="md" />
-          </Group>
+          <div className="flex justify-center items-center p-12">
+            <Loader size="md" color="#e8a020" />
+          </div>
         ) : (
           <>
             {/* Campo de API Key */}
             <PasswordInput
-              label="Google Gemini API Key"
+              label={
+                <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
+                  Google Gemini API Key
+                </Text>
+              }
               placeholder="AIza..."
               value={apiKey}
               onChange={(e) => setApiKey(e.currentTarget.value)}
               leftSection={<IconKey size={16} />}
               visible={showKey}
               onVisibilityChange={setShowKey}
+              radius={0}
               styles={{
                 input: {
-                  background: theme.colors.background.tertiary,
-                  borderColor: theme.colors.border.primary,
-                  color: theme.colors.text.primary,
+                  background: '#faf8f4',
+                  border: '2.5px solid #2d3436',
+                  color: '#2d3436',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  padding: '10px 12px',
+                  minHeight: '44px',
+                },
+                section: {
+                  color: '#2d3436',
                 },
               }}
+              className="
+                focus-within:shadow-[4px_4px_0_#e8a020]
+                focus-within:-translate-x-[2px]
+                focus-within:-translate-y-[2px]
+                transition-all
+              "
             />
 
             {/* Instrucciones */}
-            <Alert
-              icon={<IconAlertCircle size={16} />}
-              color="yellow"
-              variant="light"
-            >
-              <Stack gap="xs">
-                <Text size="xs" fw={500}>
+            <div className="bg-[#fff8e1] border-[2.5px] border-[#2d3436] p-4">
+              <Group gap="sm" mb="sm">
+                <IconAlertCircle size={18} className="text-[#2d3436]" />
+                <Text className="text-[#2d3436] font-black text-xs uppercase tracking-wide">
                   ¿Cómo obtener una API key GRATIS?
                 </Text>
-                <Text size="xs">
+              </Group>
+              <Stack gap={6}>
+                <Text size="xs" className="text-[#2d3436] font-medium">
                   1. Ve a{' '}
                   <a
                     href="https://aistudio.google.com/apikey"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: theme.colors.accent.primary }}
+                    className="text-[#e8a020] font-bold underline hover:text-[#2d3436]"
                   >
                     Google AI Studio
                   </a>
                 </Text>
-                <Text size="xs">2. Inicia sesión con tu cuenta de Google</Text>
-                <Text size="xs">3. Haz clic en "Create API Key"</Text>
-                <Text size="xs">4. Copia la key y pégala aquí</Text>
+                <Text size="xs" className="text-[#2d3436] font-medium">2. Inicia sesión con tu cuenta de Google</Text>
+                <Text size="xs" className="text-[#2d3436] font-medium">3. Haz clic en "Create API Key"</Text>
+                <Text size="xs" className="text-[#2d3436] font-medium">4. Copia la key y pégala aquí</Text>
               </Stack>
-            </Alert>
+            </div>
 
             {/* Botones de acción */}
             <Group justify="space-between" mt="md">
               <Group>
                 {hasKey && (
                   <Button
-                    variant="subtle"
-                    color="red"
                     leftSection={<IconTrash size={16} />}
                     onClick={handleDelete}
                     disabled={loading}
+                    className="
+                      !bg-[#ff6b6b] !text-[#FFF8F0] !border-[2.5px] !border-[#2d3436]
+                      !font-bold !text-sm uppercase tracking-wide
+                      transition-all duration-200 ease-out
+                      !shadow-[2px_2px_0px_#2d3436]
+                      hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+                      hover:!shadow-[3px_3px_0px_#2d3436]
+                      disabled:!opacity-40
+                      !rounded-none
+                      !h-[40px]
+                    "
                   >
                     Eliminar
                   </Button>
                 )}
               </Group>
               <Group>
-                <Button variant="subtle" onClick={handleClose} disabled={loading}>
+                <Button 
+                  onClick={handleClose} 
+                  disabled={loading}
+                  className="
+                    !bg-[#FFF8F0] !text-[#2d3436] !border-[2.5px] !border-[#2d3436]
+                    !font-bold !text-sm uppercase tracking-wide
+                    transition-all duration-200 ease-out
+                    !shadow-[2px_2px_0px_#2d3436]
+                    hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+                    hover:!shadow-[3px_3px_0px_#2d3436]
+                    !rounded-none
+                    !h-[40px]
+                  "
+                >
                   Cancelar
                 </Button>
                 <Button
@@ -229,9 +283,18 @@ export function APIKeySettingsModal({
                   }
                   onClick={handleSave}
                   disabled={!apiKey.trim() || loading}
-                  style={{
-                    background: theme.colors.accent.primary,
-                  }}
+                  className="
+                    !bg-[#e8a020] !text-[#0a0a08] !border-[3px] !border-[#2d3436]
+                    !font-black !text-sm uppercase tracking-wide
+                    transition-all duration-200 ease-out
+                    !shadow-[3px_3px_0px_#2d3436]
+                    hover:!-translate-x-[2px] hover:!-translate-y-[2px]
+                    hover:!shadow-[5px_5px_0px_#2d3436]
+                    disabled:!opacity-40
+                    disabled:!hover:translate-x-0 disabled:!hover:translate-y-0
+                    !rounded-none
+                    !h-[44px]
+                  "
                 >
                   {hasKey ? 'Actualizar' : 'Guardar'} API Key
                 </Button>
@@ -240,6 +303,7 @@ export function APIKeySettingsModal({
           </>
         )}
       </Stack>
+      </div>
     </Modal>
   );
 }

@@ -4,7 +4,6 @@ import {
   UnstyledButton,
   Avatar,
   Menu,
-  Tooltip,
   Modal,
   Button,
 } from "@mantine/core";
@@ -12,24 +11,17 @@ import {
   IconPlayerPlay,
   IconDeviceFloppy,
   IconDownload,
-  IconSettings,
   IconUser,
   IconChevronDown,
-  IconPalette,
   IconLogout,
-  IconMoon,
-  IconSun,
-  IconPencil,
+  IconEdit,
   IconFolderOpen,
-  IconSparkles,
   IconWand,
   IconKey,
+  IconSparkles,
 } from "@tabler/icons-react";
-import { ActionButton } from "../UI/ActionButton";
-import { IconButton } from "../UI/IconButton";
-import { useTheme, useThemeActions } from "../../theme/ThemeContext";
+import { useTheme } from "../../theme/ThemeContext";
 import { useUsers } from "../../hooks/useUsers";
-import { useMediaQuery } from "@mantine/hooks";
 import miLogo from '../../assets/logo2.png';
 import { useState, useEffect } from "react";
 
@@ -50,17 +42,14 @@ export function HeaderBar({
   onRun = () => {},
   onSave = () => {},
   onExport = () => {},
-  onSettings = () => {},
   onOpenFlowSelector,
-  onAIGenerate,
   onAIRepair,
+  onAIGenerate,
   onOpenAPIKeySettings,
 }: HeaderBarProps) {
   const { theme } = useTheme();
-  const { toggleTheme, isDark } = useThemeActions();
-  const { logout, user, isLoading } = useUsers();
+  const { logout, user } = useUsers();
   const [opened, setOpened] = useState(false);
-
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(workflowName);
 
@@ -68,105 +57,73 @@ export function HeaderBar({
     setTitle(workflowName);
   }, [workflowName]);
 
-
-  const isMobile = useMediaQuery("(max-width: 900px)");
-
   const handleLogout = () => {
     setOpened(false);
     logout();
-  };
-  const renderActionButton = (
-    icon: React.ReactNode,
-    label: string,
-    onClick: () => void,
-    variant?: "primary" | "secondary"
-  ) => {
-    if (isMobile) {
-      return (
-        <UnstyledButton
-          onClick={onClick}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: theme.borderRadius.sm,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background:
-              variant === "primary"
-                ? theme.colors.accent.primary
-                : theme.colors.background.secondary,
-            border: `1px solid ${
-              variant === "primary"
-                ? theme.colors.accent.primary
-                : theme.colors.border.primary
-            }`,
-            color:
-              variant === "primary"
-                ? "#fff"
-                : theme.colors.text.secondary,
-          }}
-        >
-          {icon}
-        </UnstyledButton>
-      );
-    }
-
-    if (isLoading) {
-      return <div style={{ height: 64 }} />;
-    }
-    
-    return (
-      <ActionButton icon={icon} variant={variant} onClick={onClick}>
-        {label}
-      </ActionButton>
-    );
   };
 
   return (
     <div
       style={{
-        height: 64,
-        background: theme.colors.background.primary,
-        borderBottom: `1px solid ${theme.colors.border.primary}`,
+        height: 56,
+        background: "#000000",
+        borderBottom: "3px solid #000000",
         display: "flex",
         alignItems: "center",
-        padding: isMobile ? "0 10px" : "0 28px",
+        padding: "0 24px",
       }}
     >
       <Group justify="space-between" align="center" w="100%" wrap="nowrap">
-        <Group gap={8} wrap="nowrap" style={{ minWidth: 0 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              background: theme.colors.background.secondary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: `1px solid ${theme.colors.border.primary}`,
-              flexShrink: 0,
-            }}
-          >
-            <img src={miLogo} style={{ width: 36, height: 36 }} alt="Logo" />
-          </div>
-          {!editing ? (
+        <Group gap={0} wrap="nowrap" style={{ minWidth: 0 }}>
+          <Group gap={10} wrap="nowrap" px={16}>
+            <img src={miLogo} style={{ width: 28, height: 28 }} alt="Logo" />
             <Text
-              fw={600}
+              fw={700}
               size="md"
-              c={theme.colors.text.primary}
-              style={{
-                maxWidth: isMobile ? 120 : 260,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                cursor: "default",
-              }}
-              onDoubleClick={() => setEditing(true)}
+              c={theme.colors.accent.primary}
+              style={{ letterSpacing: '0.3px', fontFamily: 'system-ui, -apple-system, sans-serif' }}
             >
-              {title}
+              capyflow
             </Text>
+          </Group>
+
+          <div style={{ 
+            width: 2, 
+            height: 40, 
+            background: "#222222" 
+          }} />
+
+          {!editing ? (
+            <Group gap={8} wrap="nowrap" px={16}>
+              <Text
+                fw={400}
+                size="13px"
+                c="#999999"
+                style={{
+                  maxWidth: 200,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+              >
+                {title}
+              </Text>
+              <UnstyledButton
+                onClick={() => setEditing(true)}
+                style={{
+                  width: 18,
+                  height: 18,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#666666",
+                  opacity: 0.9,
+                }}
+              >
+                <IconEdit size={13} />
+              </UnstyledButton>
+            </Group>
           ) : (
             <input
               autoFocus
@@ -175,157 +132,291 @@ export function HeaderBar({
               onBlur={() => setEditing(false)}
               onKeyDown={(e) => e.key === "Enter" && setEditing(false)}
               style={{
-                height: 26,
-                fontWeight: 600,
-                borderRadius: 6,
-                border: `1px solid ${theme.colors.border.primary}`,
-                background: theme.colors.background.secondary,
-                padding: "0 6px",
-                color: theme.colors.text.primary,
+                height: 32,
+                fontWeight: 500,
+                fontSize: 14,
+                borderRadius: 4,
+                border: "1px solid #333333",
+                background: "#1a1a1a",
+                padding: "0 8px",
+                color: "#FFFFFF",
+                minWidth: 200,
               }}
             />
           )}
-          <UnstyledButton
-            onClick={() => setEditing(true)}
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: theme.colors.text.secondary,
-            }}
-          >
-            <IconPencil size={18} />
-          </UnstyledButton>
+          <div style={{ 
+            width: 2, 
+            height: 40, 
+            background: "#333333" 
+          }} />
         </Group>
-        <Group gap={8} wrap="nowrap">
-          {onAIGenerate && (
-            <Tooltip label="Generar con IA" withArrow>
-              {renderActionButton(
-                <IconSparkles size={16} />,
-                "IA",
-                onAIGenerate,
-                "primary"
-              )}
-            </Tooltip>
-          )}
+
+        <Group gap={0} wrap="nowrap">
           {onAIRepair && (
-            <Tooltip label="Reparar flujo con IA" withArrow>
-              {renderActionButton(
-                <IconWand size={16} />,
-                "Reparar",
-                onAIRepair,
-                "secondary"
-              )}
-            </Tooltip>
-          )}
-          {onOpenFlowSelector && (
-            <Tooltip label="Cambiar flujo" withArrow>
-              {renderActionButton(
-                <IconFolderOpen size={16} />,
-                "Flujos",
-                onOpenFlowSelector
-              )}
-            </Tooltip>
-          )}
-
-          {renderActionButton(
-            <IconPlayerPlay size={16} />,
-            "Run",
-            onRun,
-            "primary"
-          )}
-
-          {renderActionButton(
-            <IconDeviceFloppy size={16} />,
-            "Save",
-            onSave
-          )}
-
-          {renderActionButton(
-            <IconDownload size={16} />,
-            "Export",
-            onExport
-          )}
-        </Group>
-        <Group gap={8} wrap="nowrap">
-          <Tooltip label={isDark ? "Tema claro" : "Tema oscuro"} withArrow>
             <UnstyledButton
-              onClick={toggleTheme}
+              onClick={onAIRepair}
               style={{
+                height: 56,
+                padding: "0 20px",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                width: 32,
-                height: 32,
-                borderRadius: theme.borderRadius.sm,
-                background: theme.colors.background.secondary,
-                border: `1px solid ${theme.colors.border.primary}`,
+                gap: 8,
+                borderRadius: 0,
+                background: "transparent",
+                border: "none",
+                color: "#AAAAAA",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+                transition: 'all 0.15s',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.color = "#FFFFFF";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#AAAAAA";
               }}
             >
-              {isDark ? (
-                <IconSun size={18} color={theme.colors.accent.primary} />
-              ) : (
-                <IconMoon size={18} color={theme.colors.accent.primary} />
-              )}
+              <IconWand size={16} />
+              Reparar
             </UnstyledButton>
-          </Tooltip>
+          )}
 
-          <IconButton icon={<IconSettings size={18} />} onClick={onSettings} />
+          {onAIGenerate && (
+            <UnstyledButton
+              onClick={onAIGenerate}
+              style={{
+                height: 56,
+                padding: "0 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: 0,
+                background: "transparent",
+                border: "none",
+                color: "#AAAAAA",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+                transition: 'all 0.15s',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(232, 149, 12, 0.1)";
+                e.currentTarget.style.color = "#E8950C";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#AAAAAA";
+              }}
+            >
+              <IconSparkles size={16} />
+              IA
+            </UnstyledButton>
+          )}
 
-          <Menu shadow="lg" width={180} position="bottom-end" offset={8}>
+          {onOpenFlowSelector && (
+            <UnstyledButton
+              onClick={onOpenFlowSelector}
+              style={{
+                height: 56,
+                padding: "0 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: 0,
+                background: "transparent",
+                border: "none",
+                color: "#AAAAAA",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+                transition: 'all 0.15s',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.color = "#FFFFFF";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#AAAAAA";
+              }}
+            >
+              <IconFolderOpen size={16} />
+              Flujos
+            </UnstyledButton>
+          )}
+
+          <UnstyledButton
+            onClick={onSave}
+            style={{
+              height: 56,
+              padding: "0 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 0,
+              background: "transparent",
+              border: "none",
+              color: "#AAAAAA",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.8px',
+              textTransform: 'uppercase',
+              transition: 'all 0.15s',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              e.currentTarget.style.color = "#FFFFFF";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#AAAAAA";
+            }}
+          >
+            <IconDeviceFloppy size={16} />
+            Guardar
+          </UnstyledButton>
+
+          <UnstyledButton
+            onClick={onExport}
+            style={{
+              height: 56,
+              padding: "0 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 0,
+              background: "transparent",
+              border: "none",
+              color: "#AAAAAA",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.8px',
+              textTransform: 'uppercase',
+              transition: 'all 0.15s',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              e.currentTarget.style.color = "#FFFFFF";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#AAAAAA";
+            }}
+          >
+            <IconDownload size={16} />
+            Export
+          </UnstyledButton>
+
+          <div style={{ 
+            width: 2, 
+            height: 40, 
+            background: "#333333",
+            marginLeft: 8,
+            marginRight: 8,
+          }} />
+
+          <UnstyledButton
+            onClick={onRun}
+            style={{
+              height: 36,
+              padding: "0 18px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 4,
+              background: '#E8950C',
+              border: 'none',
+              color: '#000000',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.8px',
+              textTransform: 'uppercase',
+              transition: 'all 0.15s',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#D68508';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#E8950C';
+            }}
+          >
+            <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
+              <IconPlayerPlay size={12} fill="#000" stroke="#000" strokeWidth={0} />
+              <IconPlayerPlay size={12} fill="#000" stroke="#000" strokeWidth={0} />
+            </div>
+            Run
+          </UnstyledButton>
+
+          <div style={{ 
+            width: 2, 
+            height: 40, 
+            background: "#333333",
+            marginLeft: 16,
+            marginRight: 8,
+          }} />
+
+          <Menu shadow="md" width={200} position="bottom-end" offset={8}>
             <Menu.Target>
               <UnstyledButton
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  padding: "4px 6px",
-                  borderRadius: theme.borderRadius.sm,
-                  background: theme.colors.background.secondary,
-                  border: `1px solid ${theme.colors.border.primary}`,
+                  padding: "4px 6px 4px 4px",
+                  borderRadius: 4,
+                  background: "transparent",
+                  border: "1px solid #333333",
+                  marginLeft: 8,
                 }}
               >
                 <Avatar
-                  size={24}
+                  size={28}
                   radius="xl"
                   style={{ background: theme.colors.accent.primary }}
                 >
                   {user?.name?.[0]?.toUpperCase() ?? <IconUser size={14} color="#fff" />}
                 </Avatar>
-                <IconChevronDown
-                  size={12}
-                  color={theme.colors.text.secondary}
-                />
+                <IconChevronDown size={12} color="#666666" />
               </UnstyledButton>
             </Menu.Target>
 
             <Menu.Dropdown
               style={{
-                background: theme.colors.background.secondary,
-                border: `1px solid ${theme.colors.border.primary}`,
-                borderRadius: theme.borderRadius.sm,
+                background: "#1a1a1a",
+                border: "1px solid #333333",
+                borderRadius: 8,
               }}
             >
-              <Menu.Item leftSection={<IconUser size={14} />}>
+              <Menu.Item 
+                leftSection={<IconUser size={16} />}
+                style={{ color: "#FFFFFF" }}
+              >
                 Profile
               </Menu.Item>
               {onOpenAPIKeySettings && (
                 <Menu.Item 
-                  leftSection={<IconKey size={14} />}
+                  leftSection={<IconKey size={16} />}
                   onClick={onOpenAPIKeySettings}
+                  style={{ color: "#FFFFFF" }}
                 >
                   API Key Settings
                 </Menu.Item>
               )}
-              <Menu.Item leftSection={<IconPalette size={14} />}>
-                Theme
-              </Menu.Item>
-              <Menu.Divider />
+              <Menu.Divider style={{ borderColor: "#333333" }} />
               <Menu.Item
-                leftSection={<IconLogout size={14} />}
+                leftSection={<IconLogout size={16} />}
                 color="red"
                 onClick={() => setOpened(true)}
               >
@@ -334,21 +425,24 @@ export function HeaderBar({
             </Menu.Dropdown>
           </Menu>
         </Group>
-        <Modal
-          opened={opened}
-          onClose={() => setOpened(false)}
-          title="¿Seguro que quieres salir?"
-          centered
-        >
-          <p>Todo proceso sin guardar se perderá.</p>
-          <Button color="red" onClick={handleLogout} mr={8}>
+      </Group>
+
+      <Modal
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title="¿Seguro que quieres salir?"
+        centered
+      >
+        <p>Todo proceso sin guardar se perderá.</p>
+        <Group mt="md">
+          <Button color="red" onClick={handleLogout}>
             Sí, salir
           </Button>
           <Button variant="outline" onClick={() => setOpened(false)}>
             Cancelar
           </Button>
-        </Modal>
-      </Group>
+        </Group>
+      </Modal>
     </div>
   );
 }

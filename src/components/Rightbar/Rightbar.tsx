@@ -37,8 +37,8 @@ export const Rightbar = memo(function Rightbar({
       style={{
         width: open ? WIDTH : 0,
         transition: "width 0.25s ease",
-        background: theme.colors.background.primary,
-        borderLeft: `1px solid ${theme.colors.border.primary}`,
+        background: theme.colors.paper,
+        borderLeft: `2px solid ${theme.colors.ink}`,
         position: "relative",
         overflow: "hidden",
         height: "100%",
@@ -56,6 +56,7 @@ export const Rightbar = memo(function Rightbar({
               top: 12,
               right: 8,
               zIndex: 10,
+              color: theme.colors.ink,
             }}
           >
             <IconX size={16} />
@@ -67,13 +68,13 @@ export const Rightbar = memo(function Rightbar({
                 px="md"
                 pb="sm"
                 style={{
-                  borderBottom: `1px solid ${theme.colors.border.primary}`,
+                  borderBottom: `2px solid ${theme.colors.ink}`,
                 }}
               >
-                <Text size="sm" fw={600} mb={4}>
+                <Text size="sm" fw={700} mb={4} c={theme.colors.ink}>
                   {node.data.label}
                 </Text>
-                <Text size="xs" c="dimmed">
+                <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
                   {node.data.type || "custom"}
                 </Text>
               </Box>

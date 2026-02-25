@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Collapse, Stack, UnstyledButton, Text, Group } from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
+import { IconPlus, IconMinus } from "@tabler/icons-react";
 import { useTheme } from "../../theme/ThemeContext";
 
 interface DropdownSectionProps {
@@ -8,28 +8,31 @@ interface DropdownSectionProps {
   icon: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  color?: string;
 }
 
 export function DropdownSection({ 
   title, 
   icon, 
   children, 
-  defaultOpen = false 
+  defaultOpen = false,
+  color,
 }: DropdownSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { theme } = useTheme();
+  const categoryColor = color || theme.colors.text.secondary;
 
   return (
-    <div>
+    <div style={{ marginBottom: 8 }}>
       <UnstyledButton
         onClick={() => setIsOpen(!isOpen)}
         style={{
           width: "100%",
-          padding: "10px 12px",
-          background: isOpen ? theme.colors.background.tertiary : "transparent",
-          border: `1px solid ${theme.colors.border.primary}`,
-          borderRadius: theme.borderRadius.sm,
-          transition: "all 0.2s ease",
+          padding: "10px 0",
+          background: "transparent",
+          transition: "all 0.15s ease",
+          borderBottom: `1px solid #D4D4D4`,
+          marginBottom: 4,
         }}
       >
         <Group justify="space-between" align="center">
@@ -37,27 +40,34 @@ export function DropdownSection({
             <span style={{ 
               display: "flex", 
               alignItems: "center",
-              color: theme.colors.accent.primary,
+              color: categoryColor,
+              fontSize: 10,
             }}>
               {icon}
             </span>
-            <Text size="sm" fw={600} c={theme.colors.text.primary}>
+            <Text 
+              size="13px"
+              fw={700}
+              c={categoryColor}
+              style={{
+                textTransform: 'uppercase',
+                letterSpacing: '1.2px',
+                fontFamily: 'monospace',
+              }}
+            >
               {title}
             </Text>
           </Group>
-          <IconChevronDown 
-            size={16} 
-            style={{
-              transition: "transform 0.2s ease",
-              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-              color: theme.colors.text.secondary,
-            }}
-          />
+          {isOpen ? (
+            <IconMinus size={12} color={theme.colors.text.tertiary} />
+          ) : (
+            <IconPlus size={12} color={theme.colors.text.tertiary} />
+          )}
         </Group>
       </UnstyledButton>
 
       <Collapse in={isOpen}>
-        <Stack gap={8} style={{ marginTop: 8, paddingLeft: 4 }}>
+        <Stack gap={2} style={{ marginTop: 8, paddingLeft: 0, marginBottom: 8 }}>
           {children}
         </Stack>
       </Collapse>

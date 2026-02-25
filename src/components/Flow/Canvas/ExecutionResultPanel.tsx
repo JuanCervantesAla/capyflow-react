@@ -35,21 +35,21 @@ export function ExecutionResultPanel({
   const [activeTab, setActiveTab] = useState<"current" | "history">("current");
 
   return (
-    <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box style={{ height: "100%", display: "flex", flexDirection: "column", background: theme.colors.paper }}>
       <Tabs
         value={activeTab}
         onChange={(value) => setActiveTab(value as "current" | "history")}
         style={{ height: "100%", display: "flex", flexDirection: "column" }}
       >
         <Tabs.List grow>
-          <Tabs.Tab value="current">Ejecución Actual</Tabs.Tab>
-          <Tabs.Tab value="history">Historial</Tabs.Tab>
+          <Tabs.Tab value="current">EJECUCIÓN</Tabs.Tab>
+          <Tabs.Tab value="history">HISTORIAL</Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="current" style={{ flex: 1, overflow: "hidden" }}>
+        <Tabs.Panel value="current" style={{ flex: 1, overflow: "hidden", background: theme.colors.paper }}>
           {!result && !isLoading ? (
             <Box p="xl" style={{ textAlign: "center" }}>
-              <Text c="dimmed" size="sm">
+              <Text c={theme.colors.ink} size="sm" style={{ opacity: 0.5 }}>
                 Ejecuta un flujo para ver resultados
               </Text>
             </Box>
@@ -58,7 +58,7 @@ export function ExecutionResultPanel({
           )}
         </Tabs.Panel>
 
-        <Tabs.Panel value="history" style={{ flex: 1, overflow: "hidden" }}>
+        <Tabs.Panel value="history" style={{ flex: 1, overflow: "hidden", background: theme.colors.paper }}>
           <ExecutionHistoryPanel flowId={flowId} />
         </Tabs.Panel>
       </Tabs>
@@ -77,10 +77,14 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
     <ScrollArea style={{ height: "100%" }} type="auto">
         <Stack gap="md" style={{ padding: "1rem" }}>
           {isLoading && (
-            <Card p="sm" withBorder>
+            <Card p="sm" withBorder style={{
+              background: theme.colors.paper,
+              borderColor: theme.colors.ink,
+              borderWidth: 2,
+            }}>
               <Group gap="sm">
-                <Loader size="sm" />
-                <Text size="xs">Ejecutando flujo…</Text>
+                <Loader size="sm" color={theme.colors.ink} />
+                <Text size="xs" c={theme.colors.ink} fw={600}>Ejecutando flujo…</Text>
               </Group>
             </Card>
           )}
@@ -91,30 +95,26 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
               radius="md"
               withBorder
               style={{
-                background:
-                  result.status === "success"
-                    ? "rgba(16,185,129,0.08)"
-                    : result.status === "error"
-                    ? "rgba(244,63,94,0.08)"
-                    : "rgba(59,130,246,0.08)",
+                background: theme.colors.paper,
+                borderWidth: 2,
                 borderColor:
                   result.status === "success"
                     ? "#10b981"
                     : result.status === "error"
                     ? "#f43f5e"
-                    : "#3b82f6",
+                    : theme.colors.ink,
               }}
             >
               <Group justify="space-between">
                 <Group gap="xs">
                   {result.status === "success" ? (
-                    <IconCheck size={16} color="#10b981" />
+                    <IconCheck size={16} color="#10b981" strokeWidth={2.5} />
                   ) : result.status === "error" ? (
-                    <IconX size={16} color="#f43f5e" />
+                    <IconX size={16} color="#f43f5e" strokeWidth={2.5} />
                   ) : (
-                    <IconClock size={16} color="#3b82f6" />
+                    <IconClock size={16} color={theme.colors.ink} strokeWidth={2.5} />
                   )}
-                  <Text size="xs" fw={600}>
+                  <Text size="xs" fw={700} c={theme.colors.ink}>
                     {result.status === "success"
                       ? "Ejecución Exitosa"
                       : result.status === "error"
@@ -122,7 +122,12 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
                       : "Ejecución en Progreso"}
                   </Text>
                 </Group>
-                <Badge size="sm" variant="light">
+                <Badge size="sm" variant="light" color="gray" style={{
+                  borderColor: theme.colors.ink,
+                  borderWidth: 1,
+                  background: theme.colors.paper,
+                  color: theme.colors.ink,
+                }}>
                   {result.durationMs}ms
                 </Badge>
               </Group>
@@ -136,7 +141,7 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
 
           {result?.executedNodes?.length > 0 && (
             <div>
-              <Text fw={600} size="sm" mb="xs">
+              <Text fw={700} size="sm" mb="xs" c={theme.colors.ink}>
                 Nodos Ejecutados ({result.executedNodes.length})
               </Text>
               <Stack gap="xs">
@@ -151,30 +156,34 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
                       radius="md"
                       withBorder
                       style={{
-                        background: theme.colors.background.secondary,
+                        background: theme.colors.paper,
+                        borderWidth: 2,
                         borderColor:
                           nodeResult.status === "success"
                             ? "#10b981"
                             : nodeResult.status === "error"
                             ? "#f43f5e"
-                            : "#94a3b8",
+                            : theme.colors.ink,
                       }}
                     >
                       <Stack gap="xs">
                         <Group justify="space-between">
                           <Group gap={6} align="center" wrap="nowrap">
                             {nodeResult.status === "success" ? (
-                              <IconCheck size={14} color="#10b981" />
+                              <IconCheck size={14} color="#10b981" strokeWidth={2.5} />
                             ) : nodeResult.status === "error" ? (
-                              <IconX size={14} color="#f43f5e" />
+                              <IconX size={14} color="#f43f5e" strokeWidth={2.5} />
                             ) : (
-                              <IconClock size={14} color="#94a3b8" />
+                              <IconClock size={14} color={theme.colors.ink} strokeWidth={2.5} />
                             )}
-                            <Text size="xs" fw={500} title={nodeId}>
+                            <Text size="xs" fw={600} title={nodeId} c={theme.colors.ink}>
                               {nodeLabels[nodeId] || nodeId}
                             </Text>
                           </Group>
-                          <Badge size="xs" variant="dot">
+                          <Badge size="xs" variant="dot" color="gray" style={{
+                            background: theme.colors.paper,
+                            color: theme.colors.ink,
+                          }}>
                             {nodeResult.durationMs}ms
                           </Badge>
                         </Group>
@@ -190,11 +199,13 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
                             <Code
                               block
                               style={{
-                                background:
-                                  theme.colors.background.primary,
+                                background: "rgba(45, 52, 54, 0.05)",
+                                border: `1px solid ${theme.colors.ink}`,
+                                color: theme.colors.ink,
                                 maxHeight: 120,
                                 overflow: "auto",
                                 fontSize: "10px",
+                                fontFamily: "monospace",
                               }}
                             >
                               {JSON.stringify(
@@ -213,20 +224,35 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
           )}
 
           {result && (
-            <Card p="sm" radius="md" withBorder>
+            <Card p="sm" radius="md" withBorder style={{
+              background: theme.colors.paper,
+              borderColor: theme.colors.ink,
+              borderWidth: 2,
+            }}>
               <Group justify="space-between" mb="xs">
-                <Text fw={600} size="sm">
+                <Text fw={700} size="sm" c={theme.colors.ink}>
                   JSON Completo
                 </Text>
                 <CopyButton value={JSON.stringify(result, null, 2)}>
                   {({ copied }) => (
-                    <Tooltip label={copied ? "Copiado" : "Copiar"} withArrow>
+                    <Tooltip label={copied ? "Copiado" : "Copiar"} withArrow styles={{
+                      tooltip: {
+                        background: theme.colors.paper,
+                        border: `2px solid ${theme.colors.ink}`,
+                        color: theme.colors.ink,
+                        fontWeight: 600,
+                      },
+                    }}>
                       <ActionIcon
                         color={copied ? "green" : "gray"}
                         variant="light"
                         size="xs"
+                        style={{
+                          border: `1px solid ${theme.colors.ink}`,
+                          background: theme.colors.paper,
+                        }}
                       >
-                        <IconCopy size={14} />
+                        <IconCopy size={14} color={theme.colors.ink} />
                       </ActionIcon>
                     </Tooltip>
                   )}
@@ -235,10 +261,13 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
               <Code
                 block
                 style={{
-                  background: theme.colors.background.primary,
+                  background: "rgba(45, 52, 54, 0.05)",
+                  border: `1px solid ${theme.colors.ink}`,
+                  color: theme.colors.ink,
                   maxHeight: 150,
                   overflow: "auto",
                   fontSize: "10px",
+                  fontFamily: "monospace",
                 }}
               >
                 {JSON.stringify(result, null, 2)}

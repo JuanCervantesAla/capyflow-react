@@ -9,6 +9,19 @@
   perspective: 1000px;
 }
 
+.react-flow__edges {
+  z-index: 0;
+  pointer-events: none;
+}
+
+.react-flow__edges * {
+  pointer-events: all;
+}
+
+.react-flow__nodes {
+  z-index: 1;
+}
+
 .react-flow__node {
   transform: translate3d(0, 0, 0);
   will-change: transform;
@@ -52,6 +65,18 @@
   image-rendering: optimizeSpeed;
 }
 
+.react-flow__minimap-mask {
+  fill: #FFF8F0;
+  fill-opacity: 0.8;
+  stroke: #2d3436;
+  stroke-width: 2;
+}
+
+.react-flow__minimap-node {
+  stroke: #2d3436;
+  stroke-width: 2;
+}
+
 .react-flow__background {
   transform: translate3d(0, 0, 0);
   will-change: transform;
@@ -60,10 +85,6 @@
 
 .react-flow:not(.dragging) .react-flow__node {
   transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.react-flow:not(.dragging) .react-flow__edge path {
-  transition: d 0.05s linear;
 }
 
 .react-flow__node.selected {
@@ -87,4 +108,38 @@
 .react-flow__selection {
   contain: layout style paint;
   transform: translate3d(0, 0, 0);
+}
+
+/* Execution Panel Tabs */
+.mantine-Tabs-list {
+  border-bottom: 2px solid #2d3436 !important;
+  background: transparent !important;
+  gap: 0 !important;
+  margin: 0 !important;
+}
+
+.mantine-Tabs-tab {
+  background: #FFF8F0 !important;
+  color: #2d3436 !important;
+  opacity: 0.6 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  padding: 14px 20px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+}
+
+.mantine-Tabs-tab:hover {
+  opacity: 0.8 !important;
+}
+
+.mantine-Tabs-tab[data-active="true"],
+.mantine-Tabs-tab[data-active] {
+  background: #000000 !important;
+  color: #E8950C !important;
+  opacity: 1 !important;
 }

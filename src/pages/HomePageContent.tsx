@@ -2,8 +2,8 @@ import { useContext, useEffect, useState, useRef } from "react";
 import { HeaderBar } from "../components/HeaderBar/HeaderBar";
 import { Sidebar } from "../components/SideBar/SideBar";
 import { FlowCanvas } from "../components/Flow/Canvas/FlowCanvas";
-import { ExecutionPanelWrapper } from "../components/Flow/Canvas/ExecutionPanelWrapper";
 import { Rightbar } from "../components/Rightbar/Rightbar";
+import { RightPanels } from "../components/Rightbar/RightPanels";
 import { AIGenerateModal } from "../components/UI/AIGenerateModal";
 import { AIRepairModal } from "../components/UI/AIRepairModal";
 import { APIKeySettingsModal } from "../components/UI/APIKeySettingsModal";
@@ -18,7 +18,7 @@ import type { ExecutionResult } from "../hooks/mutations/Flow/useExecuteFlow";
 
 export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [executionCollapsed, setExecutionCollapsed] = useState(false);
+  const [rightPanelsCollapsed, setRightPanelsCollapsed] = useState(false);
   const [executionResult, setExecutionResult] =
     useState<ExecutionResult | null>(null);
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
@@ -80,7 +80,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
     const handler = () => {
       const small = window.innerWidth < 1024;
       setSidebarCollapsed(small);
-      setExecutionCollapsed(small);
+      setRightPanelsCollapsed(small);
 
       if (small) {
         handleCloseRightbar();
@@ -117,8 +117,8 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const handleExecutionUpdate = (data: any) => {
     setExecutionResult(data);
 
-    if (data.status !== "idle" && executionCollapsed && !rightbarOpened) {
-      setExecutionCollapsed(false);
+    if (data.status !== "idle" && rightPanelsCollapsed && !rightbarOpened) {
+      setRightPanelsCollapsed(false);
     }
   };
 
@@ -235,12 +235,12 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
           flowId={flowId}
         />
 
-        <ExecutionPanelWrapper
+        <RightPanels
+          collapsed={rightPanelsCollapsed}
+          onToggle={() => setRightPanelsCollapsed((v) => !v)}
           flowId={flowId}
-          collapsed={executionCollapsed}
-          onToggle={() => setExecutionCollapsed((v) => !v)}
-          result={executionResult}
-          isLoading={isExecuting}
+          executionResult={executionResult}
+          isExecuting={isExecuting}
         />
       </div>
     </div>

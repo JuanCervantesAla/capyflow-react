@@ -56,7 +56,7 @@ const snapPosition = (value: number) =>
   Math.round(value / GRID_SIZE) * GRID_SIZE;
 
 
-export function FlowCanvas({
+function FlowCanvasComponent({
   onNodeSelected,
   onExecutionUpdate,
   onDeselectAll,
@@ -148,22 +148,21 @@ export function FlowCanvas({
       deletable: true,
       focusable: true,
       selectable: true,
+      interactionWidth: 20,
     }),
     [],
   );
 
   const minimapStyle = useMemo(
     () => ({
-      background: theme.colors.background.secondary,
-      border: `1px solid ${theme.colors.border.primary}`,
+      background: theme.colors.paper,
+      border: `2px solid ${theme.colors.ink}`,
       borderRadius: 8,
-      opacity: isDragging ? 0.3 : 1,
-      transition: "opacity 150ms ease",
+      boxShadow: "0 2px 8px rgba(45, 52, 54, 0.1)",
     }),
     [
-      theme.colors.background.secondary,
-      theme.colors.border.primary,
-      isDragging,
+      theme.colors.paper,
+      theme.colors.ink,
     ],
   );
 
@@ -173,32 +172,20 @@ export function FlowCanvas({
         ? "#10b981"
         : node.data?.status === "error"
         ? "#f43f5e"
-        : node.data?.color || theme.colors.accent.primary,
-    [theme.colors.accent.primary],
+        : node.data?.color || theme.colors.ink,
+    [theme.colors.ink],
   );
 
   const maskColor = useMemo(
-    () => theme.colors.background.primary + "80",
-    [theme.colors.background.primary],
+    () => theme.colors.paper + "CC",
+    [theme.colors.paper],
   );
 
   const onNodeDragStop = useCallback(
-    (_: any, node: any) => {
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === node.id
-            ? {
-                ...n,
-                position: {
-                  x: snapPosition(node.position.x),
-                  y: snapPosition(node.position.y),
-                },
-              }
-            : n,
-        ),
-      );
+    () => {
+      // Snap is now handled by ReactFlow's snapToGrid prop
     },
-    [setNodes],
+    [],
   );
 
   return (
@@ -208,7 +195,7 @@ export function FlowCanvas({
         width: "100%",
         height: "100%",
         position: "relative",
-        background: theme.colors.background.primary,
+        background: theme.colors.background.canvas,
       }}
     >
       <ReactFlow
@@ -225,6 +212,8 @@ export function FlowCanvas({
         onConnect={onConnect}
         defaultEdgeOptions={defaultEdgeOptions}
         proOptions={proOptions}
+        snapToGrid
+        snapGrid={[GRID_SIZE, GRID_SIZE]}
         fitView
         panOnScroll
         selectionOnDrag
@@ -234,6 +223,7 @@ export function FlowCanvas({
         maxZoom={4}
         deleteKeyCode="Delete"
         elevateNodesOnSelect={false}
+        elevateEdgesOnSelect={false}
         selectNodesOnDrag={false}
         nodesDraggable
         nodesConnectable={!isDragging}
@@ -242,6 +232,8 @@ export function FlowCanvas({
         edgesReconnectable
         autoPanOnConnect={false}
         autoPanOnNodeDrag={false}
+        connectionMode="loose"
+        connectionRadius={50}
         translateExtent={[
           [-2000, -2000],
           [2000, 2000],
@@ -254,7 +246,7 @@ export function FlowCanvas({
         <MemoBackground
           gap={20}
           size={1}
-          color={theme.colors.border.primary}
+          color="#CECEC8"
         />
 
         <MemoPanel position="top-left">
@@ -274,3 +266,17 @@ export function FlowCanvas({
     </div>
   );
 }
+
+// Memo FlowCanvas with custom comparison to prevent re-renders
+// when nodes/edges changes are handled internally by ReactFlow
+export const FlowCanvas = memo(
+  FlowCanvasComponent,
+  (prevProps, nextProps) => {
+    // Only re-render if callbacks change (reference equality)
+    return (
+      prevProps.onNodeSelected === nextProps.onNodeSelected &&
+      prevProps.onExecutionUpdate === nextProps.onExecutionUpdate &&
+      prevProps.onDeselectAll === nextProps.onDeselectAll
+    );
+  }
+);

@@ -6,7 +6,6 @@ import {
   Button,
   Text,
   Group,
-  Alert,
   TextInput,
   Collapse,
   Checkbox,
@@ -19,7 +18,6 @@ import {
   IconSettings,
   IconCheck,
 } from '@tabler/icons-react';
-import { useTheme } from '../../theme/ThemeContext';
 import { getGeminiAPIKey } from '../../api/User/users.api';
 
 interface AIGenerateModalProps {
@@ -37,7 +35,6 @@ export function AIGenerateModal({
   onOpenSettings,
   loading = false,
 }: AIGenerateModalProps) {
-  const { theme } = useTheme();
   const [description, setDescription] = useState('');
   const [useCustomKey, setUseCustomKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
@@ -89,146 +86,209 @@ export function AIGenerateModal({
     <Modal
       opened={opened}
       onClose={handleClose}
-      title={
-        <Group gap="xs">
-          <IconSparkles size={24} style={{ color: theme.colors.accent.primary }} />
-          <Text size="lg" fw={600}>
-            Generar Flujo con IA
-          </Text>
-        </Group>
-      }
+      withCloseButton={false}
+      centered
       size="lg"
+      padding={0}
+      radius={0}
       styles={{
         content: {
-          background: theme.colors.background.primary,
-        },
-        header: {
-          background: theme.colors.background.primary,
-          borderBottom: `1px solid ${theme.colors.border.primary}`,
+          background: '#FFF8F0',
+          border: '3px solid #2d3436',
+          boxShadow: '6px 6px 0px #2d3436',
         },
         body: {
-          padding: theme.spacing.lg,
+          padding: 0,
         },
       }}
     >
+      {/* Header con fondo negro */}
+      <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
+        <Group justify="space-between" align="center">
+          <Group gap="sm">
+            <IconSparkles size={28} className="text-[#e8a020]" />
+            <Stack gap={2}>
+              <Text className="!text-white font-black text-lg tracking-tight uppercase">
+                Generar con IA
+              </Text>
+              <Text className="!text-white/70 text-xs font-medium">
+                ~/ai/generate
+              </Text>
+            </Stack>
+          </Group>
+        </Group>
+      </div>
+
+      {/* Body con padding */}
+      <div className="px-6 py-6 bg-[#FFF8F0]">
       <Stack gap="md">
         {checkingKey ? (
-          <Alert icon={<Loader size={16} />} color="blue" variant="light">
-            <Text size="sm">Verificando configuración...</Text>
-          </Alert>
+          <div className="bg-[#e8f4ff] border-[2.5px] border-[#2d3436] p-4">
+            <Group gap="sm">
+              <Loader size={16} color="#2d3436" />
+              <Text className="text-[#2d3436] text-sm font-semibold">
+                Verificando configuración...
+              </Text>
+            </Group>
+          </div>
         ) : hasStoredKey ? (
-          <Alert
-            icon={<IconCheck size={16} />}
-            title="API Key configurada"
-            color="green"
-            variant="light"
-          >
+          <div className="bg-[#e8ffe8] border-[2.5px] border-[#2d3436] p-4">
+            <Group gap="sm" mb="xs">
+              <IconCheck size={18} className="text-[#2d3436]" />
+              <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
+                API Key Configurada
+              </Text>
+            </Group>
             <Group justify="space-between">
-              <Text size="sm">
+              <Text size="sm" className="text-[#2d3436] font-medium">
                 Usarás tu API key guardada. No necesitas ingresar una nueva.
               </Text>
               {onOpenSettings && (
                 <Button
                   size="xs"
-                  variant="subtle"
                   onClick={() => {
                     onOpenSettings();
                     handleClose();
                   }}
+                  className="
+                    !bg-[#2d3436] !text-[#FFF8F0] !border-[2px] !border-[#2d3436]
+                    !font-bold !text-xs uppercase
+                    !shadow-[2px_2px_0px_#2d3436]
+                    hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+                    hover:!shadow-[3px_3px_0px_#2d3436]
+                    !rounded-none
+                  "
                 >
                   Cambiar
                 </Button>
               )}
             </Group>
-          </Alert>
+          </div>
         ) : (
-          <Alert
-            icon={<IconAlertCircle size={16} />}
-            title="Configura tu API key"
-            color="yellow"
-            variant="light"
-          >
-            <Stack gap="xs">
-              <Text size="sm">
+          <div className="bg-[#fff8e1] border-[2.5px] border-[#2d3436] p-4">
+            <Group gap="sm" mb="xs">
+              <IconAlertCircle size={18} className="text-[#2d3436]" />
+              <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
+                Configura tu API Key
+              </Text>
+            </Group>
+            <Stack gap="sm">
+              <Text size="sm" className="text-[#2d3436] font-medium">
                 Para generar flujos con IA, necesitas una API key de Google Gemini
                 (100% gratis).
               </Text>
               {onOpenSettings && (
                 <Button
                   size="xs"
-                  variant="light"
                   leftSection={<IconKey size={14} />}
                   onClick={() => {
                     onOpenSettings();
                     handleClose();
                   }}
+                  className="
+                    !bg-[#e8a020] !text-[#0a0a08] !border-[2.5px] !border-[#2d3436]
+                    !font-bold !text-xs uppercase
+                    !shadow-[2px_2px_0px_#2d3436]
+                    hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+                    hover:!shadow-[3px_3px_0px_#2d3436]
+                    !rounded-none
+                    !w-auto
+                  "
                 >
                   Configurar API Key permanentemente
                 </Button>
               )}
-              <Text size="xs" c="dimmed">
+              <Text size="xs" className="text-[#2d3436]/70 font-medium">
                 O usa una key temporal en las opciones avanzadas ↓
               </Text>
             </Stack>
-          </Alert>
+          </div>
         )}
 
-        <Alert
-          icon={<IconSparkles size={16} />}
-          title="Describe tu flujo en lenguaje natural"
-          color="blue"
-          variant="light"
-        >
-          <Text size="sm">
+        <div className="bg-[#e8f4ff] border-[2.5px] border-[#2d3436] p-4">
+          <Group gap="sm" mb="xs">
+            <IconSparkles size={18} className="text-[#2d3436]" />
+            <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
+              Describe tu flujo en lenguaje natural
+            </Text>
+          </Group>
+          <Text size="sm" className="text-[#2d3436] font-medium">
             Describe qué tarea o proceso quieres automatizar y la IA generará un flujo
             completo con los nodos necesarios configurados.
           </Text>
-        </Alert>
+        </div>
 
         <Textarea
-          label="¿Qué flujo quieres crear?"
+          label={
+            <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
+              ¿Qué flujo quieres crear?
+            </Text>
+          }
           placeholder="Ejemplo: Quiero un flujo que reciba datos por webhook, valide si el status es 'success' y registre el resultado..."
           value={description}
           onChange={(e) => setDescription(e.currentTarget.value)}
           minRows={5}
           maxRows={10}
           required
+          radius={0}
           styles={{
             input: {
-              background: theme.colors.background.tertiary,
-              borderColor: theme.colors.border.primary,
-              color: theme.colors.text.primary,
+              background: '#faf8f4',
+              border: '2.5px solid #2d3436',
+              color: '#2d3436',
+              fontWeight: 600,
+              fontSize: '14px',
+              padding: '12px',
+              fontFamily: 'inherit',
             },
           }}
+          className="
+            focus-within:shadow-[4px_4px_0_#e8a020]
+            focus-within:-translate-x-[2px]
+            focus-within:-translate-y-[2px]
+            transition-all
+          "
         />
 
         <Stack gap="xs">
-          <Text size="sm" fw={500} c="dimmed">
+          <Text className="text-[#2d3436] text-sm font-bold uppercase tracking-wide">
             Ejemplos de descripciones:
           </Text>
+          <div className="space-y-1">
           {examples.map((example, index) => (
-            <Button
+            <button
               key={index}
-              variant="subtle"
-              size="xs"
               onClick={() => setDescription(example)}
-              styles={{
-                root: {
-                  justifyContent: 'flex-start',
-                  color: theme.colors.text.secondary,
-                },
-              }}
+              className="
+                w-full text-left px-3 py-2 text-sm
+                bg-[#faf8f4] border-[2px] border-[#2d3436]/30
+                text-[#2d3436] font-medium
+                hover:border-[#e8a020] hover:bg-[#fff8f0]
+                hover:-translate-x-[1px] hover:-translate-y-[1px]
+                hover:shadow-[2px_2px_0_#e8a020]
+                transition-all duration-150
+              "
             >
               • {example}
-            </Button>
+            </button>
           ))}
+          </div>
         </Stack>
 
         <Button
-          variant="subtle"
           size="xs"
           leftSection={<IconSettings size={14} />}
           onClick={() => setShowAdvanced(!showAdvanced)}
+          className="
+            !bg-[#2d3436] !text-[#FFF8F0] !border-[2px] !border-[#2d3436]
+            !font-bold !text-xs uppercase tracking-wide
+            !shadow-[2px_2px_0px_#2d3436]
+            hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+            hover:!shadow-[3px_3px_0px_#2d3436]
+            hover:!bg-[#e8a020] hover:!text-[#0a0a08]
+            !rounded-none
+            !w-auto
+          "
         >
           {showAdvanced ? 'Ocultar' : 'Mostrar'} opciones avanzadas
         </Button>
@@ -251,54 +311,69 @@ export function AIGenerateModal({
                   type="password"
                   leftSection={<IconKey size={16} />}
                   required={useCustomKey}
+                  radius={0}
                   styles={{
                     input: {
-                      background: theme.colors.background.tertiary,
-                      borderColor: theme.colors.border.primary,
-                      color: theme.colors.text.primary,
+                      background: '#faf8f4',
+                      border: '2.5px solid #2d3436',
+                      color: '#2d3436',
+                      fontWeight: 600,
+                      fontSize: '14px',
                     },
                   }}
+                  className="
+                    focus-within:shadow-[4px_4px_0_#e8a020]
+                    focus-within:-translate-x-[2px]
+                    focus-within:-translate-y-[2px]
+                    transition-all
+                  "
                 />
-                <Alert
-                  icon={<IconAlertCircle size={16} />}
-                  color="yellow"
-                  variant="light"
-
-                                >
-                  <Text size="xs">
+                <div className="bg-[#fff8e1] border-[2.5px] border-[#2d3436] p-4">
+                  <Group gap="sm" mb="xs">
+                    <IconAlertCircle size={18} className="text-[#2d3436]" />
+                  </Group>
+                  <Text size="xs" className="text-[#2d3436] font-medium">
                     Tu API key no se almacena y solo se usa para esta generación. Obtén
                     una GRATIS (sin tarjeta de crédito) en{' '}
                     <a
                       href="https://aistudio.google.com/apikey"
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: theme.colors.accent.primary }}
+                      className="text-[#e8a020] font-bold underline hover:text-[#2d3436]"
                     >
                       Google AI Studio
                     </a>
                   </Text>
-                </Alert>
+                </div>
               </>
             )}
 
             {!useCustomKey && (
-              <Alert
-                icon={<IconAlertCircle size={16} />}
-                color="gray"
-                variant="light"
-
-              >
-                <Text size="xs">
+              <div className="bg-[#f0f0f0] border-[2.5px] border-[#2d3436] p-4">
+                <Text size="xs" className="text-[#2d3436] font-medium">
                   Se usará la API key configurada en el servidor. Si no hay una
                   configurada, deberás usar tu propia key.
                 </Text>
-              </Alert>
+              </div>
             )}
           </Stack>
         </Collapse>
 
         <Group justify="flex-end" mt="md">
-          <Button variant="subtle" onClick={handleClose} disabled={loading}>
+          <Button 
+            onClick={handleClose} 
+            disabled={loading}
+            className="
+              !bg-[#FFF8F0] !text-[#2d3436] !border-[2.5px] !border-[#2d3436]
+              !font-bold !text-sm uppercase tracking-wide
+              transition-all duration-200 ease-out
+              !shadow-[2px_2px_0px_#2d3436]
+              hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+              hover:!shadow-[3px_3px_0px_#2d3436]
+              !rounded-none
+              !h-[40px]
+            "
+          >
             Cancelar
           </Button>
           <Button
@@ -312,14 +387,24 @@ export function AIGenerateModal({
               (useCustomKey && !apiKey.trim()) || 
               loading
             }
-            style={{
-              background: theme.colors.accent.primary,
-            }}
+            className="
+              !bg-[#e8a020] !text-[#0a0a08] !border-[3px] !border-[#2d3436]
+              !font-black !text-sm uppercase tracking-wide
+              transition-all duration-200 ease-out
+              !shadow-[3px_3px_0px_#2d3436]
+              hover:!-translate-x-[2px] hover:!-translate-y-[2px]
+              hover:!shadow-[5px_5px_0px_#2d3436]
+              disabled:!opacity-40
+              disabled:!hover:translate-x-0 disabled:!hover:translate-y-0
+              !rounded-none
+              !h-[44px]
+            "
           >
             {loading ? 'Generando...' : 'Generar Flujo'}
           </Button>
         </Group>
       </Stack>
+      </div>
     </Modal>
   );
 }
