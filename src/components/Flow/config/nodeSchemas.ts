@@ -243,6 +243,182 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     },
   },
 
+  'switch': {
+    type: 'switch',
+    displayName: 'Switch',
+    description: 'Enrutamiento multi-camino basado en valor',
+    category: 'logic',
+    parameters: [
+      {
+        name: 'Input Value',
+        key: 'inputValue',
+        type: 'json',
+        required: true,
+        placeholder: '{{ $json.status }}',
+        description: 'Valor a evaluar contra los casos',
+      },
+      {
+        name: 'Cases',
+        key: 'cases',
+        type: 'json',
+        required: true,
+        placeholder: JSON.stringify([
+          { value: 'success', output: 'case_success' },
+          { value: 'pending', output: 'case_pending' },
+          { value: 'error', output: 'case_error' }
+        ], null, 2),
+        description: 'Array de casos {value, output}',
+      },
+      {
+        name: 'Mode',
+        key: 'mode',
+        type: 'select',
+        required: true,
+        defaultValue: 'equals',
+        options: ['equals', 'contains'],
+        description: 'Modo de comparación',
+      },
+      {
+        name: 'Default Case',
+        key: 'defaultCase',
+        type: 'string',
+        required: false,
+        placeholder: 'default',
+        description: 'Salida por defecto si no hay match',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.inputValue) return 'Input Value es requerido';
+      if (!params.cases || !Array.isArray(params.cases)) {
+        return 'Cases debe ser un array';
+      }
+      if (params.cases.length === 0) {
+        return 'Debe definir al menos un caso';
+      }
+      for (const c of params.cases) {
+        if (!c.value || !c.output) {
+          return 'Cada caso debe tener value y output';
+        }
+      }
+      return null;
+    },
+  },
+
+  'error-handler': {
+    type: 'error-handler',
+    displayName: 'Error Handler',
+    description: 'Manejo de errores con reintentos y fallback',
+    category: 'logic',
+    parameters: [
+      {
+        name: 'Input Data',
+        key: 'inputData',
+        type: 'json',
+        required: true,
+        placeholder: '{{ $json }}',
+        description: 'Datos a verificar por errores',
+      },
+      {
+        name: 'Max Retries',
+        key: 'maxRetries',
+        type: 'number',
+        required: false,
+        defaultValue: 3,
+        description: 'Número máximo de reintentos',
+      },
+      {
+        name: 'Retry Delay (ms)',
+        key: 'retryDelay',
+        type: 'number',
+        required: false,
+        defaultValue: 1000,
+        description: 'Tiempo entre reintentos en milisegundos',
+      },
+      {
+        name: 'Fallback Mode',
+        key: 'fallbackMode',
+        type: 'select',
+        required: true,
+        defaultValue: 'ignore',
+        options: ['ignore', 'default', 'stop'],
+        description: 'Estrategia cuando se agotan reintentos',
+      },
+      {
+        name: 'Default Value',
+        key: 'defaultValue',
+        type: 'json',
+        required: false,
+        placeholder: '{}',
+        description: 'Valor por defecto (fallbackMode=default)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.inputData) return 'Input Data es requerido';
+      if (!params.fallbackMode) return 'Fallback Mode es requerido';
+      if (params.fallbackMode === 'default' && !params.defaultValue) {
+        return 'Default Value es requerido cuando fallbackMode=default';
+      }
+      if (params.maxRetries && params.maxRetries < 0) {
+        return 'Max Retries debe ser >= 0';
+      }
+      if (params.retryDelay && params.retryDelay < 0) {
+        return 'Retry Delay debe ser >= 0';
+      }
+      return null;
+    },
+  },
+
+  'stop': {
+    type: 'stop',
+    displayName: 'Stop',
+    description: 'Detiene el flujo condicionalmente',
+    category: 'logic',
+    parameters: [
+      {
+        name: 'Condition',
+        key: 'condition',
+        type: 'select',
+        required: true,
+        defaultValue: 'always',
+        options: ['always', 'if-true', 'if-false', 'if-error'],
+        description: 'Condición para detener el flujo',
+      },
+      {
+        name: 'Input Value',
+        key: 'inputValue',
+        type: 'json',
+        required: false,
+        placeholder: '{{ $json }}',
+        description: 'Valor a evaluar (excepto always/if-error)',
+      },
+      {
+        name: 'Stop Message',
+        key: 'stopMessage',
+        type: 'string',
+        required: false,
+        placeholder: 'Workflow stopped',
+        description: 'Mensaje al detener',
+      },
+      {
+        name: 'Stop Code',
+        key: 'stopCode',
+        type: 'select',
+        required: true,
+        defaultValue: 'success',
+        options: ['success', 'error'],
+        description: 'Código de salida',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.condition) return 'Condition es requerida';
+      if ((params.condition === 'if-true' || params.condition === 'if-false') && !params.inputValue) {
+        return 'Input Value es requerido para if-true/if-false';
+      }
+      if (!params.stopCode) return 'Stop Code es requerido';
+      return null;
+    },
+  },
+
   'transform-data': {
     type: 'transform-data',
     displayName: 'Transform Data',
@@ -885,6 +1061,346 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     validateBeforeExecute: (params) => {
       if (!params.code || params.code.trim() === '') {
         return 'El código JavaScript es requerido';
+      }
+      return null;
+    },
+  },
+
+  'sort': {
+    type: 'sort',
+    displayName: 'Sort',
+    description: 'Ordena arrays por campo o valor (ascendente/descendente)',
+    category: 'data',
+    parameters: [
+      {
+        name: 'Input Array',
+        key: 'inputData',
+        type: 'json',
+        required: true,
+        placeholder: '[{"name":"Ana","age":25},{"name":"Bob","age":30}]',
+        description: 'Array a ordenar',
+      },
+      {
+        name: 'Field',
+        key: 'field',
+        type: 'string',
+        required: false,
+        placeholder: 'age',
+        description: 'Campo por el cual ordenar (opcional para arrays primitivos)',
+      },
+      {
+        name: 'Order',
+        key: 'order',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'asc', label: 'Ascendente' },
+          { value: 'desc', label: 'Descendente' },
+        ],
+        defaultValue: 'asc',
+        description: 'Orden de clasificación',
+      },
+      {
+        name: 'Type',
+        key: 'type',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'string', label: 'String' },
+          { value: 'number', label: 'Number' },
+          { value: 'date', label: 'Date' },
+        ],
+        defaultValue: 'string',
+        description: 'Tipo de dato para comparación',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.inputData) {
+        return 'Input Array es requerido';
+      }
+      if (!params.order) {
+        return 'Order es requerido';
+      }
+      return null;
+    },
+  },
+
+  'csv-parser': {
+    type: 'csv-parser',
+    displayName: 'CSV Parser',
+    description: 'Convierte entre CSV y JSON (parse/stringify)',
+    category: 'data',
+    parameters: [
+      {
+        name: 'Input Data',
+        key: 'inputData',
+        type: 'textarea',
+        required: true,
+        placeholder: 'name,age\nAna,25\nBob,30',
+        description: 'CSV string (modo parse) o JSON array (modo stringify)',
+      },
+      {
+        name: 'Mode',
+        key: 'mode',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'parse', label: 'Parse (CSV → JSON)' },
+          { value: 'stringify', label: 'Stringify (JSON → CSV)' },
+        ],
+        defaultValue: 'parse',
+        description: 'Modo de conversión',
+      },
+      {
+        name: 'Delimiter',
+        key: 'delimiter',
+        type: 'string',
+        required: false,
+        defaultValue: ',',
+        placeholder: ',',
+        description: 'Delimitador de columnas (por defecto: coma)',
+      },
+      {
+        name: 'Has Header',
+        key: 'hasHeader',
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        description: 'La primera fila contiene nombres de columnas',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.inputData) {
+        return 'Input Data es requerido';
+      }
+      if (!params.mode) {
+        return 'Mode es requerido';
+      }
+      return null;
+    },
+  },
+
+  'regex-extract': {
+    type: 'regex-extract',
+    displayName: 'Regex Extract',
+    description: 'Extrae datos usando expresiones regulares',
+    category: 'data',
+    parameters: [
+      {
+        name: 'Input Text',
+        key: 'inputData',
+        type: 'textarea',
+        required: true,
+        placeholder: 'Email: test@example.com, Phone: 555-1234',
+        description: 'Texto donde buscar coincidencias',
+      },
+      {
+        name: 'Pattern',
+        key: 'pattern',
+        type: 'string',
+        required: true,
+        placeholder: '\\d{3}-\\d{4}',
+        description: 'Expresión regular (sin delimitadores)',
+      },
+      {
+        name: 'Mode',
+        key: 'mode',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'first', label: 'First Match' },
+          { value: 'all', label: 'All Matches' },
+          { value: 'groups', label: 'Capture Groups' },
+        ],
+        defaultValue: 'first',
+        description: 'Modo de extracción',
+      },
+      {
+        name: 'Flags',
+        key: 'flags',
+        type: 'string',
+        required: false,
+        placeholder: 'i',
+        description: 'Flags: i (case-insensitive), m (multiline), s (dotall)',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.inputData) {
+        return 'Input Text es requerido';
+      }
+      if (!params.pattern || params.pattern.trim() === '') {
+        return 'Pattern es requerido';
+      }
+      return null;
+    },
+  },
+
+  'email': {
+    type: 'email',
+    displayName: 'Email',
+    description: 'Envía emails mediante SMTP',
+    category: 'integration',
+    parameters: [
+      {
+        name: 'To',
+        key: 'to',
+        type: 'string',
+        required: true,
+        placeholder: 'recipient@example.com',
+        description: 'Destinatario(s) - separar múltiples con coma',
+      },
+      {
+        name: 'Subject',
+        key: 'subject',
+        type: 'string',
+        required: true,
+        placeholder: 'Asunto del email',
+        description: 'Asunto del mensaje',
+      },
+      {
+        name: 'Body',
+        key: 'body',
+        type: 'textarea',
+        required: true,
+        placeholder: 'Contenido del mensaje...',
+        description: 'Cuerpo del email en texto plano',
+      },
+      {
+        name: 'From',
+        key: 'from',
+        type: 'string',
+        required: true,
+        placeholder: 'sender@example.com',
+        description: 'Dirección del remitente',
+      },
+      {
+        name: 'SMTP Host',
+        key: 'smtpHost',
+        type: 'string',
+        required: true,
+        placeholder: 'smtp.gmail.com',
+        description: 'Servidor SMTP',
+      },
+      {
+        name: 'SMTP Port',
+        key: 'smtpPort',
+        type: 'number',
+        required: false,
+        defaultValue: 587,
+        description: 'Puerto SMTP (587 para TLS, 465 para SSL)',
+      },
+      {
+        name: 'SMTP User',
+        key: 'smtpUser',
+        type: 'string',
+        required: true,
+        placeholder: 'usuario@example.com',
+        description: 'Usuario para autenticación SMTP',
+      },
+      {
+        name: 'SMTP Password',
+        key: 'smtpPassword',
+        type: 'password',
+        required: true,
+        placeholder: '••••••••',
+        description: 'Contraseña SMTP',
+      },
+      {
+        name: 'CC',
+        key: 'cc',
+        type: 'string',
+        required: false,
+        placeholder: 'cc@example.com',
+        description: 'Copia (CC) - separar múltiples con coma',
+      },
+      {
+        name: 'BCC',
+        key: 'bcc',
+        type: 'string',
+        required: false,
+        placeholder: 'bcc@example.com',
+        description: 'Copia oculta (BCC) - separar múltiples con coma',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.to || params.to.trim() === '') {
+        return 'To es requerido';
+      }
+      if (!params.subject || params.subject.trim() === '') {
+        return 'Subject es requerido';
+      }
+      if (!params.body || params.body.trim() === '') {
+        return 'Body es requerido';
+      }
+      if (!params.from || params.from.trim() === '') {
+        return 'From es requerido';
+      }
+      if (!params.smtpHost || params.smtpHost.trim() === '') {
+        return 'SMTP Host es requerido';
+      }
+      if (!params.smtpUser || params.smtpUser.trim() === '') {
+        return 'SMTP User es requerido';
+      }
+      if (!params.smtpPassword || params.smtpPassword.trim() === '') {
+        return 'SMTP Password es requerido';
+      }
+      return null;
+    },
+  },
+
+  'telegram': {
+    type: 'telegram',
+    displayName: 'Telegram',
+    description: 'Envía mensajes mediante Telegram Bot API',
+    category: 'integration',
+    parameters: [
+      {
+        name: 'Bot Token',
+        key: 'botToken',
+        type: 'password',
+        required: true,
+        placeholder: '123456789:ABCdefGHIjklMNOpqrsTUVwxyz',
+        description: 'Token del bot de Telegram (@BotFather)',
+      },
+      {
+        name: 'Chat ID',
+        key: 'chatId',
+        type: 'string',
+        required: true,
+        placeholder: '123456789',
+        description: 'ID del chat o canal (usar @userinfobot)',
+      },
+      {
+        name: 'Message',
+        key: 'message',
+        type: 'textarea',
+        required: true,
+        placeholder: 'Tu mensaje aquí...',
+        description: 'Mensaje a enviar',
+      },
+      {
+        name: 'Parse Mode',
+        key: 'parseMode',
+        type: 'select',
+        required: false,
+        defaultValue: '',
+        options: [
+          { value: '', label: 'Sin formato' },
+          { value: 'Markdown', label: 'Markdown' },
+          { value: 'HTML', label: 'HTML' },
+        ],
+        description: 'Formato del mensaje',
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.botToken || params.botToken.trim() === '') {
+        return 'Bot Token es requerido';
+      }
+      if (!params.chatId || params.chatId.trim() === '') {
+        return 'Chat ID es requerido';
+      }
+      if (!params.message || params.message.trim() === '') {
+        return 'Message es requerido';
       }
       return null;
     },
