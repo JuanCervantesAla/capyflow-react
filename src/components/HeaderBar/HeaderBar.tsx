@@ -22,7 +22,7 @@ import {
 } from "@tabler/icons-react";
 import { useTheme } from "../../theme/ThemeContext";
 import { useUsers } from "../../hooks/useUsers";
-import miLogo from '../../assets/logo2.png';
+import miLogo from '../../assets/logo_orange.png';
 import { useState, useEffect } from "react";
 
 interface HeaderBarProps {
@@ -75,15 +75,28 @@ export function HeaderBar({
     >
       <Group justify="space-between" align="center" w="100%" wrap="nowrap">
         <Group gap={0} wrap="nowrap" style={{ minWidth: 0 }}>
-          <Group gap={10} wrap="nowrap" px={16}>
+          {/* <Group gap={10} wrap="nowrap" px={16}>
             <img src={miLogo} style={{ width: 28, height: 28 }} alt="Logo" />
+          </Group> */}
+
+          {/* <div style={{ 
+            width: 2, 
+            height: 40, 
+            background: "#222222" 
+          }} /> */}
+
+          <Group gap={5} wrap="nowrap" px={8}>
+            <img src={miLogo} style={{ width: 33, height: 33 }} alt="Logo" />
             <Text
-              fw={700}
-              size="md"
-              c={theme.colors.accent.primary}
-              style={{ letterSpacing: '0.3px', fontFamily: 'system-ui, -apple-system, sans-serif' }}
+              fw={900}
+              size="20px"
+              c="#E8950C"
+              style={{
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                letterSpacing: '0.5px',
+              }}
             >
-              capyflow
+              CapyFlow
             </Text>
           </Group>
 
