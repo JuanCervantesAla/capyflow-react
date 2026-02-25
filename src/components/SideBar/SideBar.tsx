@@ -1,11 +1,9 @@
 import {
   Stack,
-  Title,
   ScrollArea,
   Loader,
   Text,
   ActionIcon,
-  Group,
   Box,
 } from "@mantine/core";
 import { useMemo } from "react";
@@ -27,7 +25,6 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
   const reactFlow = useReactFlow();
   const { data: nodeTypes, isLoading, error } = useNodeTypes();
 
-  /* ------------------ Agrupar nodos ------------------ */
   const groupedNodeTypes = useMemo(() => {
     if (!nodeTypes) return {};
     return nodeTypes.reduce((acc, nodeType) => {
@@ -38,17 +35,22 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
     }, {} as Record<string, typeof nodeTypes>);
   }, [nodeTypes]);
 
-  const addAndCenter = (nodeData: any) => {
-    addNode(
-      nodeData, // 👈 ya trae color correcto
-      "custom",
-      (node) => {
-        reactFlow.setCenter(node.position.x, node.position.y, { zoom: 1 });
-      }
-    );
-  };
+  const categoryOrder = ["trigger", "data", "io", "logic", "control"];
+  const sortedCategories = useMemo(() => {
+    return Object.entries(groupedNodeTypes).sort((a, b) => {
+      const indexA = categoryOrder.indexOf(a[0].toLowerCase());
+      const indexB = categoryOrder.indexOf(b[0].toLowerCase());
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  }, [groupedNodeTypes]);
 
-  /* ------------------ CONTENIDO ------------------ */
+  const addAndCenter = (nodeData: any) =>
+    addNode(nodeData, "custom", (node) => {
+      reactFlow.setCenter(node.position.x, node.position.y, { zoom: 1 });
+    });
+
   const content = () => {
     if (isLoading) {
       return (
@@ -61,38 +63,39 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
     if (error) {
       return (
         <Box p="md">
-          <Text c="red" size="sm">Error loading node types</Text>
+          <Text c={theme.colors.text.accent} size="sm">Error loading node types</Text>
         </Box>
       );
     }
 
     return (
-      <ScrollArea h="100%">
-        <Box px="md" pb="md">
-          <Stack gap="lg">
-            <Group justify="space-between">
-              <Title
-                order={5}
+      <ScrollArea h="100%" type="scroll">
+        <Box px={16} pb="xl">
+          <Stack gap={0}>
+            <Box 
+              py={16} 
+              pb={12}
+              style={{
+                borderBottom: '2px solid #000000',
+                marginBottom: 12,
+              }}
+            >
+              <Text
+                size="13px"
+                fw={700}
+                c={theme.colors.text.sidebarTitle}
                 style={{
-                  color: theme.colors.text.accent,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
+                  letterSpacing: '1.5px',
+                  textTransform: 'uppercase',
+                  fontFamily: 'monospace',
                 }}
               >
-                Nodes
-              </Title>
-            </Group>
+                NODES
+              </Text>
+            </Box>
 
-            {Object.entries(groupedNodeTypes).map(([category, types]) => {
-              const categoryColor =
-                {
-                  trigger: theme.colors.accent.primary,
-                  ai: theme.colors.accent.cyan,
-                  data: theme.colors.accent.tertiary,
-                  logic: theme.colors.accent.primary,
-                  io: theme.colors.accent.tertiary,
-                  integration: theme.colors.accent.tertiary,
-                }[category.toLowerCase()] || theme.colors.text.accent;
+            {sortedCategories.map(([category, types]) => {
+              const categoryColor = theme.colors.category[category.toLowerCase() as keyof typeof theme.colors.category] || theme.colors.text.secondary;
 
               const IconComponent = getIconComponent(types[0]?.icon || "IconBolt");
 
@@ -100,7 +103,8 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
                 <DropdownSection
                   key={category}
                   title={category}
-                  icon={<IconComponent size={18} color={categoryColor} />}
+                  icon={<IconComponent size={14} />}
+                  color={categoryColor}
                   defaultOpen={category.toLowerCase() === "trigger"}
                 >
                   {types.map((nodeType) => {
@@ -108,26 +112,7 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
                     return (
                       <ActionButton
                         key={nodeType.id}
-                        // icon={
-                        //   <Box style={{ position: "relative" }}>
-                        //     <Box
-                        //       style={{
-                        //         position: "absolute",
-                        //         top: "50%",
-                        //         left: "50%",
-                        //         transform: "translate(-50%, -50%)",
-                        //         width: 24,
-                        //         height: 24,
-                        //         borderRadius: "50%",
-                        //         backgroundColor: nodeType.color,
-                        //         zIndex: 0,
-                        //       }}
-                        //     />
-                        //     <Icon size={16} style={{ position: "relative", zIndex: 1 }} />
-                        //   </Box>
-                        // }
-                        icon={<Icon size={16} />}
-                        hoverColor={nodeType.color}
+                        icon={<Icon size={14} />}
                         onClick={() =>
                           addAndCenter({
                             label: nodeType.name,
@@ -155,20 +140,18 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
     );
   };
 
-  /* ------------------ SIDEBAR ------------------ */
   return (
     <Box
       style={{
         width: isCollapsed ? COLLAPSED_WIDTH : SIDEBAR_WIDTH,
         transition: "width 0.25s ease",
-        background: theme.colors.background.primary,
-        borderRight: `1px solid ${theme.colors.border.primary}`,
+        background: theme.colors.background.sidebar,
+        borderRight: `3px solid #000000`,
         position: "relative",
         height: "100%",
         overflow: "hidden",
       }}
     >
-      {/* Botón colapsar */}
       <ActionIcon
         variant="subtle"
         size="sm"
@@ -178,12 +161,12 @@ export function Sidebar({ onToggleCollapse, isCollapsed ,}: { onToggleCollapse: 
           top: 12,
           right: isCollapsed ? 8 : 12,
           zIndex: 10,
+          color: theme.colors.text.tertiary,
         }}
       >
         {isCollapsed ? <IconChevronRight size={18} /> : <IconChevronLeft size={18} />}
       </ActionIcon>
 
-      {/* Contenido */}
       {!isCollapsed && content()}
     </Box>
   );

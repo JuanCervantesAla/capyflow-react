@@ -20,23 +20,15 @@ export const CustomControls = memo(function CustomControls({
   const { theme } = useTheme();
 
   return (
-    <ControlCard
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 8,
-        padding: 12,
-      }}
-    >
+    <ControlCard>
       <ControlButton
-        icon={<IconZoomIn size={18} />}
+        icon={<IconZoomIn size={20} strokeWidth={2.5} />}
         onClick={zoomIn}
         tooltip="Zoom In"
       />
 
       <ControlButton
-        icon={<IconZoomOut size={18} />}
+        icon={<IconZoomOut size={20} strokeWidth={2.5} />}
         onClick={zoomOut}
         tooltip="Zoom Out"
       />
@@ -44,20 +36,21 @@ export const CustomControls = memo(function CustomControls({
       <div
         style={{
           width: "100%",
-          height: 1,
-          background: theme.colors.border.primary,
+          height: 2,
+          background: theme.colors.ink,
           margin: "4px 0",
+          opacity: 0.15,
         }}
       />
 
       <ControlButton
-        icon={<IconFocus size={18} />}
+        icon={<IconFocus size={20} strokeWidth={2.5} />}
         onClick={fitView}
         tooltip="Fit View"
       />
 
       <ControlButton
-        icon={<IconReload size={18} />}
+        icon={<IconReload size={20} strokeWidth={2.5} />}
         onClick={reset}
         tooltip="Reset View"
       />

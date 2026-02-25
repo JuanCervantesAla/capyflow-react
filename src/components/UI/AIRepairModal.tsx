@@ -47,79 +47,120 @@ export function AIRepairModal({
     <Modal
       opened={opened}
       onClose={handleClose}
-      title={
-        <Group gap="xs">
-          <IconWand size={24} style={{ color: theme.colors.accent.primary }} />
-          <Text size="lg" fw={600}>
-            Reparar Flujo con IA
-          </Text>
-        </Group>
-      }
+      withCloseButton={false}
+      centered
       size="lg"
+      padding={0}
+      radius={0}
       styles={{
         content: {
-          background: theme.colors.background.primary,
-        },
-        header: {
-          background: theme.colors.background.primary,
-          borderBottom: `1px solid ${theme.colors.border.primary}`,
+          background: '#FFF8F0',
+          border: '3px solid #2d3436',
+          boxShadow: '6px 6px 0px #2d3436',
         },
         body: {
-          padding: theme.spacing.lg,
+          padding: 0,
         },
       }}
     >
+      {/* Header con fondo negro */}
+      <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
+        <Group justify="space-between" align="center">
+          <Group gap="sm">
+            <IconWand size={28} className="text-[#e8a020]" />
+            <Stack gap={2}>
+              <Text className="!text-white font-black text-lg tracking-tight uppercase">
+                Reparar con IA
+              </Text>
+              <Text className="!text-white/70 text-xs font-medium">
+                ~/ai/repair
+              </Text>
+            </Stack>
+          </Group>
+        </Group>
+      </div>
+
+      {/* Body con padding */}
+      <div className="px-6 py-6 bg-[#FFF8F0]">
       <Stack gap="md">
         {/* Información */}
-        <Alert
-          icon={<IconInfoCircle size={16} />}
-          title="¿Qué hace la reparación automática?"
-          color="blue"
-          variant="light"
-        >
-          <Text size="sm" mb="xs">
+        <div className="bg-[#e8f4ff] border-[2.5px] border-[#2d3436] p-4">
+          <Group gap="sm" mb="xs">
+            <IconInfoCircle size={18} className="text-[#2d3436]" />
+            <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
+              ¿Qué hace la reparación automática?
+            </Text>
+          </Group>
+          <Text size="sm" mb="xs" className="text-[#2d3436] font-medium">
             La IA analizará tu flujo y corregirá automáticamente:
           </Text>
-          <List size="sm" spacing="xs">
-            <List.Item>Nodos con IDs duplicados</List.Item>
-            <List.Item>Conexiones a nodos que no existen</List.Item>
-            <List.Item>Falta de nodo trigger inicial</List.Item>
-            <List.Item>Tipos de nodos inválidos</List.Item>
-            <List.Item>Posiciones de nodos superpuestas</List.Item>
-            <List.Item>Parámetros inválidos o faltantes</List.Item>
-            <List.Item>Nodos o conexiones huérfanas</List.Item>
+          <List size="sm" spacing="xs" className="text-[#2d3436]">
+            <List.Item className="font-medium">Nodos con IDs duplicados</List.Item>
+            <List.Item className="font-medium">Conexiones a nodos que no existen</List.Item>
+            <List.Item className="font-medium">Falta de nodo trigger inicial</List.Item>
+            <List.Item className="font-medium">Tipos de nodos inválidos</List.Item>
+            <List.Item className="font-medium">Posiciones de nodos superpuestas</List.Item>
+            <List.Item className="font-medium">Parámetros inválidos o faltantes</List.Item>
+            <List.Item className="font-medium">Nodos o conexiones huérfanas</List.Item>
           </List>
-        </Alert>
+        </div>
 
         <Textarea
-          label="¿Algún problema específico? (Opcional)"
+          label={
+            <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
+              ¿Algún problema específico? (Opcional)
+            </Text>
+          }
           placeholder="Ej: Los nodos están superpuestos, falta una conexión entre el webhook y el log..."
           value={issues}
           onChange={(e) => setIssues(e.currentTarget.value)}
           minRows={3}
           maxRows={6}
+          radius={0}
           styles={{
             input: {
-              background: theme.colors.background.tertiary,
-              borderColor: theme.colors.border.primary,
-              color: theme.colors.text.primary,
+              background: '#faf8f4',
+              border: '2.5px solid #2d3436',
+              color: '#2d3436',
+              fontWeight: 600,
+              fontSize: '14px',
+              padding: '12px',
+              fontFamily: 'inherit',
             },
           }}
+          className="
+            focus-within:shadow-[4px_4px_0_#e8a020]
+            focus-within:-translate-x-[2px]
+            focus-within:-translate-y-[2px]
+            transition-all
+          "
         />
 
-        <Alert
-          icon={<IconAlertCircle size={16} />}
-          color="yellow"
-          variant="light"
-        >
-          <Text size="xs">
+        <div className="bg-[#fff8e1] border-[2.5px] border-[#2d3436] p-4">
+          <Group gap="sm" mb="xs">
+            <IconAlertCircle size={18} className="text-[#2d3436]" />
+          </Group>
+          <Text size="xs" className="text-[#2d3436] font-medium">
             <strong>Nota:</strong> La reparación sobrescribirá tu flujo actual. Se
             recomienda revisar los cambios antes de guardar.
           </Text>
-        </Alert>
+        </div>
 
         <Group justify="flex-end" mt="md">
-          <Button variant="subtle" onClick={handleClose} disabled={loading}>
+          <Button 
+            onClick={handleClose} 
+            disabled={loading}
+            className="
+              !bg-[#FFF8F0] !text-[#2d3436] !border-[2.5px] !border-[#2d3436]
+              !font-bold !text-sm uppercase tracking-wide
+              transition-all duration-200 ease-out
+              !shadow-[2px_2px_0px_#2d3436]
+              hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+              hover:!shadow-[3px_3px_0px_#2d3436]
+              !rounded-none
+              !h-[40px]
+            "
+          >
             Cancelar
           </Button>
           <Button
@@ -128,14 +169,24 @@ export function AIRepairModal({
             }
             onClick={handleRepair}
             disabled={loading}
-            style={{
-              background: theme.colors.accent.primary,
-            }}
+            className="
+              !bg-[#e8a020] !text-[#0a0a08] !border-[3px] !border-[#2d3436]
+              !font-black !text-sm uppercase tracking-wide
+              transition-all duration-200 ease-out
+              !shadow-[3px_3px_0px_#2d3436]
+              hover:!-translate-x-[2px] hover:!-translate-y-[2px]
+              hover:!shadow-[5px_5px_0px_#2d3436]
+              disabled:!opacity-40
+              disabled:!hover:translate-x-0 disabled:!hover:translate-y-0
+              !rounded-none
+              !h-[44px]
+            "
           >
             {loading ? 'Reparando...' : 'Reparar Flujo'}
           </Button>
         </Group>
       </Stack>
+      </div>
     </Modal>
   );
 }

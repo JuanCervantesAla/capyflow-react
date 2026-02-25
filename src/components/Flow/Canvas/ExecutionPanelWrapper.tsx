@@ -29,8 +29,8 @@ export function ExecutionPanelWrapper({
       style={{
         width: collapsed ? COLLAPSED : WIDTH,
         transition: "width 0.25s ease",
-        background: theme.colors.background.primary,
-        borderLeft: `1px solid ${theme.colors.border.primary}`,
+        background: theme.colors.paper,
+        borderLeft: `2px solid ${theme.colors.ink}`,
         position: "relative",
         overflow: "hidden",
         height: "100%",
@@ -42,9 +42,10 @@ export function ExecutionPanelWrapper({
         onClick={onToggle}
         style={{
           position: "absolute",
-          top: 12,
+          bottom: 12,
           left: collapsed ? 12 : 8,
           zIndex: 10,
+          color: theme.colors.ink,
         }}
       >
         {collapsed ? (
@@ -55,11 +56,13 @@ export function ExecutionPanelWrapper({
       </ActionIcon>
 
       {!collapsed && flowId && (
-        <ExecutionResultPanel
-          flowId={flowId}
-          result={result}
-          isLoading={isLoading}
-        />
+        <Box style={{ height: "100%" }}>
+          <ExecutionResultPanel
+            flowId={flowId}
+            result={result}
+            isLoading={isLoading}
+          />
+        </Box>
       )}
     </Box>
   );

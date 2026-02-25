@@ -18,8 +18,8 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
   if (isLoading) {
     return (
       <Box p="xl" style={{ textAlign: "center" }}>
-        <Loader size="sm" />
-        <Text size="sm" c="dimmed" mt="md">Cargando historial...</Text>
+        <Loader size="sm" color={theme.colors.ink} />
+        <Text size="sm" c={theme.colors.ink} mt="md" style={{ opacity: 0.5 }}>Cargando historial...</Text>
       </Box>
     );
   }
@@ -27,7 +27,7 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
   if (!executions || executions.length === 0) {
     return (
       <Box p="xl" style={{ textAlign: "center" }}>
-        <Text size="sm" c="dimmed">No hay ejecuciones previas</Text>
+        <Text size="sm" c={theme.colors.ink} style={{ opacity: 0.5 }}>No hay ejecuciones previas</Text>
       </Box>
     );
   }
@@ -44,28 +44,34 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
               withBorder
               style={{
                 cursor: "pointer",
-                background: selectedExecutionId === execution.id
-                  ? theme.colors.accent.primary + "15"
-                  : theme.colors.background.secondary,
+                background: theme.colors.paper,
+                borderWidth: 2,
                 borderColor: selectedExecutionId === execution.id
-                  ? theme.colors.accent.primary
-                  : theme.colors.border.primary,
-                transition: "all 0.2s ease",
+                  ? theme.colors.ink
+                  : "rgba(45, 52, 54, 0.2)",
+                transition: "all 0.15s ease",
+                transform: selectedExecutionId === execution.id ? "translateY(-1px)" : "translateY(0)",
+                boxShadow: selectedExecutionId === execution.id ? "0 3px 8px rgba(45, 52, 54, 0.15)" : "0 1px 3px rgba(45, 52, 54, 0.1)",
               }}
               onClick={() => setSelectedExecutionId(execution.id)}
             >
               <Group justify="space-between" mb={4}>
                 <Group gap="xs">
                   <StatusIndicator status={execution.status} />
-                  <Text size="xs" fw={500}>
+                  <Text size="xs" fw={600} c={theme.colors.ink}>
                     {execution.triggerType}
                   </Text>
                 </Group>
-                <Badge size="xs" variant="light">
+                <Badge size="xs" variant="light" color="gray" style={{
+                  borderColor: theme.colors.ink,
+                  borderWidth: 1,
+                  background: theme.colors.paper,
+                  color: theme.colors.ink,
+                }}>
                   {execution.durationMs}ms
                 </Badge>
               </Group>
-              <Text size="xs" c="dimmed">
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.5 }}>
                 {new Date(execution.startedAt).toLocaleString()}
               </Text>
             </Card>
@@ -77,21 +83,21 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
         <Box
           p="md"
           style={{
-            borderTop: `1px solid ${theme.colors.border.primary}`,
-            background: theme.colors.background.secondary,
+            borderTop: `2px solid ${theme.colors.ink}`,
+            background: theme.colors.paper,
           }}
         >
-          <Text size="sm" fw={600} mb="sm">Detalle de Ejecución</Text>
+          <Text size="sm" fw={700} mb="sm" c={theme.colors.ink}>Detalle de Ejecución</Text>
           <Stack gap="xs">
             <Group justify="space-between">
-              <Text size="xs" c="dimmed">Nodos ejecutados:</Text>
-              <Text size="xs" fw={500}>
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Nodos ejecutados:</Text>
+              <Text size="xs" fw={600} c={theme.colors.ink}>
                 {executionDetail.parsedExecutedNodes?.length || 0}
               </Text>
             </Group>
             <Group justify="space-between">
-              <Text size="xs" c="dimmed">Duración:</Text>
-              <Text size="xs" fw={500}>{executionDetail.durationMs}ms</Text>
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Duración:</Text>
+              <Text size="xs" fw={600} c={theme.colors.ink}>{executionDetail.durationMs}ms</Text>
             </Group>
             {executionDetail.errorMessage && (
               <Text size="xs" c="red" mt="xs">

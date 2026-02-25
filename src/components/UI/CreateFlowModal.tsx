@@ -1,4 +1,4 @@
-import { Modal, TextInput, Button, Stack, Text, Group, Divider } from "@mantine/core";
+import { Modal, TextInput, Button, Stack, Text, Group } from "@mantine/core";
 import { useState, useEffect } from "react";
 
 interface CreateFlowModalProps {
@@ -32,74 +32,110 @@ export function CreateFlowModal({
       centered
       withCloseButton={false}
       size="sm"
-      radius="lg"
-      padding="lg"
+      padding={0}
+      radius={0}
+      styles={{
+        content: {
+          background: '#FFF8F0',
+          border: '3px solid #2d3436',
+          boxShadow: '6px 6px 0px #2d3436',
+        },
+        body: {
+          padding: 0,
+        },
+      }}
     >
-      <Stack gap="lg">
-        {/* Header */}
-        <Stack gap={6}>
-          <Text fw={700} size="xl">
-            Nuevo flujo
+      {/* Header con fondo negro */}
+      <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
+        <Stack gap={4}>
+          <Text className="!text-white font-black text-lg tracking-tight uppercase">
+            Nuevo Flujo
           </Text>
-          <Text size="sm" c="dimmed">
-            Dale un nombre claro para identificar este flujo más adelante
+          <Text className="!text-white/70 text-xs font-medium">
+            ~/create
           </Text>
         </Stack>
+      </div>
 
-        <Divider />
+      {/* Body con padding */}
+      <div className="px-6 py-6 bg-[#FFF8F0]">
+        <Stack gap="lg">
+          {/* Descripción */}
+          <Text className="text-[#2d3436] text-sm font-medium">
+            Dale un nombre claro para identificar este flujo más adelante
+          </Text>
 
-        {/* Input */}
-        <TextInput
+          {/* Input */}
+          <TextInput
+            label={
+              <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
+                Nombre del Flujo
+              </Text>
+            }
             placeholder="Ej. Flujo de automatización"
             value={name}
             onChange={(e) => setName(e.currentTarget.value)}
             autoFocus
+            radius={0}
             styles={{
-                input: {
-                borderColor: '#000',
-                transition: 'all 150ms ease',
-                '&:hover': {
-                    borderColor: '#000',
-                },
-                '&:focus': {
-                    borderColor: '#000',
-                    boxShadow: '0 0 0 1px #000',
-                },
-                },
+              input: {
+                background: '#faf8f4',
+                border: '2.5px solid #2d3436',
+                color: '#2d3436',
+                fontWeight: 600,
+                fontSize: '14px',
+                padding: '10px 12px',
+                minHeight: '44px',
+              },
             }}
-            />
-
-
-        {/* Actions */}
-        <Group justify="space-between" mt="xs">
-          <Button
-            variant="subtle"
-            color="gray"
-            onClick={onClose}
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            loading={loading}
-            disabled={!name.trim()}
-            onClick={handleSubmit}
             className="
-              !bg-black !text-white !border-2 !border-black
-              h-10
-              font-semibold
-              transition-all duration-200 ease-out
-              shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)]
-              hover:!-translate-y-1
-              hover:!shadow-[4px_4px_0px_0px_rgba(0,0,0,0.35)]
-              disabled:opacity-50
-              disabled:hover:translate-y-0
+              focus-within:shadow-[4px_4px_0_#e8a020]
+              focus-within:-translate-x-[2px]
+              focus-within:-translate-y-[2px]
+              transition-all
             "
-          >
-            Crear flujo
-          </Button>
-        </Group>
-      </Stack>
+          />
+
+          {/* Actions */}
+          <Group justify="flex-end" mt="xs" gap="sm">
+            <Button
+              onClick={onClose}
+              className="
+                !bg-[#FFF8F0] !text-[#2d3436] !border-[2.5px] !border-[#2d3436]
+                !font-bold !text-sm uppercase tracking-wide
+                transition-all duration-200 ease-out
+                !shadow-[2px_2px_0px_#2d3436]
+                hover:!-translate-x-[1px] hover:!-translate-y-[1px]
+                hover:!shadow-[3px_3px_0px_#2d3436]
+                !rounded-none
+                !h-[40px]
+              "
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              loading={loading}
+              disabled={!name.trim()}
+              onClick={handleSubmit}
+              className="
+                !bg-[#e8a020] !text-[#0a0a08] !border-[3px] !border-[#2d3436]
+                !font-black !text-sm uppercase tracking-wide
+                transition-all duration-200 ease-out
+                !shadow-[3px_3px_0px_#2d3436]
+                hover:!-translate-x-[2px] hover:!-translate-y-[2px]
+                hover:!shadow-[5px_5px_0px_#2d3436]
+                disabled:!opacity-40
+                disabled:!hover:translate-x-0 disabled:!hover:translate-y-0
+                !rounded-none
+                !h-[44px]
+              "
+            >
+              Crear Flujo
+            </Button>
+          </Group>
+        </Stack>
+      </div>
     </Modal>
   );
 }

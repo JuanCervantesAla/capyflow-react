@@ -1,20 +1,34 @@
 export const LIGHT_THEME = {
   colors: {
+    paper: "#FFF8F0",
+    ink: "#2d3436",
+    
     background: {
       primary: "#F7F7F7", 
       secondary: "#E5E5E5", 
-      tertiary: "#D4D4D4", 
+      tertiary: "#D4D4D4",
+      sidebar: "#F5F1E8",
+      canvas: "#F5F1E8",
+      node: "#FAF8F4",
     },
 
     border: {
       primary: "#C2C2C2", 
-      accent: "#000000",  
+      accent: "#000000",
+      sidebar: "#E0DDD4",
+      node: "#0A0A08",
     },
 
     text: {
       primary: "#111111",   
       secondary: "#6B6B6B", 
-      accent: "#000000",    
+      accent: "#000000",
+      tertiary: "#999999",
+      sidebarTitle: "#C9873D",
+      sidebarItem: "#5A4A3A",
+      sidebarItemHover: "#2A1A0A",
+      muted: "#7A7060",
+      ink: "#0A0A08",
     },
 
     accent: {
@@ -23,6 +37,34 @@ export const LIGHT_THEME = {
       tertiary: "#E5E5E5",  
       cyan: "#000000",      
       cyanDark: "#000000",
+    },
+
+    category: {
+      trigger: "#B05000",
+      data: "#1A4F8A",
+      io: "#2E7D32",
+      logic: "#5A1A8A",
+      control: "#6B7280",
+      ai: "#3B82F6",
+      integration: "#3B82F6",
+    },
+
+    categoryBg: {
+      trigger: "#FFF3E0",
+      data: "#E8F0FA",
+      io: "#E8F5E9",
+      logic: "#F3EAFA",
+      control: "#F5F5F5",
+      ai: "#E8F0FA",
+      integration: "#E8F0FA",
+    },
+
+    status: {
+      idle: "transparent",
+      ready: "#2E7D32",
+      running: "#E8A020",
+      error: "#B71C1C",
+      success: "#2E7D32",
     },
 
     selection: {
@@ -57,21 +99,35 @@ export const LIGHT_THEME = {
 
 export const DARK_THEME = {
   colors: {
+    paper: "#FFF8F0",
+    ink: "#2d3436",
+    
     background: {
       primary: "#0F0F11",   
       secondary: "#18181B", 
-      tertiary: "#27272A",  
+      tertiary: "#27272A",
+      sidebar: "#F5F1E8",
+      canvas: "#F5F1E8",
+      node: "#FAF8F4",
     },
 
     border: {
       primary: "#3F3F46",  
-      accent: "#3B82F6",   
+      accent: "#3B82F6",
+      sidebar: "#E0DDD4",
+      node: "#0A0A08",
     },
 
     text: {
       primary: "#F3F4F6",   
       secondary: "#A1A1AA", 
-      accent: "#60A5FA",    
+      accent: "#60A5FA",
+      tertiary: "#999999",
+      sidebarTitle: "#C9873D",
+      sidebarItem: "#5A4A3A",
+      sidebarItemHover: "#2A1A0A",
+      muted: "#7A7060",
+      ink: "#0A0A08",
     },
 
     accent: {
@@ -80,6 +136,34 @@ export const DARK_THEME = {
       tertiary: "#1E3A8A",  
       cyan: "#06B6D4",      
       cyanDark: "#083344",  
+    },
+
+    category: {
+      trigger: "#B05000",
+      data: "#1A4F8A",
+      io: "#2E7D32",
+      logic: "#5A1A8A",
+      control: "#6B7280",
+      ai: "#3B82F6",
+      integration: "#3B82F6",
+    },
+
+    categoryBg: {
+      trigger: "#FFF3E0",
+      data: "#E8F0FA",
+      io: "#E8F5E9",
+      logic: "#F3EAFA",
+      control: "#F5F5F5",
+      ai: "#E8F0FA",
+      integration: "#E8F0FA",
+    },
+
+    status: {
+      idle: "transparent",
+      ready: "#2E7D32",
+      running: "#E8A020",
+      error: "#B71C1C",
+      success: "#2E7D32",
     },
 
     selection: {
