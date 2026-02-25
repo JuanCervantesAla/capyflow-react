@@ -52,10 +52,6 @@ const MemoPanel = memo(Panel);
 
 const GRID_SIZE = 20;
 
-const snapPosition = (value: number) =>
-  Math.round(value / GRID_SIZE) * GRID_SIZE;
-
-
 function FlowCanvasComponent({
   onNodeSelected,
   onExecutionUpdate,

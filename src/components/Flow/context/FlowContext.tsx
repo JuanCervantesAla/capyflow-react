@@ -60,7 +60,7 @@ export function FlowProvider({
   children: React.ReactNode;
   onSave?: (nodes: FlowNode[], edges: Edge[]) => Promise<void>;
 }) {
-  const [nodes, setNodesInternal, onNodesChange] = useNodesState([]);
+  const [nodes, setNodesInternal, onNodesChangeInternal] = useNodesState([]);
   const [edges, setEdgesInternal, onEdgesChange] = useEdgesState([]);
 
   const setNodes =
@@ -72,6 +72,41 @@ export function FlowProvider({
 
   const nodesRef = useRef<FlowNode[]>(nodes as FlowNode[]);
   const edgesRef = useRef<Edge[]>(edges as Edge[]);
+  
+  // Throttle position updates during drag to improve performance
+  const pendingChangesRef = useRef<NodeChange[]>([]);
+  const throttleTimeoutRef = useRef<number | null>(null);
+
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
+    // Check if all changes are position updates (dragging)
+    const allPositionChanges = changes.every(
+      (change) => change.type === 'position' && (change as any).dragging
+    );
+
+    if (allPositionChanges) {
+      // Batch position changes during drag
+      pendingChangesRef.current.push(...changes);
+      
+      if (throttleTimeoutRef.current === null) {
+        throttleTimeoutRef.current = window.requestAnimationFrame(() => {
+          onNodesChangeInternal(pendingChangesRef.current);
+          pendingChangesRef.current = [];
+          throttleTimeoutRef.current = null;
+        });
+      }
+    } else {
+      // Apply non-position changes immediately
+      if (throttleTimeoutRef.current !== null) {
+        cancelAnimationFrame(throttleTimeoutRef.current);
+        if (pendingChangesRef.current.length > 0) {
+          onNodesChangeInternal(pendingChangesRef.current);
+          pendingChangesRef.current = [];
+        }
+        throttleTimeoutRef.current = null;
+      }
+      onNodesChangeInternal(changes);
+    }
+  }, [onNodesChangeInternal]);
 
   useEffect(() => {
     nodesRef.current = nodes as FlowNode[];
@@ -268,6 +303,7 @@ export function FlowProvider({
       onNodesChange,
       onEdgesChange,
       centerOnNode,
+      registerCenterHandler,
       saveFlow,
       loadFlowData,
       updateNodeExecutionStatus,
