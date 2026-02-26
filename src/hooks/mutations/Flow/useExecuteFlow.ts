@@ -39,9 +39,9 @@ export function useExecuteFlow(options?: UseExecuteFlowOptions) {
 
     onError: (error) => {
       if (error instanceof ApiError) {
-        toastError(error.data?.error || error.message || "Error al ejecutar flujo");
+        toastError(error.data?.error || error.message || "Error executing flow");
       } else {
-        toastError("Error inesperado al ejecutar flujo");
+        toastError("Unexpected error executing flow");
       }
       options?.onError?.(error, "", undefined);
     },

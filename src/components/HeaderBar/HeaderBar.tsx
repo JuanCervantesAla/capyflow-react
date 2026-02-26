@@ -19,9 +19,11 @@ import {
   IconWand,
   IconKey,
   IconSparkles,
+  IconChartBar,
 } from "@tabler/icons-react";
 import { useTheme } from "../../theme/ThemeContext";
 import { useUsers } from "../../hooks/useUsers";
+import { useNavigate } from "react-router-dom";
 import miLogo from '../../assets/logo_orange.png';
 import { useState, useEffect } from "react";
 
@@ -49,6 +51,7 @@ export function HeaderBar({
 }: HeaderBarProps) {
   const { theme } = useTheme();
   const { logout, user } = useUsers();
+  const navigate = useNavigate();
   const [opened, setOpened] = useState(false);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(workflowName);
@@ -195,7 +198,7 @@ export function HeaderBar({
               }}
             >
               <IconWand size={16} />
-              Reparar
+              Fix
             </UnstyledButton>
           )}
 
@@ -229,7 +232,7 @@ export function HeaderBar({
               }}
             >
               <IconSparkles size={16} />
-              IA
+              AI
             </UnstyledButton>
           )}
 
@@ -263,7 +266,7 @@ export function HeaderBar({
               }}
             >
               <IconFolderOpen size={16} />
-              Flujos
+              Flows
             </UnstyledButton>
           )}
 
@@ -296,7 +299,7 @@ export function HeaderBar({
             }}
           >
             <IconDeviceFloppy size={16} />
-            Guardar
+            Save
           </UnstyledButton>
 
           <UnstyledButton
@@ -418,6 +421,13 @@ export function HeaderBar({
               >
                 Profile
               </Menu.Item>
+              <Menu.Item 
+                leftSection={<IconChartBar size={16} />}
+                onClick={() => navigate('/analytics')}
+                style={{ color: "#FFFFFF" }}
+              >
+                Analytics
+              </Menu.Item>
               {onOpenAPIKeySettings && (
                 <Menu.Item 
                   leftSection={<IconKey size={16} />}
@@ -443,16 +453,16 @@ export function HeaderBar({
       <Modal
         opened={opened}
         onClose={() => setOpened(false)}
-        title="¿Seguro que quieres salir?"
+        title="Are you sure you want to exit?"
         centered
       >
-        <p>Todo proceso sin guardar se perderá.</p>
+        <p>All unsaved progress will be lost.</p>
         <Group mt="md">
           <Button color="red" onClick={handleLogout}>
-            Sí, salir
+            Yes, exit
           </Button>
           <Button variant="outline" onClick={() => setOpened(false)}>
-            Cancelar
+            Cancel
           </Button>
         </Group>
       </Modal>

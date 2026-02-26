@@ -1,8 +1,8 @@
-import { Stack, TextInput, NumberInput, Select, Button, Group, Text, Checkbox, Textarea, Alert, ActionIcon } from "@mantine/core";
+import { Stack, TextInput, NumberInput, Select, Button, Group, Text, Checkbox, Textarea, Alert, ActionIcon, SegmentedControl, Anchor } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { useTheme } from "../../../theme/ThemeContext";
-import { IconCheck, IconX, IconAlertCircle, IconPlus, IconTrash } from "@tabler/icons-react";
-import { getNodeSchema, validateNodeParameters, getDefaultNodeParameters } from "./nodeSchemas";
+import { IconCheck, IconX, IconAlertCircle, IconPlus, IconTrash, IconInfoCircle } from "@tabler/icons-react";
+import { getNodeSchema, validateNodeParameters, getDefaultNodeParameters, getFilteredParameters, hasAdvancedParameters, countAdvancedParameters } from "./nodeSchemas";
 
 // Componentes de editores especializados
 function JsonEditor({ value, onChange, placeholder }: { value: string; onChange: (val: any) => void; placeholder?: string }) {
@@ -154,7 +154,7 @@ function KeyValueEditor({ value, onChange }: { value: Record<string, any>; onCha
           },
         }}
       >
-        Agregar
+        Add
       </Button>
     </Stack>
   );
@@ -190,6 +190,11 @@ export function NodeParameterEditor({
   });
   
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [configMode, setConfigMode] = useState<'basic' | 'advanced'>('basic');
+
+  // Verificar si este nodo tiene parámetros avanzados
+  const hasAdvanced = hasAdvancedParameters(nodeType);
+  const advancedCount = countAdvancedParameters(nodeType);
 
   useEffect(() => {
     const defaults = getDefaultNodeParameters(nodeType);
@@ -237,14 +242,43 @@ export function NodeParameterEditor({
 
   return (
     <Stack gap="md" p="md" style={{ borderRadius: theme.borderRadius.md, background: theme.colors.paper }}>
-      <div>
-        <Text fw={700} size="sm" c={theme.colors.ink}>
-          {schema.displayName}
-        </Text>
-        <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
-          {schema.description}
-        </Text>
-      </div>
+      <Group justify="space-between" wrap="nowrap">
+        <div>
+          <Text fw={700} size="sm" c={theme.colors.ink}>
+            {schema.displayName}
+          </Text>
+          <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
+            {schema.description}
+          </Text>
+        </div>
+
+        {/* Toggle Básico/Avanzado - Solo mostrar si hay parámetros avanzados */}
+        {hasAdvanced && (
+          <SegmentedControl
+            size="xs"
+            value={configMode}
+            onChange={(value) => setConfigMode(value as 'basic' | 'advanced')}
+            data={[
+              { label: '🟢 Basic', value: 'basic' },
+              { label: '🔵 Advanced', value: 'advanced' }
+            ]}
+            styles={{
+              root: {
+                border: `2px solid ${theme.colors.ink}`,
+                background: theme.colors.paper,
+              },
+              label: {
+                color: theme.colors.ink,
+                fontWeight: 600,
+                fontSize: '11px',
+              },
+              indicator: {
+                background: theme.colors.ink,
+              },
+            }}
+          />
+        )}
+      </Group>
 
       {validationError && (
         <Alert 
@@ -272,7 +306,8 @@ export function NodeParameterEditor({
         </Text>
       ) : (
         <Stack gap="sm">
-          {schema.parameters.map((param) => {
+          {/* Usar parámetros filtrados según el modo */}
+          {getFilteredParameters(nodeType, configMode).map((param) => {
             const value = parameters[param.key];
 
             return (
@@ -401,6 +436,39 @@ export function NodeParameterEditor({
         </Stack>
       )}
 
+      {/* Mostrar indicador de parámetros ocultos en modo básico */}
+      {configMode === 'basic' && hasAdvanced && (
+        <Alert 
+          icon={<IconInfoCircle size={16} />} 
+          color="blue"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+              opacity: 0.8,
+            },
+            message: {
+              color: theme.colors.ink,
+              fontWeight: 500,
+              fontSize: '12px',
+            },
+          }}
+        >
+          <Text size="xs" c={theme.colors.ink}>
+            {advancedCount} advanced parameter{advancedCount > 1 ? 's are' : ' is'} hidden (using smart defaults).{' '}
+            <Anchor 
+              size="xs" 
+              fw={700}
+              onClick={() => setConfigMode('advanced')}
+              style={{ cursor: 'pointer', color: theme.colors.ink, textDecoration: 'underline' }}
+            >
+              Show all options
+            </Anchor>
+          </Text>
+        </Alert>
+      )}
+
       <Group justify="flex-end" gap="xs">
         <Button 
           variant="default" 
@@ -419,7 +487,7 @@ export function NodeParameterEditor({
             },
           }}
         >
-          Cancelar
+          Cancel
         </Button>
         <Button 
           size="xs" 
@@ -436,7 +504,7 @@ export function NodeParameterEditor({
             },
           }}
         >
-          Guardar
+          Save
         </Button>
       </Group>
     </Stack>

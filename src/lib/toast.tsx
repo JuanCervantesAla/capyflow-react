@@ -35,7 +35,7 @@ const baseStyles = {
 
 export function toastSuccess(message: string) {
   showNotification({
-    title: "ÉXITO",
+    title: "SUCCESS",
     message,
     color: ORANGE,
     icon: <IconCheck size={20} />,

@@ -217,13 +217,13 @@ export default function RegisterPage() {
 
                 {registerError && (
                   <div className="border-l-4 border-[#b71c1c] bg-[#fff5f5] px-4 py-3 font-mono text-[11px] font-semibold text-[#b71c1c]">
-                    {registerError instanceof Error ? registerError.message : "Error al registrarse"}
+                    {registerError instanceof Error ? registerError.message : "Registration error"}
                   </div>
                 )}
 
                 {password !== confirmPassword && confirmPassword !== "" && (
                   <div className="border-l-4 border-[#e8a020] bg-[#fff8e1] px-4 py-3 font-mono text-[11px] font-semibold text-[#b05000]">
-                    Las contraseñas no coinciden
+                    Passwords do not match
                   </div>
                 )}
 

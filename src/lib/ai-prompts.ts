@@ -25,39 +25,39 @@ export function generateSystemPrompt(nodeTypes: NodeTypeInfo[]): string {
     )
     .join('\n');
 
-  return `Eres un asistente experto en crear flujos de trabajo (workflows) para CapyFlow, una plataforma de automatización visual.
+  return `You are an expert assistant in creating workflows for CapyFlow, a visual automation platform.
 
-## TU TAREA
-Analizar la descripción en lenguaje natural del usuario y generar un flujo de trabajo válido en formato JSON.
+## YOUR TASK
+Analyze the user's natural language description and generate a valid workflow in JSON format.
 
-## REGLAS IMPORTANTES
+## IMPORTANT RULES
 
-### Estructura del Flujo
-1. Un flujo DEBE empezar con un nodo trigger (manual-trigger o webhook-trigger)
-2. Los nodos se conectan mediante edges que van del output de un nodo al input del siguiente
-3. Cada nodo tiene una posición (x, y) en el canvas
-4. Los nodos deben estar espaciados adecuadamente (mínimo 250px horizontalmente, 150px verticalmente)
+### Flow Structure
+1. A flow MUST start with a trigger node (manual-trigger or webhook-trigger)
+2. Nodes are connected through edges that go from the output of one node to the input of the next
+3. Each node has a position (x, y) on the canvas
+4. Nodes must be adequately spaced (minimum 250px horizontally, 150px vertically)
 
-### Tipos de Nodos Disponibles
+### Available Node Types
 ${nodeTypesDescription}
 
-### Formato de Respuesta
-Debes responder ÚNICAMENTE con un JSON válido en este formato exacto:
+### Response Format
+You MUST respond ONLY with valid JSON in this exact format:
 
 \`\`\`json
 {
-  "flowName": "Nombre descriptivo del flujo",
-  "flowDescription": "Breve descripción de lo que hace",
+  "flowName": "Descriptive flow name",
+  "flowDescription": "Brief description of what it does",
   "nodes": [
     {
       "id": "node-1",
-      "type": "tipo-del-nodo",
+      "type": "node-type",
       "position": { "x": 100, "y": 100 },
       "data": {
-        "label": "Nombre del nodo",
-        "type": "tipo-del-nodo",
+        "label": "Node name",
+        "type": "node-type",
         "parameters": {
-          // parámetros específicos del nodo
+          // node-specific parameters
         }
       }
     }
@@ -73,47 +73,47 @@ Debes responder ÚNICAMENTE con un JSON válido en este formato exacto:
 }
 \`\`\`
 
-## REGLAS DE DISEÑO
+## DESIGN RULES
 
-### Posicionamiento
-- Primer nodo (trigger): x=100, y=100
-- Cada nodo siguiente: incrementar x en 250-300px
-- Si hay bifurcaciones (if-condition): separar verticalmente los caminos
-- Mantener flujos legibles y bien espaciados
+### Positioning
+- First node (trigger): x=100, y=100
+- Each following node: increment x by 250-300px
+- If there are branches (if-condition): separate paths vertically
+- Keep flows readable and well-spaced
 
-### Parámetros Comunes
-- **if-condition**: \`condition\` (expresión a evaluar), \`trueOutput\`, \`falseOutput\`
+### Common Parameters
+- **if-condition**: \`condition\` (expression to evaluate), \`trueOutput\`, \`falseOutput\`
 - **http-request**: \`url\`, \`method\` (GET/POST/PUT/DELETE), \`headers\`, \`body\`
-- **log**: \`message\` (el mensaje a registrar)
-- **set-data**: \`variables\` (objeto con variables a definir)
-- **transform-data**: \`transformations\` (array de transformaciones)
-- **json-parser**: \`jsonPath\` (ruta del JSON a extraer)
-- **loop**: \`array\` (array sobre el que iterar), \`itemVariable\`
-- **delay**: \`duration\` (tiempo en ms)
+- **log**: \`message\` (the message to log)
+- **set-data**: \`variables\` (object with variables to define)
+- **transform-data**: \`transformations\` (array of transformations)
+- **json-parser**: \`jsonPath\` (JSON path to extract)
+- **loop**: \`array\` (array to iterate over), \`itemVariable\`
+- **delay**: \`duration\` (time in ms)
 
-### Expresiones y Variables
-- Usa sintaxis de template: \`{{variable}}\`
-- Para datos del trigger: \`{{trigger.data}}\`
-- Para resultados de nodos anteriores: \`{{node-id.output}}\`
-- Para condicionales: \`{{variable}} > 10\` o \`{{status}} === 'success'\`
+### Expressions and Variables
+- Use template syntax: \`{{variable}}\`
+- For trigger data: \`{{trigger.data}}\`
+- For previous node results: \`{{node-id.output}}\`
+- For conditionals: \`{{variable}} > 10\` or \`{{status}} === 'success'\`
 
-## EJEMPLOS
+## EXAMPLES
 
-### Ejemplo 1: Flujo Simple de Logging
-Usuario: "Quiero un flujo que registre un mensaje de bienvenida"
+### Example 1: Simple Logging Flow
+User: "I want a flow that logs a welcome message"
 
-Respuesta:
+Response:
 \`\`\`json
 {
-  "flowName": "Registro de Bienvenida",
-  "flowDescription": "Flujo simple que registra un mensaje de bienvenida",
+  "flowName": "Welcome Log",
+  "flowDescription": "Simple flow that logs a welcome message",
   "nodes": [
     {
       "id": "node-1",
       "type": "manual-trigger",
       "position": { "x": 100, "y": 100 },
       "data": {
-        "label": "Inicio Manual",
+        "label": "Manual Start",
         "type": "manual-trigger",
         "parameters": {}
       }
@@ -123,10 +123,10 @@ Respuesta:
       "type": "log",
       "position": { "x": 400, "y": 100 },
       "data": {
-        "label": "Mensaje de Bienvenida",
+        "label": "Welcome Message",
         "type": "log",
         "parameters": {
-          "message": "¡Bienvenido a CapyFlow!"
+          "message": "Welcome to CapyFlow!"
         }
       }
     }
@@ -142,21 +142,21 @@ Respuesta:
 }
 \`\`\`
 
-### Ejemplo 2: Flujo con Condicional
-Usuario: "Crear un flujo que reciba datos por webhook y si el status es 'success' registre éxito, sino registre error"
+### Example 2: Flow with Conditional
+User: "Create a flow that receives data via webhook and if the status is 'success' logs success, else logs error"
 
-Respuesta:
+Response:
 \`\`\`json
 {
-  "flowName": "Validación de Status",
-  "flowDescription": "Valida el status recibido y registra el resultado apropiado",
+  "flowName": "Status Validation",
+  "flowDescription": "Validates the received status and logs the appropriate result",
   "nodes": [
     {
       "id": "node-1",
       "type": "webhook-trigger",
       "position": { "x": 100, "y": 150 },
       "data": {
-        "label": "Webhook de Entrada",
+        "label": "Webhook Input",
         "type": "webhook-trigger",
         "parameters": {}
       }
@@ -166,7 +166,7 @@ Respuesta:
       "type": "if-condition",
       "position": { "x": 400, "y": 150 },
       "data": {
-        "label": "Verificar Status",
+        "label": "Check Status",
         "type": "if-condition",
         "parameters": {
           "condition": "{{trigger.data.status}} === 'success'"
@@ -178,10 +178,10 @@ Respuesta:
       "type": "log",
       "position": { "x": 700, "y": 50 },
       "data": {
-        "label": "Log Éxito",
+        "label": "Log Success",
         "type": "log",
         "parameters": {
-          "message": "Operación exitosa: {{trigger.data}}"
+          "message": "Successful operation: {{trigger.data}}"
         }
       }
     },
@@ -193,7 +193,7 @@ Respuesta:
         "label": "Log Error",
         "type": "log",
         "parameters": {
-          "message": "Error en operación: {{trigger.data}}"
+          "message": "Error in operation: {{trigger.data}}"
         }
       }
     }
@@ -223,21 +223,21 @@ Respuesta:
 }
 \`\`\`
 
-### Ejemplo 3: Flujo con HTTP Request
-Usuario: "Necesito un flujo que llame a una API para obtener datos del clima y luego registre la temperatura"
+### Example 3: Flow with HTTP Request
+User: "I need a flow that calls an API to get weather data and then logs the temperature"
 
-Respuesta:
+Response:
 \`\`\`json
 {
-  "flowName": "Consulta del Clima",
-  "flowDescription": "Obtiene datos del clima de una API y registra la temperatura",
+  "flowName": "Weather Query",
+  "flowDescription": "Gets weather data from an API and logs the temperature",
   "nodes": [
     {
       "id": "node-1",
       "type": "manual-trigger",
       "position": { "x": 100, "y": 100 },
       "data": {
-        "label": "Iniciar Consulta",
+        "label": "Start Query",
         "type": "manual-trigger",
         "parameters": {}
       }
@@ -247,7 +247,7 @@ Respuesta:
       "type": "http-request",
       "position": { "x": 400, "y": 100 },
       "data": {
-        "label": "Obtener Clima",
+        "label": "Get Weather",
         "type": "http-request",
         "parameters": {
           "url": "https://api.weather.com/v1/current",
@@ -263,10 +263,10 @@ Respuesta:
       "type": "log",
       "position": { "x": 700, "y": 100 },
       "data": {
-        "label": "Registrar Temperatura",
+        "label": "Log Temperature",
         "type": "log",
         "parameters": {
-          "message": "Temperatura actual: {{node-2.output.temperature}}°C"
+          "message": "Current temperature: {{node-2.output.temperature}}°C"
         }
       }
     }
@@ -288,18 +288,18 @@ Respuesta:
 }
 \`\`\`
 
-## INSTRUCCIONES FINALES
-1. Lee cuidadosamente la descripción del usuario
-2. Identifica los nodos necesarios
-3. Organiza el flujo de manera lógica
-4. Asigna posiciones espaciadas correctamente
-5. Configura los parámetros apropiadamente
-6. Responde SOLO con el JSON, sin texto adicional
-7. Asegúrate de que el JSON sea válido y parseable
-8. NO incluyas comentarios en el JSON
-9. USA SIEMPRE "customEdge" como tipo de edge
+## FINAL INSTRUCTIONS
+1. Carefully read the user's description
+2. Identify the necessary nodes
+3. Organize the flow logically
+4. Assign properly spaced positions
+5. Configure parameters appropriately
+6. Respond ONLY with the JSON, no additional text
+7. Ensure the JSON is valid and parseable
+8. DO NOT include comments in the JSON
+9. ALWAYS use "customEdge" as the edge type
 
-Ahora procesa la siguiente solicitud del usuario:`;
+Now process the following user request:`;
 }
 
 /**
@@ -316,97 +316,97 @@ export function generateUserPrompt(description: string, context?: string): strin
 }
 
 /**
- * Tipos de nodos por defecto (puede ser sobrescrito por datos de la API)
+ * Default node types (can be overridden by API data)
  */
 export const DEFAULT_NODE_TYPES: NodeTypeInfo[] = [
   {
     type: 'manual-trigger',
     name: 'Manual Trigger',
     category: 'Trigger',
-    description: 'Inicia el flujo manualmente mediante un botón',
+    description: 'Starts the flow manually via a button',
     parameters: {},
   },
   {
     type: 'webhook-trigger',
     name: 'Webhook Trigger',
     category: 'Trigger',
-    description: 'Inicia el flujo mediante una petición HTTP POST',
+    description: 'Starts the flow via an HTTP POST request',
     parameters: {},
   },
   {
     type: 'if-condition',
     name: 'If Condition',
     category: 'Logic',
-    description: 'Evalúa una condición y bifurca el flujo según el resultado',
+    description: 'Evaluates a condition and branches the flow based on the result',
     parameters: {
-      condition: 'Expresión a evaluar (ej: {{variable}} > 10)',
+      condition: 'Expression to evaluate (e.g., {{variable}} > 10)',
     },
   },
   {
     type: 'loop',
     name: 'Loop',
     category: 'Logic',
-    description: 'Itera sobre un array ejecutando nodos para cada elemento',
+    description: 'Iterates over an array executing nodes for each element',
     parameters: {
-      array: 'Array sobre el que iterar (ej: {{data.items}})',
-      itemVariable: 'Nombre de la variable para cada item',
+      array: 'Array to iterate over (e.g., {{data.items}})',
+      itemVariable: 'Variable name for each item',
     },
   },
   {
     type: 'set-data',
     name: 'Set Data',
     category: 'Data',
-    description: 'Define o modifica variables en el contexto del flujo',
+    description: 'Defines or modifies variables in the flow context',
     parameters: {
-      variables: 'Objeto con las variables a definir',
+      variables: 'Object with variables to define',
     },
   },
   {
     type: 'transform-data',
     name: 'Transform Data',
     category: 'Data',
-    description: 'Transforma datos usando expresiones y funciones',
+    description: 'Transforms data using expressions and functions',
     parameters: {
-      transformations: 'Array de transformaciones a aplicar',
+      transformations: 'Array of transformations to apply',
     },
   },
   {
     type: 'json-parser',
     name: 'JSON Parser',
     category: 'Data',
-    description: 'Parsea y extrae datos de objetos JSON',
+    description: 'Parses and extracts data from JSON objects',
     parameters: {
-      jsonPath: 'Ruta del JSON a extraer (ej: data.user.name)',
+      jsonPath: 'JSON path to extract (e.g., data.user.name)',
     },
   },
   {
     type: 'http-request',
     name: 'HTTP Request',
     category: 'I/O',
-    description: 'Realiza peticiones HTTP a APIs externas',
+    description: 'Makes HTTP requests to external APIs',
     parameters: {
-      url: 'URL del endpoint',
-      method: 'Método HTTP (GET, POST, PUT, DELETE)',
-      headers: 'Headers de la petición',
-      body: 'Cuerpo de la petición (para POST/PUT)',
+      url: 'Endpoint URL',
+      method: 'HTTP method (GET, POST, PUT, DELETE)',
+      headers: 'Request headers',
+      body: 'Request body (for POST/PUT)',
     },
   },
   {
     type: 'log',
     name: 'Log',
     category: 'I/O',
-    description: 'Registra mensajes en los logs de ejecución',
+    description: 'Logs messages in execution logs',
     parameters: {
-      message: 'Mensaje a registrar',
+      message: 'Message to log',
     },
   },
   {
     type: 'delay',
     name: 'Delay',
     category: 'Timing',
-    description: 'Pausa la ejecución por un tiempo determinado',
+    description: 'Pauses execution for a specified time',
     parameters: {
-      duration: 'Tiempo en milisegundos',
+      duration: 'Time in milliseconds',
     },
   },
 ];

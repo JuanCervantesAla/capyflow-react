@@ -70,7 +70,7 @@ export function AIRepairModal({
             <IconWand size={28} className="text-[#e8a020]" />
             <Stack gap={2}>
               <Text className="!text-white font-black text-lg tracking-tight uppercase">
-                Reparar con IA
+                Repair with AI
               </Text>
               <Text className="!text-white/70 text-xs font-medium">
                 ~/ai/repair
@@ -88,30 +88,30 @@ export function AIRepairModal({
           <Group gap="sm" mb="xs">
             <IconInfoCircle size={18} className="text-[#2d3436]" />
             <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
-              ¿Qué hace la reparación automática?
+              What does automatic repair do?
             </Text>
           </Group>
           <Text size="sm" mb="xs" className="text-[#2d3436] font-medium">
-            La IA analizará tu flujo y corregirá automáticamente:
+            AI will analyze your flow and automatically fix:
           </Text>
           <List size="sm" spacing="xs" className="text-[#2d3436]">
-            <List.Item className="font-medium">Nodos con IDs duplicados</List.Item>
-            <List.Item className="font-medium">Conexiones a nodos que no existen</List.Item>
-            <List.Item className="font-medium">Falta de nodo trigger inicial</List.Item>
-            <List.Item className="font-medium">Tipos de nodos inválidos</List.Item>
-            <List.Item className="font-medium">Posiciones de nodos superpuestas</List.Item>
-            <List.Item className="font-medium">Parámetros inválidos o faltantes</List.Item>
-            <List.Item className="font-medium">Nodos o conexiones huérfanas</List.Item>
+            <List.Item className="font-medium">Nodes with duplicate IDs</List.Item>
+            <List.Item className="font-medium">Connections to non-existent nodes</List.Item>
+            <List.Item className="font-medium">Missing initial trigger node</List.Item>
+            <List.Item className="font-medium">Invalid node types</List.Item>
+            <List.Item className="font-medium">Overlapping node positions</List.Item>
+            <List.Item className="font-medium">Invalid or missing parameters</List.Item>
+            <List.Item className="font-medium">Orphaned nodes or connections</List.Item>
           </List>
         </div>
 
         <Textarea
           label={
             <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
-              ¿Algún problema específico? (Opcional)
+              Any specific issues? (Optional)
             </Text>
           }
-          placeholder="Ej: Los nodos están superpuestos, falta una conexión entre el webhook y el log..."
+          placeholder="e.g: Nodes are overlapping, missing connection between webhook and log..."
           value={issues}
           onChange={(e) => setIssues(e.currentTarget.value)}
           minRows={3}
@@ -141,8 +141,8 @@ export function AIRepairModal({
             <IconAlertCircle size={18} className="text-[#2d3436]" />
           </Group>
           <Text size="xs" className="text-[#2d3436] font-medium">
-            <strong>Nota:</strong> La reparación sobrescribirá tu flujo actual. Se
-            recomienda revisar los cambios antes de guardar.
+            <strong>Note:</strong> The repair will overwrite your current flow. We
+            recommend reviewing the changes before saving.
           </Text>
         </div>
 
@@ -161,7 +161,7 @@ export function AIRepairModal({
               !h-[40px]
             "
           >
-            Cancelar
+            Cancel
           </Button>
           <Button
             leftSection={
@@ -182,7 +182,7 @@ export function AIRepairModal({
               !h-[44px]
             "
           >
-            {loading ? 'Reparando...' : 'Reparar Flujo'}
+            {loading ? 'Repairing...' : 'Repair Flow'}
           </Button>
         </Group>
       </Stack>

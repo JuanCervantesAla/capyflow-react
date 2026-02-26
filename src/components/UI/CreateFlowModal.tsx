@@ -49,7 +49,7 @@ export function CreateFlowModal({
       <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
         <Stack gap={4}>
           <Text className="!text-white font-black text-lg tracking-tight uppercase">
-            Nuevo Flujo
+            New Flow
           </Text>
           <Text className="!text-white/70 text-xs font-medium">
             ~/create
@@ -60,19 +60,19 @@ export function CreateFlowModal({
       {/* Body con padding */}
       <div className="px-6 py-6 bg-[#FFF8F0]">
         <Stack gap="lg">
-          {/* Descripción */}
+          {/* Description */}
           <Text className="text-[#2d3436] text-sm font-medium">
-            Dale un nombre claro para identificar este flujo más adelante
+            Give it a clear name to identify this flow later
           </Text>
 
           {/* Input */}
           <TextInput
             label={
               <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
-                Nombre del Flujo
+                Flow Name
               </Text>
             }
-            placeholder="Ej. Flujo de automatización"
+            placeholder="e.g. Automation Flow"
             value={name}
             onChange={(e) => setName(e.currentTarget.value)}
             autoFocus
@@ -111,7 +111,7 @@ export function CreateFlowModal({
                 !h-[40px]
               "
             >
-              Cancelar
+              Cancel
             </Button>
 
             <Button
@@ -131,7 +131,7 @@ export function CreateFlowModal({
                 !h-[44px]
               "
             >
-              Crear Flujo
+              Create Flow
             </Button>
           </Group>
         </Stack>

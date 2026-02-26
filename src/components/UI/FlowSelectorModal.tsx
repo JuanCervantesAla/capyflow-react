@@ -65,7 +65,7 @@ export function FlowSelectorModal({
           <Group justify="space-between" align="center">
             <Stack gap={4}>
               <Text className="!text-white font-black text-lg tracking-tight uppercase">
-                Gestión de Flujos
+                Flow Management
               </Text>
               <Text className="!text-white/70 text-xs font-medium">
                 ~/flows
@@ -74,7 +74,7 @@ export function FlowSelectorModal({
 
             <CloseButton
               onClick={onClose}
-              aria-label="Cerrar"
+              aria-label="Close"
               size="md"
               className="text-[#FFF8F0] hover:bg-[#FFF8F0]/10 hover:text-[#e8a020] transition-colors"
             />
@@ -87,7 +87,7 @@ export function FlowSelectorModal({
             {/* Selector */}
             <Stack gap={8}>
               <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px]">
-                Flujo Existente
+                Existing Flow
               </Text>
 
               <Select
@@ -95,7 +95,7 @@ export function FlowSelectorModal({
                 value={selectedFlowId}
                 onChange={setSelectedFlowId}
                 placeholder={
-                  isLoading ? "Cargando flujos..." : "Selecciona un flujo"
+                  isLoading ? "Loading flows..." : "Select a flow"
                 }
                 disabled={isLoading || isError}
                 comboboxProps={{ withinPortal: false }}
@@ -143,7 +143,7 @@ export function FlowSelectorModal({
                 !h-[48px]
               "
             >
-              Abrir Flujo
+              Open Flow
             </Button>
 
             <div className="relative">
@@ -152,7 +152,7 @@ export function FlowSelectorModal({
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="bg-[#FFF8F0] px-3 text-[#2d3436]/60 font-bold uppercase tracking-wider">
-                  o
+                  or
                 </span>
               </div>
             </div>
@@ -173,7 +173,7 @@ export function FlowSelectorModal({
                 !h-[44px]
               "
             >
-              + Crear Nuevo Flujo
+              + Create New Flow
             </Button>
           </Stack>
         </div>

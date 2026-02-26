@@ -19,6 +19,7 @@ export interface NodeParameterSchema {
   description?: string;
   options?: string[];
   validation?: (value: any) => string | null;
+  advanced?: boolean; // Si true, solo mostrar en modo avanzado
 }
 
 export interface NodeTypeSchema {
@@ -56,10 +57,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.values || typeof params.values !== 'object') {
-        return 'El parámetro "values" debe ser un objeto';
+        return 'The "values" parameter must be an object';
       }
       if (Object.keys(params.values).length === 0) {
-        return 'Debes definir al menos un valor';
+        return 'You must define at least one value';
       }
       return null;
     },
@@ -78,6 +79,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         placeholder: 'https://api.example.com/users/{{userId}}',
         description: 'URL del endpoint. Usa {{variable}} para interpolar valores',
+        advanced: false, // BÁSICO
       },
       {
         name: 'Method',
@@ -87,6 +89,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 'GET',
         options: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         description: 'Método HTTP',
+        advanced: false, // BÁSICO
       },
       {
         name: 'Headers',
@@ -95,6 +98,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: {},
         description: 'Headers HTTP (Authorization, Content-Type, etc)',
+        advanced: true, // AVANZADO
       },
       {
         name: 'Body',
@@ -103,7 +107,8 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: {},
         placeholder: '{\n  "email": "{{email}}",\n  "name": "{{nombre}}"\n}',
-        description: 'Cuerpo JSON para POST/PUT/PATCH',
+        description: 'JSON body for POST/PUT/PATCH',
+        advanced: true, // AVANZADO
       },
       {
         name: 'Timeout (ms)',
@@ -111,7 +116,8 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'number',
         required: false,
         defaultValue: 30000,
-        description: 'Timeout de la petición en milisegundos',
+        description: 'Request timeout in milliseconds',
+        advanced: true, // AVANZADO
       },
       {
         name: 'Max Retries',
@@ -120,7 +126,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 0,
         placeholder: '0',
-        description: 'Número de reintentos en caso de fallo (0 = sin retry, máx: 10)',
+        description: 'Number of retries on failure (0 = no retry, max: 10)',
       },
       {
         name: 'Retry Delay (ms)',
@@ -129,7 +135,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 1000,
         placeholder: '1000',
-        description: 'Delay inicial entre reintentos en ms (se incrementa exponencialmente)',
+        description: 'Initial delay between retries in ms (increases exponentially)',
       },
       {
         name: 'Backoff Multiplier',
@@ -138,31 +144,31 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 2.0,
         placeholder: '2.0',
-        description: 'Multiplicador para backoff exponencial (1.0 = constante, 2.0 = duplica cada vez)',
+        description: 'Multiplier for exponential backoff (1.0 = constant, 2.0 = doubles each time)',
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.url) return 'La URL es requerida';
-      if (!params.method) return 'El método HTTP es requerido';
+      if (!params.url) return 'URL is required';
+      if (!params.method) return 'HTTP method is required';
       
       if (params.body && typeof params.body === 'string') {
         try {
           JSON.parse(params.body);
         } catch {
-          return 'El body debe ser un JSON válido';
+          return 'Body must be valid JSON';
         }
       }
 
       if (params.maxRetries && (params.maxRetries < 0 || params.maxRetries > 10)) {
-        return 'Max Retries debe estar entre 0 y 10';
+        return 'Max Retries must be between 0 and 10';
       }
 
       if (params.retryDelay && params.retryDelay < 100) {
-        return 'Retry Delay debe ser al menos 100ms';
+        return 'Retry Delay must be at least 100ms';
       }
 
       if (params.backoffMultiplier && (params.backoffMultiplier < 1.0 || params.backoffMultiplier > 5.0)) {
-        return 'Backoff Multiplier debe estar entre 1.0 y 5.0';
+        return 'Backoff Multiplier must be between 1.0 and 5.0';
       }
 
       return null;
@@ -195,7 +201,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.message || params.message.trim() === '') {
-        return 'El mensaje es requerido';
+        return 'Message is required';
       }
       return null;
     },
@@ -204,7 +210,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'if-condition': {
     type: 'if-condition',
     displayName: 'If Condition',
-    description: 'Ejecuta ramas basadas en una condición',
+    description: 'Executes branches based on a condition',
     category: 'logic',
     parameters: [
       {
@@ -229,15 +235,15 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         key: 'value',
         type: 'string',
         required: false,
-        placeholder: 'Valor a comparar',
-        description: 'Valor con el que comparar',
+        placeholder: 'Value to compare',
+        description: 'Value to compare with',
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.field) return 'El campo es requerido';
-      if (!params.operator) return 'El operador es requerido';
+      if (!params.field) return 'Field is required';
+      if (!params.operator) return 'Operator is required';
       if (params.operator !== 'exists' && !params.value) {
-        return 'El valor es requerido para este operador';
+        return 'Value is required for this operator';
       }
       return null;
     },
@@ -284,20 +290,20 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'default',
-        description: 'Salida por defecto si no hay match',
+        description: 'Default output if no match',
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.inputValue) return 'Input Value es requerido';
+      if (!params.inputValue) return 'Input Value is required';
       if (!params.cases || !Array.isArray(params.cases)) {
-        return 'Cases debe ser un array';
+        return 'Cases must be an array';
       }
       if (params.cases.length === 0) {
-        return 'Debe definir al menos un caso';
+        return 'Must define at least one case';
       }
       for (const c of params.cases) {
         if (!c.value || !c.output) {
-          return 'Cada caso debe tener value y output';
+          return 'Each case must have value and output';
         }
       }
       return null;
@@ -349,7 +355,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: false,
         placeholder: '{}',
-        description: 'Valor por defecto (fallbackMode=default)',
+        description: 'Default value (fallbackMode=default)',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -359,10 +365,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         return 'Default Value es requerido cuando fallbackMode=default';
       }
       if (params.maxRetries && params.maxRetries < 0) {
-        return 'Max Retries debe ser >= 0';
+        return 'Max Retries must be >= 0';
       }
       if (params.retryDelay && params.retryDelay < 0) {
-        return 'Retry Delay debe ser >= 0';
+        return 'Retry Delay must be >= 0';
       }
       return null;
     },
@@ -422,7 +428,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'transform-data': {
     type: 'transform-data',
     displayName: 'Transform Data',
-    description: 'Extrae, renombra y transforma campos de datos',
+    description: 'Extracts, renames, and transforms data fields',
     category: 'data',
     parameters: [
       {
@@ -453,19 +459,19 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.transformations || !Array.isArray(params.transformations)) {
-        return 'Las transformaciones deben ser un array';
+        return 'Transformations must be an array';
       }
       if (params.transformations.length === 0) {
-        return 'Debes definir al menos una transformación';
+        return 'You must define at least one transformation';
       }
       // Validar cada transformación
       for (const t of params.transformations) {
         if (!t.source || !t.target || !t.operation) {
-          return 'Cada transformación debe tener source, target y operation';
+          return 'Each transformation must have source, target, and operation';
         }
         const validOps = ['extract', 'rename', 'default', 'calculate', 'concat'];
         if (!validOps.includes(t.operation)) {
-          return `Operación inválida: ${t.operation}. Debe ser una de: ${validOps.join(', ')}`;
+          return `Invalid operation: ${t.operation}. Must be one of: ${validOps.join(', ')}`;
         }
       }
       return null;
@@ -509,7 +515,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: '{{item.age}} > 18',
-        description: 'Para "filter": condición que debe cumplir cada item',
+        description: 'For "filter": condition that each item must meet',
       },
       {
         name: 'Item Variable',
@@ -532,13 +538,13 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.arraySource || params.arraySource.trim() === '') {
-        return 'El array source es requerido';
+        return 'Array source is required';
       }
       if (params.operation === 'map' && (!params.mapExpression || params.mapExpression.trim() === '')) {
-        return 'La expresión map es requerida para la operación "map"';
+        return 'Map expression is required for "map" operation';
       }
       if (params.operation === 'filter' && (!params.filterExpr || params.filterExpr.trim() === '')) {
-        return 'La expresión filter es requerida para la operación "filter"';
+        return 'Filter expression is required for "filter" operation';
       }
       return null;
     },
@@ -557,7 +563,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 1000,
         placeholder: '1000',
-        description: 'Tiempo de espera en milisegundos (min: 100ms, max: 300000ms = 5min)',
+        description: 'Wait time in milliseconds (min: 100ms, max: 300000ms = 5min)',
       },
       {
         name: 'Reason',
@@ -570,7 +576,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.duration || params.duration <= 0) {
-        return 'La duración debe ser mayor a 0ms';
+        return 'Duration must be greater than 0ms';
       }
       if (params.duration > 300000) {
         return 'La duración máxima es 300000ms (5 minutos)';
@@ -602,11 +608,11 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'data.items[0]',
-        description: 'Ruta específica a extraer (opcional)',
+        description: 'Specific path to extract (optional)',
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.jsonString) return 'El JSON string es requerido';
+      if (!params.jsonString) return 'JSON string is required';
       try {
         JSON.parse(params.jsonString);
         return null;
@@ -687,18 +693,18 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: false,
         placeholder: 'Eres un asistente experto en...',
-        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
+        description: 'System instructions to define model behavior (optional)',
       },
     ],
     validateBeforeExecute: (params) => {
       if (!params.prompt || params.prompt.trim() === '') {
-        return 'El prompt es requerido';
+        return 'Prompt is required';
       }
       if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 2)) {
-        return 'Temperature debe estar entre 0 y 2';
+        return 'Temperature must be between 0 and 2';
       }
       if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 8192)) {
-        return 'Max Tokens debe estar entre 1 y 8192';
+        return 'Max Tokens must be between 1 and 8192';
       }
       return null;
     },
@@ -717,6 +723,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
         description: 'El prompt o pregunta para el modelo GPT',
+        advanced: false, // BÁSICO
       },
       {
         name: 'API Key',
@@ -725,6 +732,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         placeholder: 'sk-...',
         description: 'API Key de OpenAI (obtén una en https://platform.openai.com)',
+        advanced: false, // BÁSICO
       },
       {
         name: 'Model',
@@ -734,6 +742,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 'gpt-4o-mini',
         options: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
         description: 'Modelo de GPT a utilizar',
+        advanced: true, // AVANZADO
       },
       {
         name: 'Temperature',
@@ -743,6 +752,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 0.7,
         placeholder: '0.7',
         description: 'Creatividad de las respuestas (0 = determinístico, 2 = muy creativo)',
+        advanced: true, // AVANZADO
       },
       {
         name: 'Max Tokens',
@@ -752,6 +762,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 1024,
         placeholder: '1024',
         description: 'Máximo número de tokens en la respuesta (1-16384)',
+        advanced: true, // AVANZADO
       },
       {
         name: 'System Prompt',
@@ -759,21 +770,22 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: false,
         placeholder: 'You are a helpful assistant...',
-        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
+        description: 'System instructions to define model behavior (optional)',
+        advanced: true, // AVANZADO
       },
     ],
     validateBeforeExecute: (params) => {
       if (!params.prompt || params.prompt.trim() === '') {
-        return 'El prompt es requerido';
+        return 'Prompt is required';
       }
       if (!params.apiKey || params.apiKey.trim() === '') {
-        return 'La API Key de OpenAI es requerida';
+        return 'OpenAI API Key is required';
       }
       if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 2)) {
-        return 'Temperature debe estar entre 0 y 2';
+        return 'Temperature must be between 0 and 2';
       }
       if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 16384)) {
-        return 'Max Tokens debe estar entre 1 y 16384';
+        return 'Max Tokens must be between 1 and 16384';
       }
       return null;
     },
@@ -842,13 +854,13 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         return 'El prompt es requerido';
       }
       if (!params.apiKey || params.apiKey.trim() === '') {
-        return 'La API Key de Anthropic es requerida';
+        return 'Anthropic API Key is required';
       }
       if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 1)) {
-        return 'Temperature debe estar entre 0 y 1 para Claude';
+        return 'Temperature must be between 0 and 1 for Claude';
       }
       if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 8192)) {
-        return 'Max Tokens debe estar entre 1 y 8192';
+        return 'Max Tokens must be between 1 and 8192';
       }
       return null;
     },
@@ -857,7 +869,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'filter': {
     type: 'filter',
     displayName: 'Filter',
-    description: 'Filtra arrays según condiciones específicas',
+    description: 'Filters arrays based on specific conditions',
     category: 'data',
     parameters: [
       {
@@ -908,7 +920,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         return 'Input Data es requerido';
       }
       if (!params.operator) {
-        return 'Operator es requerido';
+        return 'Operator is required';
       }
       return null;
     },
@@ -917,7 +929,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'split': {
     type: 'split',
     displayName: 'Split',
-    description: 'Divide arrays en elementos o lotes individuales',
+    description: 'Splits arrays into individual items or batches',
     category: 'data',
     parameters: [
       {
@@ -935,7 +947,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'items',
         options: ['items', 'batches', 'field'],
-        description: 'Tipo de división: items (individual), batches (lotes), field (extraer campo)',
+        description: 'Split type: items (individual), batches (batches), field (extract field)',
       },
       {
         name: 'Batch Size',
@@ -952,7 +964,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'id',
-        description: 'Campo a extraer de cada elemento (solo para mode=field)',
+        description: 'Field to extract from each element (only for mode=field)',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -963,10 +975,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         return 'Mode es requerido';
       }
       if (params.mode === 'batches' && (!params.batchSize || params.batchSize < 1)) {
-        return 'Batch Size debe ser al menos 1 para mode=batches';
+        return 'Batch Size must be at least 1 for mode=batches';
       }
       if (params.mode === 'field' && !params.field) {
-        return 'Field es requerido para mode=field';
+        return 'Field is required for mode=field';
       }
       return null;
     },
@@ -975,7 +987,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'merge': {
     type: 'merge',
     displayName: 'Merge',
-    description: 'Combina múltiples entradas en una salida unificada',
+    description: 'Combines multiple inputs into a unified output',
     category: 'data',
     parameters: [
       {
@@ -984,7 +996,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: true,
         placeholder: '[1, 2, 3]',
-        description: 'Primera entrada a combinar',
+        description: 'First input to combine',
       },
       {
         name: 'Input 2',
@@ -992,7 +1004,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: true,
         placeholder: '[4, 5, 6]',
-        description: 'Segunda entrada a combinar',
+        description: 'Second input to combine',
       },
       {
         name: 'Mode',
@@ -1001,7 +1013,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'append',
         options: ['append', 'combine', 'merge'],
-        description: 'Tipo de combinación: append (unir arrays), combine (objeto con entradas), merge (fusionar objetos)',
+        description: 'Combination type: append (join arrays), combine (object with inputs), merge (merge objects)',
       },
       {
         name: 'Input 3',
@@ -1022,10 +1034,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.input1) {
-        return 'Input 1 es requerido';
+        return 'Input 1 is required';
       }
       if (!params.input2) {
-        return 'Input 2 es requerido';
+        return 'Input 2 is required';
       }
       if (!params.mode) {
         return 'Mode es requerido';
@@ -1037,7 +1049,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'function': {
     type: 'function',
     displayName: 'Function',
-    description: 'Ejecuta código JavaScript personalizado para transformaciones complejas',
+    description: 'Executes custom JavaScript code for complex transformations',
     category: 'data',
     parameters: [
       {
@@ -1055,12 +1067,12 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'return input;',
         placeholder: '// Transforma los datos\nreturn input.map(x => x * 2);',
-        description: 'Código JavaScript. Usa "input" para los datos de entrada, "context" para el contexto del flow. Debe retornar un valor.',
+        description: 'JavaScript code. Use "input" for input data, "context" for flow context. Must return a value.',
       },
     ],
     validateBeforeExecute: (params) => {
       if (!params.code || params.code.trim() === '') {
-        return 'El código JavaScript es requerido';
+        return 'JavaScript code is required';
       }
       return null;
     },
@@ -1069,7 +1081,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'sort': {
     type: 'sort',
     displayName: 'Sort',
-    description: 'Ordena arrays por campo o valor (ascendente/descendente)',
+    description: 'Sorts arrays by field or value (ascending/descending)',
     category: 'data',
     parameters: [
       {
@@ -1078,7 +1090,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: true,
         placeholder: '[{"name":"Ana","age":25},{"name":"Bob","age":30}]',
-        description: 'Array a ordenar',
+        description: 'Array to sort',
       },
       {
         name: 'Field',
@@ -1086,7 +1098,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'age',
-        description: 'Campo por el cual ordenar (opcional para arrays primitivos)',
+        description: 'Field to sort by (optional for primitive arrays)',
       },
       {
         name: 'Order',
@@ -1116,10 +1128,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.inputData) {
-        return 'Input Array es requerido';
+        return 'Input Array is required';
       }
       if (!params.order) {
-        return 'Order es requerido';
+        return 'Order is required';
       }
       return null;
     },
@@ -1183,7 +1195,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'regex-extract': {
     type: 'regex-extract',
     displayName: 'Regex Extract',
-    description: 'Extrae datos usando expresiones regulares',
+    description: 'Extracts data using regular expressions',
     category: 'data',
     parameters: [
       {
@@ -1226,10 +1238,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.inputData) {
-        return 'Input Text es requerido';
+        return 'Input Text is required';
       }
       if (!params.pattern || params.pattern.trim() === '') {
-        return 'Pattern es requerido';
+        return 'Pattern is required';
       }
       return null;
     },
@@ -1238,7 +1250,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'email': {
     type: 'email',
     displayName: 'Email',
-    description: 'Envía emails mediante SMTP',
+    description: 'Sends emails via SMTP',
     category: 'integration',
     parameters: [
       {
@@ -1247,23 +1259,23 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: true,
         placeholder: 'recipient@example.com',
-        description: 'Destinatario(s) - separar múltiples con coma',
+        description: 'Recipient(s) - separate multiple with comma',
       },
       {
         name: 'Subject',
         key: 'subject',
         type: 'string',
         required: true,
-        placeholder: 'Asunto del email',
-        description: 'Asunto del mensaje',
+        placeholder: 'Email subject',
+        description: 'Message subject',
       },
       {
         name: 'Body',
         key: 'body',
         type: 'textarea',
         required: true,
-        placeholder: 'Contenido del mensaje...',
-        description: 'Cuerpo del email en texto plano',
+        placeholder: 'Message content...',
+        description: 'Email body in plain text',
       },
       {
         name: 'From',
@@ -1271,7 +1283,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: true,
         placeholder: 'sender@example.com',
-        description: 'Dirección del remitente',
+        description: 'Sender address',
       },
       {
         name: 'SMTP Host',
@@ -1279,7 +1291,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: true,
         placeholder: 'smtp.gmail.com',
-        description: 'Servidor SMTP',
+        description: 'SMTP server',
       },
       {
         name: 'SMTP Port',
@@ -1287,15 +1299,15 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'number',
         required: false,
         defaultValue: 587,
-        description: 'Puerto SMTP (587 para TLS, 465 para SSL)',
+        description: 'SMTP port (587 for TLS, 465 for SSL)',
       },
       {
         name: 'SMTP User',
         key: 'smtpUser',
         type: 'string',
         required: true,
-        placeholder: 'usuario@example.com',
-        description: 'Usuario para autenticación SMTP',
+        placeholder: 'user@example.com',
+        description: 'User for SMTP authentication',
       },
       {
         name: 'SMTP Password',
@@ -1303,7 +1315,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'password',
         required: true,
         placeholder: '••••••••',
-        description: 'Contraseña SMTP',
+        description: 'SMTP password',
       },
       {
         name: 'CC',
@@ -1311,7 +1323,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'cc@example.com',
-        description: 'Copia (CC) - separar múltiples con coma',
+        description: 'Copy (CC) - separate multiple with comma',
       },
       {
         name: 'BCC',
@@ -1319,30 +1331,30 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'bcc@example.com',
-        description: 'Copia oculta (BCC) - separar múltiples con coma',
+        description: 'Blind copy (BCC) - separate multiple with comma',
       },
     ],
     validateBeforeExecute: (params) => {
       if (!params.to || params.to.trim() === '') {
-        return 'To es requerido';
+        return 'To is required';
       }
       if (!params.subject || params.subject.trim() === '') {
-        return 'Subject es requerido';
+        return 'Subject is required';
       }
       if (!params.body || params.body.trim() === '') {
-        return 'Body es requerido';
+        return 'Body is required';
       }
       if (!params.from || params.from.trim() === '') {
-        return 'From es requerido';
+        return 'From is required';
       }
       if (!params.smtpHost || params.smtpHost.trim() === '') {
-        return 'SMTP Host es requerido';
+        return 'SMTP Host is required';
       }
       if (!params.smtpUser || params.smtpUser.trim() === '') {
-        return 'SMTP User es requerido';
+        return 'SMTP User is required';
       }
       if (!params.smtpPassword || params.smtpPassword.trim() === '') {
-        return 'SMTP Password es requerido';
+        return 'SMTP Password is required';
       }
       return null;
     },
@@ -1351,7 +1363,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'telegram': {
     type: 'telegram',
     displayName: 'Telegram',
-    description: 'Envía mensajes mediante Telegram Bot API',
+    description: 'Sends messages via Telegram Bot API',
     category: 'integration',
     parameters: [
       {
@@ -1394,13 +1406,110 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.botToken || params.botToken.trim() === '') {
-        return 'Bot Token es requerido';
+        return 'Bot Token is required';
       }
       if (!params.chatId || params.chatId.trim() === '') {
-        return 'Chat ID es requerido';
+        return 'Chat ID is required';
       }
       if (!params.message || params.message.trim() === '') {
-        return 'Message es requerido';
+        return 'Message is required';
+      }
+      return null;
+    },
+  },
+
+  'database': {
+    type: 'database',
+    displayName: 'Database',
+    description: 'Execute SQL queries on PostgreSQL, MySQL, or SQLite databases',
+    category: 'integration',
+    parameters: [
+      {
+        name: 'Driver',
+        key: 'driver',
+        type: 'select',
+        required: true,
+        defaultValue: 'postgres',
+        options: ['postgres', 'mysql', 'sqlite3'],
+        description: 'Database driver to use',
+        advanced: false, // BÁSICO
+      },
+      {
+        name: 'Connection URL',
+        key: 'connectionUrl',
+        type: 'string',
+        required: true,
+        placeholder: 'postgres://user:pass@localhost:5432/dbname?sslmode=disable',
+        description: 'Database connection URL/DSN',
+        advanced: false, // BÁSICO
+      },
+      {
+        name: 'Query',
+        key: 'query',
+        type: 'textarea',
+        required: true,
+        placeholder: 'SELECT * FROM users WHERE id = {{userId}}',
+        description: 'SQL query to execute (use {{variable}} for interpolation)',
+        advanced: false, // BÁSICO
+      },
+      {
+        name: 'Timeout (ms)',
+        key: 'timeout',
+        type: 'number',
+        required: false,
+        defaultValue: 30000,
+        placeholder: '30000',
+        description: 'Query timeout in milliseconds',
+        advanced: true, // AVANZADO
+      },
+      {
+        name: 'Max Retries',
+        key: 'maxRetries',
+        type: 'number',
+        required: false,
+        defaultValue: 0,
+        placeholder: '0',
+        description: 'Maximum number of retries on failure',
+        advanced: true, // AVANZADO
+      },
+      {
+        name: 'Retry Delay (ms)',
+        key: 'retryDelay',
+        type: 'number',
+        required: false,
+        defaultValue: 1000,
+        placeholder: '1000',
+        description: 'Delay between retries in milliseconds',
+        advanced: true, // AVANZADO
+      },
+      {
+        name: 'Query Parameters',
+        key: 'queryParams',
+        type: 'key-value',
+        required: false,
+        defaultValue: {},
+        description: 'Named parameters for parameterized queries',
+        advanced: true, // AVANZADO
+      },
+      {
+        name: 'Return Metadata',
+        key: 'returnMetadata',
+        type: 'boolean',
+        required: false,
+        defaultValue: false,
+        description: 'Include query metadata in response',
+        advanced: true, // AVANZADO
+      },
+    ],
+    validateBeforeExecute: (params) => {
+      if (!params.driver) {
+        return 'Driver is required';
+      }
+      if (!params.connectionUrl || params.connectionUrl.trim() === '') {
+        return 'Connection URL is required';
+      }
+      if (!params.query || params.query.trim() === '') {
+        return 'Query is required';
       }
       return null;
     },
@@ -1420,7 +1529,7 @@ export function validateNodeParameters(
 
   for (const param of schema.parameters) {
     if (param.required && (parameters[param.key] === undefined || parameters[param.key] === null || parameters[param.key] === '')) {
-      return `El parámetro "${param.name}" es requerido`;
+      return `The parameter "${param.name}" is required`;
     }
 
     if (param.validation && parameters[param.key] !== undefined) {
@@ -1447,4 +1556,40 @@ export function getDefaultNodeParameters(nodeType: string): Record<string, any> 
     }
   }
   return defaults;
+}
+
+/**
+ * Filtra parámetros según el modo (basic o advanced)
+ */
+export function getFilteredParameters(
+  nodeType: string,
+  mode: 'basic' | 'advanced'
+): NodeParameterSchema[] {
+  const schema = getNodeSchema(nodeType);
+  if (!schema) return [];
+
+  if (mode === 'basic') {
+    // Solo retornar parámetros no-avanzados
+    return schema.parameters.filter(param => !param.advanced);
+  }
+
+  // Modo advanced: retornar todos
+  return schema.parameters;
+}
+
+/**
+ * Cuenta cuántos parámetros avanzados tiene un nodo
+ */
+export function countAdvancedParameters(nodeType: string): number {
+  const schema = getNodeSchema(nodeType);
+  if (!schema) return 0;
+
+  return schema.parameters.filter(param => param.advanced === true).length;
+}
+
+/**
+ * Verifica si un nodo tiene parámetros avanzados
+ */
+export function hasAdvancedParameters(nodeType: string): boolean {
+  return countAdvancedParameters(nodeType) > 0;
 }

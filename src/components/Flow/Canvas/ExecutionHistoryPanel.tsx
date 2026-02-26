@@ -19,7 +19,7 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
     return (
       <Box p="xl" style={{ textAlign: "center" }}>
         <Loader size="sm" color={theme.colors.ink} />
-        <Text size="sm" c={theme.colors.ink} mt="md" style={{ opacity: 0.5 }}>Cargando historial...</Text>
+        <Text size="sm" c={theme.colors.ink} mt="md" style={{ opacity: 0.5 }}>Loading history...</Text>
       </Box>
     );
   }
@@ -27,7 +27,7 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
   if (!executions || executions.length === 0) {
     return (
       <Box p="xl" style={{ textAlign: "center" }}>
-        <Text size="sm" c={theme.colors.ink} style={{ opacity: 0.5 }}>No hay ejecuciones previas</Text>
+        <Text size="sm" c={theme.colors.ink} style={{ opacity: 0.5 }}>No previous executions</Text>
       </Box>
     );
   }
@@ -87,10 +87,10 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
             background: theme.colors.paper,
           }}
         >
-          <Text size="sm" fw={700} mb="sm" c={theme.colors.ink}>Detalle de Ejecución</Text>
+          <Text size="sm" fw={700} mb="sm" c={theme.colors.ink}>Execution Detail</Text>
           <Stack gap="xs">
             <Group justify="space-between">
-              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Nodos ejecutados:</Text>
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Executed Nodes:</Text>
               <Text size="xs" fw={600} c={theme.colors.ink}>
                 {executionDetail.parsedExecutedNodes?.length || 0}
               </Text>

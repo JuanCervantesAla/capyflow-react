@@ -23,9 +23,11 @@ import { FlowContext } from "../context/FlowContext";
 import { CustomNode } from "../../Nodes/CustomNode";
 import { CustomEdge } from "../../Edges/CustomEdge";
 import { CustomControls } from "../../Control/CustomControls";
+import { CreationTimer } from "./CreationTimer";
 import { useTheme } from "../../../theme/ThemeContext";
 import { FlowInternals } from "./FlowInternals";
 import { useWebSocket } from "../../../hooks/useWebSocket";
+import { useCreationSession } from "../../../hooks/useCreationSession";
 import { queryKeys } from "../../../lib/queryKeys";
 import "@xyflow/react/dist/style.css";
 import { useExecutionUpdates } from '../../../hooks/useExecutionUpdates';
@@ -75,6 +77,18 @@ function FlowCanvasComponent({
 
   const { executionData } = useExecutionUpdates(flowId);
 
+  // Creation session tracking
+  const { formatTime, trackActivity, trackSave, isActive } = useCreationSession({
+    flowId: flowId || '',
+    creationMethod: 'manual', // TODO: Detect from flow creation
+    enabled: !!flowId,
+  });
+
+  // Track node/edge changes for analytics
+  useEffect(() => {
+    trackActivity(nodes.length, edges.length);
+  }, [nodes.length, edges.length, trackActivity]);
+
   useEffect(() => {
     if (onExecutionUpdate && executionData.status !== 'idle') {
       onExecutionUpdate(executionData);
@@ -113,19 +127,52 @@ function FlowCanvasComponent({
   }, []);
 
   const onSelectionChange = useCallback(
-    ({ nodes }: { nodes: any[] }) => {
+    ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
       const node = nodes[0] ?? null;
       if (node && onNodeSelected) {
         onNodeSelected(node);
       }
+      // Si hay un edge seleccionado y no hay nodos, dejar de mostrar el panel de nodo
+      if (edges.length > 0 && nodes.length === 0 && onNodeSelected) {
+        onNodeSelected(null);
+      }
     },
     [onNodeSelected],
+  );
+
+  const onEdgeClick = useCallback(
+    (_event: React.MouseEvent, edge: any) => {
+      // Deseleccionar todos los nodos cuando se selecciona un edge
+      setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+      // Seleccionar el edge clickeado
+      setEdges((eds) =>
+        eds.map((e) => ({
+          ...e,
+          selected: e.id === edge.id,
+        }))
+      );
+      // Deseleccionar el panel de configuración de nodos
+      if (onNodeSelected) {
+        onNodeSelected(null);
+      }
+    },
+    [setNodes, setEdges, onNodeSelected],
   );
 
   const onConnect = useCallback(
     (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
     [setEdges],
   );
+
+  const onPaneClick = useCallback(() => {
+    // Deseleccionar todos los edges cuando se hace clic en el canvas vacío
+    setEdges((eds) =>
+      eds.map((e) => ({
+        ...e,
+        selected: false,
+      }))
+    );
+  }, [setEdges]);
 
   const controls = useMemo(
     () => ({
@@ -206,6 +253,8 @@ function FlowCanvasComponent({
         onNodeDragStop={onNodeDragStop}
         onSelectionChange={onSelectionChange}
         onConnect={onConnect}
+        onEdgeClick={onEdgeClick}
+        onPaneClick={onPaneClick}
         defaultEdgeOptions={defaultEdgeOptions}
         proOptions={proOptions}
         snapToGrid
@@ -219,7 +268,7 @@ function FlowCanvasComponent({
         maxZoom={4}
         deleteKeyCode="Delete"
         elevateNodesOnSelect={false}
-        elevateEdgesOnSelect={false}
+        elevateEdgesOnSelect={true}
         selectNodesOnDrag={false}
         nodesDraggable
         nodesConnectable={!isDragging}
@@ -257,6 +306,14 @@ function FlowCanvasComponent({
 
         <MemoPanel position="top-left">
           <CustomControls {...controls} />
+        </MemoPanel>
+
+        <MemoPanel position="top-right">
+          <CreationTimer 
+            formatTime={formatTime}
+            isActive={isActive}
+            creationMethod="manual"
+          />
         </MemoPanel>
 
         <MemoMiniMap
