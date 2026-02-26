@@ -18,6 +18,9 @@ export interface AIRepairFlowResponse {
   fixes?: string[];
   error?: string;
   rawResponse?: string;
+  cleaned?: string;
+  hint?: string;
+  truncated?: boolean;
 }
 
 export interface AIGeneratedFlow {
@@ -185,10 +188,37 @@ export async function repairFlowWithAI(
     );
     return response;
   } catch (error: any) {
-    console.error('Error repairing flow with AI:', error);
+    console.error('❌ Error repairing flow with AI:', error);
+    
+    // Extraer información detallada del error
+    const errorData = error.data || error.response?.data;
+    const errorMessage = errorData?.error || error.message || 'Failed to repair flow with AI';
+    const rawResponse = errorData?.rawResponse;
+    const cleaned = errorData?.cleaned;
+    const hint = errorData?.hint;
+    const truncated = errorData?.truncated;
+    
+    // Log detallado para debugging
+    if (rawResponse) {
+      console.log('📄 Raw AI Response:', rawResponse);
+    }
+    if (cleaned) {
+      console.log('🧹 Cleaned Response:', cleaned);
+    }
+    if (hint) {
+      console.log('💡 Hint:', hint);
+    }
+    if (truncated) {
+      console.warn('⚠️ Response was truncated!');
+    }
+    
     return {
       success: false,
-      error: error.message || error.data?.error || 'Failed to repair flow with AI',
+      error: errorMessage,
+      rawResponse,
+      cleaned,
+      hint,
+      truncated,
     };
   }
 }

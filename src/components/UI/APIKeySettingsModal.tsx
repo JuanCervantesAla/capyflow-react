@@ -58,36 +58,36 @@ export function APIKeySettingsModal({
 
   const handleSave = async () => {
     if (!apiKey.trim()) {
-      toastError('Por favor, ingresa una API key válida');
+      toastError('Please enter a valid API key');
       return;
     }
 
     setLoading(true);
     try {
       await saveGeminiAPIKey(apiKey);
-      toastSuccess('API key guardada exitosamente');
+      toastSuccess('API key saved successfully');
       setHasKey(true);
       onClose();
     } catch (error: any) {
-      toastError(error.message || 'Error al guardar la API key');
+      toastError(error.message || 'Error saving API key');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('¿Estás seguro de que quieres eliminar tu API key?')) {
+    if (!confirm('Are you sure you want to delete your API key?')) {
       return;
     }
 
     setLoading(true);
     try {
       await deleteGeminiAPIKey();
-      toastSuccess('API key eliminada exitosamente');
+      toastSuccess('API key deleted successfully');
       setHasKey(false);
       setApiKey('');
     } catch (error: any) {
-      toastError(error.message || 'Error al eliminar la API key');
+      toastError(error.message || 'Error deleting API key');
     } finally {
       setLoading(false);
     }
@@ -144,13 +144,13 @@ export function APIKeySettingsModal({
           <Group gap="sm" mb="xs">
             <IconInfoCircle size={18} className="text-[#2d3436]" />
             <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
-              ¿Por qué configurar tu API key?
+              Why configure your API key?
             </Text>
           </Group>
           <Text size="sm" className="text-[#2d3436] font-medium">
-            Al guardar tu API key de Google Gemini, no necesitarás ingresarla cada vez
-            que generes o repares un flujo. Tu API key se guarda encriptada y solo tú
-            puedes verla.
+            By saving your Google Gemini API key, you won't need to enter it every time
+            you generate or repair a flow. Your API key is stored encrypted and only you
+            can see it.
           </Text>
         </div>
 
@@ -159,11 +159,11 @@ export function APIKeySettingsModal({
             <Group gap="sm" mb="xs">
               <IconCheck size={18} className="text-[#2d3436]" />
               <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
-                API Key configurada
+                API Key Configured
               </Text>
             </Group>
             <Text size="sm" className="text-[#2d3436] font-medium">
-              Ya tienes una API key guardada. Puedes actualizarla o eliminarla.
+              You already have an API key saved. You can update or delete it.
             </Text>
           </div>
         )}
@@ -215,12 +215,12 @@ export function APIKeySettingsModal({
               <Group gap="sm" mb="sm">
                 <IconAlertCircle size={18} className="text-[#2d3436]" />
                 <Text className="text-[#2d3436] font-black text-xs uppercase tracking-wide">
-                  ¿Cómo obtener una API key GRATIS?
+                  How to get a FREE API key?
                 </Text>
               </Group>
               <Stack gap={6}>
                 <Text size="xs" className="text-[#2d3436] font-medium">
-                  1. Ve a{' '}
+                  1. Go to{' '}
                   <a
                     href="https://aistudio.google.com/apikey"
                     target="_blank"
@@ -230,9 +230,9 @@ export function APIKeySettingsModal({
                     Google AI Studio
                   </a>
                 </Text>
-                <Text size="xs" className="text-[#2d3436] font-medium">2. Inicia sesión con tu cuenta de Google</Text>
-                <Text size="xs" className="text-[#2d3436] font-medium">3. Haz clic en "Create API Key"</Text>
-                <Text size="xs" className="text-[#2d3436] font-medium">4. Copia la key y pégala aquí</Text>
+                <Text size="xs" className="text-[#2d3436] font-medium">2. Sign in with your Google account</Text>
+                <Text size="xs" className="text-[#2d3436] font-medium">3. Click on "Create API Key"</Text>
+                <Text size="xs" className="text-[#2d3436] font-medium">4. Copy the key and paste it here</Text>
               </Stack>
             </div>
 
@@ -256,7 +256,7 @@ export function APIKeySettingsModal({
                       !h-[40px]
                     "
                   >
-                    Eliminar
+                    Delete
                   </Button>
                 )}
               </Group>
@@ -275,7 +275,7 @@ export function APIKeySettingsModal({
                     !h-[40px]
                   "
                 >
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   leftSection={
@@ -296,7 +296,7 @@ export function APIKeySettingsModal({
                     !h-[44px]
                   "
                 >
-                  {hasKey ? 'Actualizar' : 'Guardar'} API Key
+                  {hasKey ? 'Update' : 'Save'} API Key
                 </Button>
               </Group>
             </Group>

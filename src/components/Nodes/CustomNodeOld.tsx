@@ -226,11 +226,11 @@ export const CustomNode = memo(
     return (
       <div style={{ width: 240, position: "relative" }} className="node-container">
         {confirmOpen && (
-          <Modal opened={confirmOpen} onClose={handleCloseConfirm} title="Confirmar eliminación" size="sm">
-            <Text size="sm">¿Estás seguro de que deseas eliminar este nodo?</Text>
-            <Group mt="md" justify="flex-end">
-              <Button variant="default" onClick={handleCloseConfirm}>Cancelar</Button>
-              <Button color="red" onClick={handleDelete}>Eliminar</Button>
+          <Modal opened={confirmOpen} onClose={handleCloseConfirm} title="Confirm deletion" size="sm">
+            <Text size="sm">Are you sure you want to delete this node?</Text>
+            <Group mt="md">
+              <Button variant="default" onClick={handleCloseConfirm}>Cancel</Button>
+              <Button color="red" onClick={handleDelete}>Delete</Button>
             </Group>
           </Modal>
         )}

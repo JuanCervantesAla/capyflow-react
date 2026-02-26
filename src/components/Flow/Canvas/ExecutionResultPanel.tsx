@@ -42,15 +42,15 @@ export function ExecutionResultPanel({
         style={{ height: "100%", display: "flex", flexDirection: "column" }}
       >
         <Tabs.List grow>
-          <Tabs.Tab value="current">EJECUCIÓN</Tabs.Tab>
-          <Tabs.Tab value="history">HISTORIAL</Tabs.Tab>
+          <Tabs.Tab value="current">EXECUTION</Tabs.Tab>
+          <Tabs.Tab value="history">HISTORY</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="current" style={{ flex: 1, overflow: "hidden", background: theme.colors.paper }}>
           {!result && !isLoading ? (
             <Box p="xl" style={{ textAlign: "center" }}>
               <Text c={theme.colors.ink} size="sm" style={{ opacity: 0.5 }}>
-                Ejecuta un flujo para ver resultados
+                Execute a Flow to see the results!
               </Text>
             </Box>
           ) : (

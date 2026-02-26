@@ -76,10 +76,10 @@ export function AIGenerateModal({
   };
 
   const examples = [
-    'Crear un flujo que reciba datos por webhook y los registre',
-    'Flujo que llame a una API del clima y muestre la temperatura',
-    'Workflow que valide si un número es mayor a 100 y registre el resultado',
-    'Proceso que itere sobre una lista de usuarios y envíe un mensaje de bienvenida',
+    'Create a flow that receives data via webhook and logs it',
+    'Flow that calls a weather API and displays the temperature',
+    'Workflow that validates if a number is greater than 100 and logs the result',
+    'Process that iterates over a list of users and sends a welcome message',
   ];
 
   return (
@@ -109,7 +109,7 @@ export function AIGenerateModal({
             <IconSparkles size={28} className="text-[#e8a020]" />
             <Stack gap={2}>
               <Text className="!text-white font-black text-lg tracking-tight uppercase">
-                Generar con IA
+                Generate with AI
               </Text>
               <Text className="!text-white/70 text-xs font-medium">
                 ~/ai/generate
@@ -127,7 +127,7 @@ export function AIGenerateModal({
             <Group gap="sm">
               <Loader size={16} color="#2d3436" />
               <Text className="text-[#2d3436] text-sm font-semibold">
-                Verificando configuración...
+                Checking configuration...
               </Text>
             </Group>
           </div>
@@ -136,12 +136,12 @@ export function AIGenerateModal({
             <Group gap="sm" mb="xs">
               <IconCheck size={18} className="text-[#2d3436]" />
               <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
-                API Key Configurada
+                SETTED API KEY
               </Text>
             </Group>
             <Group justify="space-between">
               <Text size="sm" className="text-[#2d3436] font-medium">
-                Usarás tu API key guardada. No necesitas ingresar una nueva.
+                You'll use your saved API key. No need to enter a new one.
               </Text>
               {onOpenSettings && (
                 <Button
@@ -159,7 +159,7 @@ export function AIGenerateModal({
                     !rounded-none
                   "
                 >
-                  Cambiar
+                  Change
                 </Button>
               )}
             </Group>
@@ -169,13 +169,13 @@ export function AIGenerateModal({
             <Group gap="sm" mb="xs">
               <IconAlertCircle size={18} className="text-[#2d3436]" />
               <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
-                Configura tu API Key
+                Configure your API Key
               </Text>
             </Group>
             <Stack gap="sm">
               <Text size="sm" className="text-[#2d3436] font-medium">
-                Para generar flujos con IA, necesitas una API key de Google Gemini
-                (100% gratis).
+                To generate flows with AI, you need a Google Gemini API key
+                (100% free).
               </Text>
               {onOpenSettings && (
                 <Button
@@ -195,11 +195,11 @@ export function AIGenerateModal({
                     !w-auto
                   "
                 >
-                  Configurar API Key permanentemente
+                  Configure API Key permanently
                 </Button>
               )}
               <Text size="xs" className="text-[#2d3436]/70 font-medium">
-                O usa una key temporal en las opciones avanzadas ↓
+                Or use a temporary key in advanced options ↓
               </Text>
             </Stack>
           </div>
@@ -209,22 +209,22 @@ export function AIGenerateModal({
           <Group gap="sm" mb="xs">
             <IconSparkles size={18} className="text-[#2d3436]" />
             <Text className="text-[#2d3436] font-black text-sm uppercase tracking-wide">
-              Describe tu flujo en lenguaje natural
+              Describe your flow in natural language
             </Text>
           </Group>
           <Text size="sm" className="text-[#2d3436] font-medium">
-            Describe qué tarea o proceso quieres automatizar y la IA generará un flujo
-            completo con los nodos necesarios configurados.
+            Describe what task or process you want to automate and AI will generate a
+            complete flow with the necessary configured nodes.
           </Text>
         </div>
 
         <Textarea
           label={
             <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
-              ¿Qué flujo quieres crear?
+              What flow do you want to create?
             </Text>
           }
-          placeholder="Ejemplo: Quiero un flujo que reciba datos por webhook, valide si el status es 'success' y registre el resultado..."
+          placeholder="Example: I want a flow that receives data via webhook, validates if the status is 'success' and logs the result..."
           value={description}
           onChange={(e) => setDescription(e.currentTarget.value)}
           minRows={5}
@@ -252,7 +252,7 @@ export function AIGenerateModal({
 
         <Stack gap="xs">
           <Text className="text-[#2d3436] text-sm font-bold uppercase tracking-wide">
-            Ejemplos de descripciones:
+            Example descriptions:
           </Text>
           <div className="space-y-1">
           {examples.map((example, index) => (
@@ -290,13 +290,13 @@ export function AIGenerateModal({
             !w-auto
           "
         >
-          {showAdvanced ? 'Ocultar' : 'Mostrar'} opciones avanzadas
+          {showAdvanced ? 'Hide' : 'Show'} advanced options
         </Button>
 
         <Collapse in={showAdvanced}>
           <Stack gap="md">
             <Checkbox
-              label="Usar mi propia API key de Google Gemini (100% GRATIS)"
+              label="Use my own Google Gemini API key (100% FREE)"
               checked={useCustomKey}
               onChange={(e) => setUseCustomKey(e.currentTarget.checked)}
             />
@@ -333,8 +333,8 @@ export function AIGenerateModal({
                     <IconAlertCircle size={18} className="text-[#2d3436]" />
                   </Group>
                   <Text size="xs" className="text-[#2d3436] font-medium">
-                    Tu API key no se almacena y solo se usa para esta generación. Obtén
-                    una GRATIS (sin tarjeta de crédito) en{' '}
+                    Your API key is not stored and is only used for this generation. Get one
+                    FREE (no credit card) at{' '}
                     <a
                       href="https://aistudio.google.com/apikey"
                       target="_blank"
@@ -351,8 +351,8 @@ export function AIGenerateModal({
             {!useCustomKey && (
               <div className="bg-[#f0f0f0] border-[2.5px] border-[#2d3436] p-4">
                 <Text size="xs" className="text-[#2d3436] font-medium">
-                  Se usará la API key configurada en el servidor. Si no hay una
-                  configurada, deberás usar tu propia key.
+                  The API key configured on the server will be used. If there isn't one
+                  configured, you'll need to use your own key.
                 </Text>
               </div>
             )}
@@ -374,7 +374,7 @@ export function AIGenerateModal({
               !h-[40px]
             "
           >
-            Cancelar
+            Cancel
           </Button>
           <Button
             leftSection={
@@ -400,7 +400,7 @@ export function AIGenerateModal({
               !h-[44px]
             "
           >
-            {loading ? 'Generando...' : 'Generar Flujo'}
+            {loading ? 'Generating...' : 'Generate Flow'}
           </Button>
         </Group>
       </Stack>

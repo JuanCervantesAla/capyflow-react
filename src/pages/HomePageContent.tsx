@@ -131,7 +131,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
             generatedFlow.edges || []
           );
           toastSuccess(
-            `Flujo "${generatedFlow.name}" generado. No olvides guardarlo.`
+            `Flow "${generatedFlow.name}" generated. Don't forget to save it.`
           );
         }
       });
@@ -164,17 +164,33 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         );
         if (response.fixes && response.fixes.length > 0) {
           toastSuccess(
-            `Flujo reparado. Cambios: ${response.fixes.join(", ")}`
+            `Flow repaired. Changes: ${response.fixes.join(", ")}`
           );
         } else {
-          toastSuccess("Flujo reparado exitosamente");
+          toastSuccess("Flow repaired successfully");
         }
       } else {
-        toastError(response.error || "No se pudo reparar el flujo");
+        // Mostrar error con más contexto si está disponible
+        const errorMessage = response.hint 
+          ? `${response.error}\n\n💡 ${response.hint}`
+          : response.error || "Could not repair flow";
+        
+        toastError(errorMessage);
+        
+        // Log adicional para el desarrollador
+        if (response.rawResponse) {
+          console.error("🔍 Detalles del error:", {
+            error: response.error,
+            hint: response.hint,
+            rawResponse: response.rawResponse,
+            cleaned: response.cleaned,
+            truncated: response.truncated,
+          });
+        }
       }
     } catch (error: any) {
-      console.error("Error reparando flujo:", error);
-      toastError(error.message || "Error al reparar el flujo");
+      console.error("❌ Error repairing flow:", error);
+      toastError(error.message || "Error repairing flow");
     } finally {
       setIsRepairing(false);
     }

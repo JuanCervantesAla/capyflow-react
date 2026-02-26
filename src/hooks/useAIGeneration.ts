@@ -14,13 +14,13 @@ export function useAIGeneration() {
     onSuccess?: (flow: any) => void
   ) => {
     if (!description.trim()) {
-      toastError('Por favor, describe el flujo que quieres crear');
+      toastError('Please describe the flow you want to create');
       return;
     }
 
     if (!apiKey) {
       toastError(
-        'Por favor, proporciona tu API key de Google Gemini (100% gratis) en las opciones avanzadas'
+        'Please provide your Google Gemini API key (100% free) in advanced options'
       );
       return;
     }
@@ -49,7 +49,7 @@ export function useAIGeneration() {
       );
 
       if (!response.success || !response.flow) {
-        throw new Error(response.error || 'No se pudo generar el flujo');
+        throw new Error(response.error || 'Could not generate flow');
       }
 
       // Validar el flujo generado
@@ -67,7 +67,7 @@ export function useAIGeneration() {
       // Transformar el flujo para React Flow
       const transformedFlow = transformAIFlowToReactFlow(response.flow);
 
-      toastSuccess('¡Flujo generado exitosamente!');
+      toastSuccess('Flow generated successfully!');
 
       // Callback de éxito
       if (onSuccess) {
@@ -81,7 +81,7 @@ export function useAIGeneration() {
       return transformedFlow;
     } catch (error: any) {
       console.error('Error generating flow with AI:', error);
-      toastError(error.message || 'Error al generar el flujo con IA');
+      toastError(error.message || 'Error generating flow with AI');
       throw error;
     } finally {
       setIsGenerating(false);
