@@ -47,17 +47,19 @@ export function ProfileHeader() {
         <Group gap={0} wrap="nowrap" style={{ minWidth: 0 }}>
           <Group gap={5} wrap="nowrap" px={8}>
             <img src={miLogo} style={{ width: 33, height: 33 }} alt="Logo" />
-            <Text
-              fw={900}
-              size="20px"
-              c="#E8950C"
-              style={{
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                letterSpacing: '0.5px',
-              }}
-            >
-              CapyFlow
-            </Text>
+            <span className="hidden sm:inline">
+              <Text
+                fw={900}
+                size="20px"
+                c="#E8950C"
+                style={{
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                CapyFlow
+              </Text>
+            </span>
           </Group>
 
           <div style={{ 
@@ -68,16 +70,18 @@ export function ProfileHeader() {
 
           <Group gap={8} wrap="nowrap" px={16}>
             <IconUser size={16} color="#999999" />
-            <Text
-              fw={400}
-              size="13px"
-              c="#999999"
-              style={{
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-              }}
-            >
-              Profile
-            </Text>
+            <span className="hidden sm:inline">
+              <Text
+                fw={400}
+                size="13px"
+                c="#999999"
+                style={{
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+              >
+                Profile
+              </Text>
+            </span>
           </Group>
 
           <div style={{ 
@@ -117,7 +121,7 @@ export function ProfileHeader() {
             }}
           >
             <IconArrowLeft size={16} />
-            Back to Editor
+            <span className="hidden sm:inline">Back to Editor</span>
           </UnstyledButton>
 
           <div style={{ 
