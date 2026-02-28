@@ -418,9 +418,10 @@ export function HeaderBar({
               <Menu.Item 
                 leftSection={<IconUser size={16} />}
                 style={{ color: "#FFFFFF" }}
-              >
-                Profile
-              </Menu.Item>
+                  onClick={() => navigate('/profile')}
+                >
+                  Profile
+                </Menu.Item>
               <Menu.Item 
                 leftSection={<IconChartBar size={16} />}
                 onClick={() => navigate('/analytics')}

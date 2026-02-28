@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import miLogo from '../../assets/logo_orange.png';
 import { useState } from "react";
 
-export function AnalyticsHeader() {
+export function ProfileHeader() {
   const { theme } = useTheme();
   const { logout, user } = useUsers();
   const navigate = useNavigate();
@@ -67,7 +67,7 @@ export function AnalyticsHeader() {
           }} />
 
           <Group gap={8} wrap="nowrap" px={16}>
-            <IconChartBar size={16} color="#999999" />
+            <IconUser size={16} color="#999999" />
             <Text
               fw={400}
               size="13px"
@@ -76,7 +76,7 @@ export function AnalyticsHeader() {
                 fontFamily: 'system-ui, -apple-system, sans-serif',
               }}
             >
-              Analytics Dashboard
+              Profile
             </Text>
           </Group>
 
@@ -162,7 +162,6 @@ export function AnalyticsHeader() {
             >
               <Menu.Item 
                 leftSection={<IconUser size={16} />}
-                onClick={() => navigate('/profile')}
                 style={{ color: "#FFFFFF" }}
               >
                 Profile
