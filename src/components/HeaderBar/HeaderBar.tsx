@@ -17,7 +17,6 @@ import {
   IconEdit,
   IconFolderOpen,
   IconWand,
-  IconKey,
   IconSparkles,
   IconChartBar,
 } from "@tabler/icons-react";
@@ -36,7 +35,6 @@ interface HeaderBarProps {
   onOpenFlowSelector?: () => void;
   onAIGenerate?: () => void;
   onAIRepair?: () => void;
-  onOpenAPIKeySettings?: () => void;
 }
 
 export function HeaderBar({
@@ -47,7 +45,6 @@ export function HeaderBar({
   onOpenFlowSelector,
   onAIRepair,
   onAIGenerate,
-  onOpenAPIKeySettings,
 }: HeaderBarProps) {
   const { theme } = useTheme();
   const { logout, user } = useUsers();
@@ -419,12 +416,28 @@ export function HeaderBar({
                 <IconChevronDown size={12} color="#666666" />
               </UnstyledButton>
             </Menu.Target>
-            <Menu.Dropdown style={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 8 }}>
-              <Menu.Item leftSection={<IconUser size={16} />} style={{ color: "#FFFFFF" }} onClick={() => navigate('/profile')}>Profile</Menu.Item>
-              <Menu.Item leftSection={<IconChartBar size={16} />} onClick={() => navigate('/analytics')} style={{ color: "#FFFFFF" }}>Analytics</Menu.Item>
-              {onOpenAPIKeySettings && (
-                <Menu.Item leftSection={<IconKey size={16} />} onClick={onOpenAPIKeySettings} style={{ color: "#FFFFFF" }}>API Key Settings</Menu.Item>
-              )}
+
+            <Menu.Dropdown
+              style={{
+                background: "#1a1a1a",
+                border: "1px solid #333333",
+                borderRadius: 8,
+              }}
+            >
+              <Menu.Item 
+                leftSection={<IconUser size={16} />}
+                onClick={() => navigate('/profile')}
+                style={{ color: "#FFFFFF" }}
+              >
+                Profile
+              </Menu.Item>
+              <Menu.Item 
+                leftSection={<IconChartBar size={16} />}
+                onClick={() => navigate('/analytics')}
+                style={{ color: "#FFFFFF" }}
+              >
+                Analytics
+              </Menu.Item>
               <Menu.Divider style={{ borderColor: "#333333" }} />
               <Menu.Item leftSection={<IconLogout size={16} />} color="red" onClick={() => setOpened(true)}>Logout</Menu.Item>
             </Menu.Dropdown>

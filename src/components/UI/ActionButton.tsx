@@ -1,4 +1,5 @@
-import { FC, ReactNode, useState } from "react";
+import { useState } from "react";
+import type { FC, ReactNode } from "react";
 import { UnstyledButton, Text } from "@mantine/core";
 import { useTheme } from "../../theme/ThemeContext";
 

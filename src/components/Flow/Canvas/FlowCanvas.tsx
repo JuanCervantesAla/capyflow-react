@@ -26,9 +26,7 @@ import { CustomControls } from "../../Control/CustomControls";
 import { CreationTimer } from "./CreationTimer";
 import { useTheme } from "../../../theme/ThemeContext";
 import { FlowInternals } from "./FlowInternals";
-import { useWebSocket } from "../../../hooks/useWebSocket";
 import { useCreationSession } from "../../../hooks/useCreationSession";
-import { queryKeys } from "../../../lib/queryKeys";
 import "@xyflow/react/dist/style.css";
 import { useExecutionUpdates } from '../../../hooks/useExecutionUpdates';
 
@@ -103,16 +101,6 @@ function FlowCanvasComponent({
       onDeselectAll.current = deselectAll;
     }
   }, [onDeselectAll, setNodes]);
-
-  useWebSocket({
-    onUpdate: (update) => {
-      if (update.type === "complete" && update.flowId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.executions.byFlow(update.flowId),
-        });
-      }
-    },
-  });
 
   const onMoveStart = useCallback(() => {
     setIsDragging(true);

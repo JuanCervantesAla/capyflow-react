@@ -10,18 +10,11 @@ export function useAIGeneration() {
 
   const generateFlow = async (
     description: string,
-    apiKey?: string,
+    _apiKey?: string,
     onSuccess?: (flow: any) => void
   ) => {
     if (!description.trim()) {
       toastError('Please describe the flow you want to create');
-      return;
-    }
-
-    if (!apiKey) {
-      toastError(
-        'Please provide your Google Gemini API key (100% free) in advanced options'
-      );
       return;
     }
 
@@ -41,16 +34,29 @@ export function useAIGeneration() {
       // Generar el prompt del sistema
       const systemPrompt = generateSystemPrompt(nodeTypesInfo);
 
-      // Llamar a la API de Google Gemini
+      // Llamar a la API (ahora usa Groq con API key del backend)
       const response = await generateFlowWithOpenAI(
         description,
-        systemPrompt,
-        apiKey
+        systemPrompt
       );
 
       if (!response.success || !response.flow) {
         throw new Error(response.error || 'Could not generate flow');
       }
+
+      console.log('🔍 [AI] Respuesta del backend:', response.flow);
+      console.log('🔍 [AI] Nodos recibidos:', response.flow.nodes);
+      
+      // Log de metadata de cada nodo
+      response.flow.nodes.forEach((node: any, index: number) => {
+        console.log(`🎨 [AI] Nodo ${index + 1} "${node.data?.label || node.label}":`, {
+          type: node.data?.type || node.type,
+          subtitle: node.data?.subtitle,
+          icon: node.data?.icon,
+          color: node.data?.color,
+          category: node.data?.category,
+        });
+      });
 
       // Validar el flujo generado
       const validation = validateGeneratedFlow(response.flow);
@@ -66,6 +72,20 @@ export function useAIGeneration() {
 
       // Transformar el flujo para React Flow
       const transformedFlow = transformAIFlowToReactFlow(response.flow);
+      
+      console.log('✅ [AI] Nodos transformados para React Flow:', transformedFlow.nodes);
+      transformedFlow.nodes.forEach((node: any, index: number) => {
+        console.log(`📦 [AI] Nodo transformado ${index + 1}:`, {
+          id: node.id,
+          type: node.type,
+          label: node.data?.label,
+          nodeType: node.data?.type,
+          subtitle: node.data?.subtitle,
+          icon: node.data?.icon,
+          color: node.data?.color,
+          category: node.data?.category,
+        });
+      });
 
       toastSuccess('Flow generated successfully!');
 
@@ -81,7 +101,15 @@ export function useAIGeneration() {
       return transformedFlow;
     } catch (error: any) {
       console.error('Error generating flow with AI:', error);
-      toastError(error.message || 'Error generating flow with AI');
+      
+      // Si es error de rate limit, mostrar mensaje especial
+      if (error.isRateLimit && error.retryAfter) {
+        const seconds = Math.ceil(error.retryAfter);
+        toastError(`Límite de API excedido. Espera ${seconds} segundos e intenta de nuevo.`, 'warning', 10000);
+      } else {
+        toastError(error.message || 'Error generating flow with AI');
+      }
+      
       throw error;
     } finally {
       setIsGenerating(false);
@@ -99,22 +127,38 @@ export function useAIGeneration() {
  */
 function transformAIFlowToReactFlow(aiFlow: any) {
   // Transformar nodos
-  const nodes = aiFlow.nodes.map((node: any) => ({
-    id: node.id,
-    type: 'custom', // Todos usan el CustomNode component
-    position: node.position,
-    data: {
-      label: node.data.label,
-      type: node.data.type,
-      subtitle: getCategoryForType(node.data.type),
-      icon: getIconForType(node.data.type),
-      color: getColorForType(node.data.type),
-      category: getCategoryForType(node.data.type),
-      description: node.data.description || '',
-      parameters: node.data.parameters || {},
-      nodeTypeId: node.data.type,
-    },
-  }));
+  const nodes = aiFlow.nodes.map((node: any) => {
+    // Si el nodo ya tiene estructura React Flow completa (data.label, data.subtitle, etc.), usarlo directamente
+    if (node.data && node.data.label && node.data.subtitle && node.data.icon) {
+      console.log(`✅ [Transform] Usando metadata del backend para "${node.data.label}"`);
+      return {
+        id: node.id,
+        type: 'custom',
+        position: node.position,
+        data: node.data, // Usar data del backend que ya tiene metadata completa
+      };
+    }
+    
+    console.warn(`⚠️ [Transform] Generando metadata desde frontend para "${node.data?.label || node.id}" - backend no envió metadata completa`);
+    
+    // Si no tiene metadata completa, generarla desde el frontend (fallback)
+    return {
+      id: node.id,
+      type: 'custom',
+      position: node.position,
+      data: {
+        label: node.data?.label || 'Node',
+        type: node.data?.type || 'custom',
+        subtitle: node.data?.subtitle || getCategoryForType(node.data?.type),
+        icon: node.data?.icon || getIconForType(node.data?.type),
+        color: node.data?.color || getColorForType(node.data?.type),
+        category: node.data?.category || getCategoryForType(node.data?.type),
+        description: node.data?.description || '',
+        parameters: node.data?.parameters || {},
+        nodeTypeId: node.data?.type,
+      },
+    };
+  });
 
   // Transformar edges
   const edges = aiFlow.edges.map((edge: any) => ({

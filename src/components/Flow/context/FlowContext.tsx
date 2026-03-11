@@ -60,7 +60,7 @@ export function FlowProvider({
   children: React.ReactNode;
   onSave?: (nodes: FlowNode[], edges: Edge[]) => Promise<void>;
 }) {
-  const [nodes, setNodesInternal, onNodesChangeInternal] = useNodesState([]);
+  const [nodes, setNodesInternal, onNodesChangeInternal] = useNodesState<FlowNode>([]);
   const [edges, setEdgesInternal, onEdgesChange] = useEdgesState([]);
 
   const setNodes =

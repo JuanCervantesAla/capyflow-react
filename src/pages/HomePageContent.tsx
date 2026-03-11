@@ -6,7 +6,6 @@ import { Rightbar } from "../components/Rightbar/Rightbar";
 import { RightPanels } from "../components/Rightbar/RightPanels";
 import { AIGenerateModal } from "../components/UI/AIGenerateModal";
 import { AIRepairModal } from "../components/UI/AIRepairModal";
-import { APIKeySettingsModal } from "../components/UI/APIKeySettingsModal";
 import { FlowContext } from "../components/Flow/context/FlowContext";
 import { useExecuteFlow } from "../hooks/mutations/Flow/useExecuteFlow";
 import { useSaveFlow } from "../hooks/mutations/Flow/useSaveFlow";
@@ -15,6 +14,7 @@ import { useAIGeneration } from "../hooks/useAIGeneration";
 import { repairFlowWithAI } from "../api/AI/ai.api";
 import { toastSuccess, toastError } from "../lib/toast";
 import type { ExecutionResult } from "../hooks/mutations/Flow/useExecuteFlow";
+import { transformNodeFromBackend, transformEdgeFromBackend } from "../components/Flow/types/NodeTypes";
 
 export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -25,7 +25,6 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [rightbarOpened, setRightbarOpened] = useState(false);
   const [aiModalOpened, setAiModalOpened] = useState(false);
   const [aiRepairModalOpened, setAiRepairModalOpened] = useState(false);
-  const [apiKeyModalOpened, setApiKeyModalOpened] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
 
   const [ignoreNextSelection, setIgnoreNextSelection] = useState(false);
@@ -122,9 +121,9 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
     }
   };
 
-  const handleAIGenerate = async (description: string, apiKey?: string) => {
+  const handleAIGenerate = async (description: string) => {
     try {
-      await generateFlow(description, apiKey, (generatedFlow) => {
+      await generateFlow(description, undefined, (generatedFlow) => {
         if (flowContext?.loadFlowData) {
           flowContext.loadFlowData(
             generatedFlow.nodes || [],
@@ -137,7 +136,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
       });
     } catch (error) {
       console.error('Error generando flujo:', error);
-    }
+}
   };
 
   const handleAIRepair = async (issues?: string) => {
@@ -145,6 +144,8 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
 
     setIsRepairing(true);
     try {
+      // Enviar nodos en formato React Flow directamente
+      // El backend puede manejar tanto formato plano como React Flow (con data anidado)
       const currentFlow = {
         flowName: flowName || "Untitled Workflow",
         flowDescription: "",
@@ -158,9 +159,24 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
       });
 
       if (response.success && response.flow) {
+        // Check if nodes are already in React Flow format (have data.label)
+        // or in backend format (have label at root level)
+        const nodes = response.flow.nodes || [];
+        const edges = response.flow.edges || [];
+        
+        const isAlreadyTransformed = nodes.length > 0 && nodes[0]?.data?.label;
+        
+        const transformedNodes = isAlreadyTransformed 
+          ? nodes 
+          : nodes.map(transformNodeFromBackend);
+          
+        const transformedEdges = isAlreadyTransformed 
+          ? edges 
+          : edges.map(transformEdgeFromBackend);
+        
         flowContext.loadFlowData(
-          response.flow.nodes || [],
-          response.flow.edges || []
+          transformedNodes,
+          transformedEdges
         );
         if (response.fixes && response.fixes.length > 0) {
           toastSuccess(
@@ -202,7 +218,6 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         opened={aiModalOpened}
         onClose={() => setAiModalOpened(false)}
         onGenerate={handleAIGenerate}
-        onOpenSettings={() => setApiKeyModalOpened(true)}
         loading={isGenerating}
       />
 
@@ -212,11 +227,6 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         onRepair={handleAIRepair}
         loading={isRepairing}
       />
-
-      <APIKeySettingsModal
-        opened={apiKeyModalOpened}
-        onClose={() => setApiKeyModalOpened(false)}
-      />
       
       <HeaderBar
         workflowName={flowName}
@@ -225,7 +235,6 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         onRun={handleExecute}
         onAIGenerate={() => setAiModalOpened(true)}
         onAIRepair={() => setAiRepairModalOpened(true)}
-        onOpenAPIKeySettings={() => setApiKeyModalOpened(true)}
       />
 
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
