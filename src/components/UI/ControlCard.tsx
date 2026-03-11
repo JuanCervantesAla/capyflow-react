@@ -1,4 +1,4 @@
-import { useTheme } from "../../theme/themeContext";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface ControlCardProps {
   children: React.ReactNode;

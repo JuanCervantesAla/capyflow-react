@@ -7,7 +7,8 @@ export type NodeParameterType =
   | 'json'
   | 'http-method'
   | 'http-headers'
-  | 'key-value';
+  | 'key-value'
+  | 'password';
 
 export interface NodeParameterSchema {
   name: string;
@@ -17,7 +18,7 @@ export interface NodeParameterSchema {
   defaultValue?: any;
   placeholder?: string;
   description?: string;
-  options?: string[];
+  options?: string[] | Array<{ value: string; label: string }>;
   validation?: (value: any) => string | null;
   advanced?: boolean; // Si true, solo mostrar en modo avanzado
 }
@@ -647,10 +648,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
   },
 
-  'gemini': {
-    type: 'gemini',
-    displayName: 'Gemini',
-    description: 'Interactúa con Google Gemini para generar texto, análisis y respuestas inteligentes',
+  'groq': {
+    type: 'groq',
+    displayName: 'Groq',
+    description: 'Interactúa con Groq AI para generar texto ultrarrápido con modelos LLaMA y Mixtral',
     category: 'ai',
     parameters: [
       {
@@ -659,15 +660,21 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: true,
         placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
-        description: 'El prompt o pregunta para el modelo Gemini',
+        description: 'El prompt o pregunta para el modelo Groq',
       },
       {
-        name: 'API Key',
-        key: 'apiKey',
-        type: 'string',
+        name: 'Model',
+        key: 'model',
+        type: 'select',
         required: false,
-        placeholder: 'Deja vacío para usar tu API key guardada',
-        description: 'API Key de Google Gemini (opcional si ya configuraste una en tu perfil)',
+        defaultValue: 'llama-3.3-70b-versatile',
+        options: [
+          { value: 'llama-3.3-70b-versatile', label: 'LLaMA 3.3 70B (Recommended)' },
+          { value: 'llama-3.1-8b-instant', label: 'LLaMA 3.1 8B (Fast)' },
+          { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' },
+          { value: 'gemma2-9b-it', label: 'Gemma 2 9B' },
+        ],
+        description: 'Modelo de Groq a utilizar',
       },
       {
         name: 'Temperature',
@@ -685,7 +692,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 1024,
         placeholder: '1024',
-        description: 'Máximo número de tokens en la respuesta (1-8192)',
+        description: 'Máximo número de tokens en la respuesta (1-32768)',
       },
       {
         name: 'System Prompt',
@@ -693,7 +700,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: false,
         placeholder: 'Eres un asistente experto en...',
-        description: 'System instructions to define model behavior (optional)',
+        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -703,8 +710,8 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
       if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 2)) {
         return 'Temperature must be between 0 and 2';
       }
-      if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 8192)) {
-        return 'Max Tokens must be between 1 and 8192';
+      if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 32768)) {
+        return 'Max Tokens must be between 1 and 32768';
       }
       return null;
     },

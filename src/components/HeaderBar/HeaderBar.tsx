@@ -36,7 +36,6 @@ interface HeaderBarProps {
   onOpenFlowSelector?: () => void;
   onAIGenerate?: () => void;
   onAIRepair?: () => void;
-  onOpenAPIKeySettings?: () => void;
 }
 
 export function HeaderBar({
@@ -47,7 +46,6 @@ export function HeaderBar({
   onOpenFlowSelector,
   onAIRepair,
   onAIGenerate,
-  onOpenAPIKeySettings,
 }: HeaderBarProps) {
   const { theme } = useTheme();
   const { logout, user } = useUsers();
@@ -428,15 +426,6 @@ export function HeaderBar({
               >
                 Analytics
               </Menu.Item>
-              {onOpenAPIKeySettings && (
-                <Menu.Item 
-                  leftSection={<IconKey size={16} />}
-                  onClick={onOpenAPIKeySettings}
-                  style={{ color: "#FFFFFF" }}
-                >
-                  API Key Settings
-                </Menu.Item>
-              )}
               <Menu.Divider style={{ borderColor: "#333333" }} />
               <Menu.Item
                 leftSection={<IconLogout size={16} />}

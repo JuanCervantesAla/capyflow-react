@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { UnstyledButton, Text } from "@mantine/core";
-import { THEME } from "../../theme/Constants";
+import { THEME } from "../../theme/constants";
 
 interface MyButtonProps {
   icon?: React.ReactNode;

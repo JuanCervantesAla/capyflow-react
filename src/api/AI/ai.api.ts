@@ -57,80 +57,33 @@ export async function generateFlowWithAI(
 
 export async function generateFlowWithOpenAI(
   description: string,
-  systemPrompt: string,
-  apiKey: string
+  systemPrompt: string
 ): Promise<AIGenerateFlowResponse> {
   try {
-    const fullPrompt = `${systemPrompt}\n\nDescripción del usuario:\n${description}\n\nResponde SOLO con JSON válido, sin texto adicional.`;
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    const response = await api.post<AIGenerateFlowResponse>(
+      '/ai/generate-flow',
       {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: fullPrompt,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 4000,
-          },
-        }),
+        description,
+        systemPrompt,
       }
     );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Gemini API error');
-    }
-
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!content) {
-      throw new Error('No content in Gemini response');
-    }
-
-    let flow: AIGeneratedFlow;
-    try {
-      const cleanContent = content
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .trim();
-      flow = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', content);
-      throw new Error('Failed to parse AI-generated flow');
-    }
-
-    if (!flow.nodes || !Array.isArray(flow.nodes)) {
-      throw new Error('Invalid flow structure: missing nodes array');
-    }
-
-    if (!flow.edges || !Array.isArray(flow.edges)) {
-      throw new Error('Invalid flow structure: missing edges array');
-    }
-
-    return {
-      success: true,
-      flow,
-      rawResponse: content,
-    };
+    return response;
   } catch (error: any) {
-    console.error('Error calling Gemini API:', error);
-    return {
-      success: false,
-      error: error.message || 'Failed to call Gemini API',
-    };
+    console.error('❌ Error generating flow with AI:', error);
+    
+    // Extraer información detallada del error
+    const errorData = error.data || error.response?.data;
+    const errorMessage = errorData?.error || error.message || 'Failed to generate flow with AI';
+    
+    // Si es error de rate limit (429), preservar esa información
+    if (error.status === 429 || errorData?.retryAfter) {
+      const err = new Error(errorMessage) as any;
+      err.retryAfter = errorData.retryAfter || 60;
+      err.isRateLimit = true;
+      throw err;
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 

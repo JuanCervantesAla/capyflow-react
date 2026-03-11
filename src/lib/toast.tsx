@@ -71,7 +71,7 @@ export function toastError(message: string) {
   });
 }
 
-export function showToast(title: string, message: string, type: 'success' | 'error' | 'info' | 'warning') {
+export function showToast(title: string, message: string, type: 'success' | 'error' | 'info' | 'warning', id?: string) {
   const config = {
     success: {
       color: ORANGE,
@@ -102,6 +102,7 @@ export function showToast(title: string, message: string, type: 'success' | 'err
   const currentConfig = config[type];
   
   showNotification({
+    id,
     title: title.toUpperCase(),
     message,
     color: currentConfig.color,

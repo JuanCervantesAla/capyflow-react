@@ -73,7 +73,7 @@ export function AIRepairModal({
                 Repair with AI
               </Text>
               <Text className="!text-white/70 text-xs font-medium">
-                ~/ai/repair
+                Powered by Groq
               </Text>
             </Stack>
           </Group>

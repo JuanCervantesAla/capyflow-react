@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tooltip } from "@mantine/core";
-import { useTheme } from "../../theme/themeContext";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface ControlButtonProps {
   icon: React.ReactNode;

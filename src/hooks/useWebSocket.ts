@@ -136,12 +136,17 @@ export function useWebSocket(options?: UseWebSocketOptions) {
   }, []);
 
   useEffect(() => {
-    connect();
+    // Solo conectar si no hay una conexión existente
+    if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+      connect();
+    }
 
     return () => {
+      // Limpiar la conexión cuando el componente se desmonte
       disconnect();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Array vacío: solo ejecutar en mount/unmount
 
   return {
     isConnected,

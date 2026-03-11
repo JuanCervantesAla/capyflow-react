@@ -194,6 +194,11 @@ export const CustomNode = memo(
     const [confirmOpen, setConfirmOpen] = useState(false);
     const timeoutRef = useRef<number | undefined>(undefined);
 
+    // Handle missing data
+    if (!data) {
+      return null;
+    }
+
     const nodeData = data as NodeData;
     const category = nodeData.category || 'trigger';
     const executionStatus = nodeData.executionStatus || 'idle';
@@ -365,6 +370,9 @@ export const CustomNode = memo(
     
     const prevData = prevProps.data as NodeData;
     const nextData = nextProps.data as NodeData;
+    
+    // Re-render if data is missing
+    if (!prevData || !nextData) return false;
     
     // Re-render if data content changes
     if (prevData.label !== nextData.label) return false;
