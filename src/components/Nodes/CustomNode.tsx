@@ -247,12 +247,67 @@ export const CustomNode = memo(
     return (
       <div style={styles.container}>
         {confirmOpen && (
-          <Modal opened={confirmOpen} onClose={handleCloseConfirm} title="Confirm deletion" size="sm">
-            <Text size="sm">Are you sure you want to delete this node?</Text>
-            <Group mt="md" justify="flex-end">
-              <Button variant="default" onClick={handleCloseConfirm}>Cancel</Button>
-              <Button color="red" onClick={handleDelete}>Delete</Button>
-            </Group>
+          <Modal
+            opened={confirmOpen}
+            onClose={handleCloseConfirm}
+            size="sm"
+            withCloseButton={false}
+            styles={{
+              title: {
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontWeight: 700,
+                fontSize: 18,
+                color: styles.colors.textPrimary,
+                letterSpacing: "-0.3px",
+              },
+              body: {
+                background: styles.colors.canvas,
+                borderRadius: 12,
+                padding: 24,
+              },
+              content: {
+                border: `2px solid ${styles.colors.borderNode}`,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                background: "#F5F1E8",
+              },
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <Text
+                size="md"
+                style={{
+                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontWeight: 600,
+                  color: styles.colors.textInk,
+                  fontSize: 15,
+                  marginBottom: 8,
+                }}
+              >¿Estás seguro que quieres eliminar este nodo?</Text>
+              <Group mt="md" justify="flex-end" style={{ gap: 12 }}>
+                <Button
+                  variant="outline"
+                  color={styles.colors.textMuted}
+                  onClick={handleCloseConfirm}
+                  style={{
+                    borderColor: styles.colors.borderPrimary,
+                    color: styles.colors.textMuted,
+                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontWeight: 500,
+                  }}
+                >Cancelar</Button>
+                <Button
+                  color="red"
+                  onClick={handleDelete}
+                  style={{
+                    background: styles.colors.errorColor,
+                    color: "#fff",
+                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontWeight: 600,
+                    boxShadow: "0 2px 8px rgba(255,0,0,0.08)",
+                  }}
+                >Eliminar</Button>
+              </Group>
+            </div>
           </Modal>
         )}
 
