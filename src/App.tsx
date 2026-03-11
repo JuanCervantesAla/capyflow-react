@@ -8,6 +8,7 @@ import RegisterPage from "./pages/RegisterPage";
 import { HomePage } from "./pages/HomePage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ProfilePage } from "./pages/ProfilePage";
 
 export default function App() {
   return (
@@ -38,6 +39,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AnalyticsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               }
             />
