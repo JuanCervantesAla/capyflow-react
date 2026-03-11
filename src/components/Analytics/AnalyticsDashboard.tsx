@@ -133,9 +133,9 @@ export const AnalyticsDashboard = () => {
           )}
         </Group>
         <Text 
-          size="28px" 
           fw={900} 
           c="#0A0A08"
+          className="analytics-value"
           style={{ lineHeight: 1, fontFamily: 'system-ui, sans-serif' }}
         >
           {value}
@@ -177,13 +177,77 @@ export const AnalyticsDashboard = () => {
 
   return (
     <Box p={20}>
+      <style>{`
+        .analytics-grid {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 12px;
+        }
+        .analytics-grid .col-3 { grid-column: span 3; }
+        .analytics-grid .col-4 { grid-column: span 4; }
+        .analytics-grid .col-6 { grid-column: span 6; }
+        .analytics-grid .col-8 { grid-column: span 8; }
+        .analytics-grid .chart-tall { height: 240px; }
+        .analytics-grid .chart-medium { height: 220px; }
+        .analytics-title { font-size: 24px; }
+        .analytics-value { font-size: 28px; }
+
+        /* Tablet: 768px - 1024px */
+        @media (max-width: 1024px) {
+          .analytics-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+          .analytics-grid .col-3,
+          .analytics-grid .col-4,
+          .analytics-grid .col-6,
+          .analytics-grid .col-8 {
+            grid-column: span 1;
+          }
+          .analytics-grid .chart-tall,
+          .analytics-grid .chart-medium {
+            height: 260px;
+          }
+          .analytics-grid .chart-wide {
+            grid-column: span 2;
+          }
+          .analytics-grid .thesis-card {
+            grid-column: span 2;
+            height: auto !important;
+            min-height: 220px;
+          }
+        }
+
+        /* Mobile: < 640px */
+        @media (max-width: 640px) {
+          .analytics-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .analytics-grid .col-3,
+          .analytics-grid .col-4,
+          .analytics-grid .col-6,
+          .analytics-grid .col-8,
+          .analytics-grid .chart-wide,
+          .analytics-grid .thesis-card {
+            grid-column: span 1;
+          }
+          .analytics-grid .chart-tall,
+          .analytics-grid .chart-medium {
+            height: 240px;
+          }
+          .analytics-title { font-size: 20px; }
+          .analytics-value { font-size: 24px; }
+        }
+      `}</style>
+
       <Stack gap={16}>
         {/* Header */}
         <Box mb={4}>
           <Text 
-            size="24px" 
             fw={900} 
             c="#0A0A08"
+            className="analytics-title"
             style={{
               letterSpacing: '0.5px',
               fontFamily: 'system-ui, sans-serif',
@@ -198,13 +262,9 @@ export const AnalyticsDashboard = () => {
         </Box>
 
         {/* Bento Grid Layout */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(12, 1fr)',
-          gap: 12,
-        }}>
+        <div className="analytics-grid">
           {/* Row 1 - Key Metrics */}
-          <div style={{ gridColumn: 'span 3' }}>
+          <div className="col-3">
             <MetricCard
               icon={IconSparkles}
               label="Total Workflows"
@@ -215,7 +275,7 @@ export const AnalyticsDashboard = () => {
             />
           </div>
 
-          <div style={{ gridColumn: 'span 3' }}>
+          <div className="col-3">
             <MetricCard
               icon={IconClock}
               label="Time Saved"
@@ -226,7 +286,7 @@ export const AnalyticsDashboard = () => {
             />
           </div>
 
-          <div style={{ gridColumn: 'span 3' }}>
+          <div className="col-3">
             <MetricCard
               icon={IconRobot}
               label="AI Interactions"
@@ -236,7 +296,7 @@ export const AnalyticsDashboard = () => {
             />
           </div>
 
-          <div style={{ gridColumn: 'span 3' }}>
+          <div className="col-3">
             <MetricCard
               icon={IconActivity}
               label="Success Rate"
@@ -248,7 +308,7 @@ export const AnalyticsDashboard = () => {
           </div>
 
           {/* Row 2 - Charts */}
-          <div style={{ gridColumn: 'span 8', height: '240px' }}>
+          <div className="col-8 chart-tall chart-wide">
             <ChartCard title="Creation Time & Complexity Comparison" icon={IconChartBar}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={comparisonData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -281,7 +341,7 @@ export const AnalyticsDashboard = () => {
             </ChartCard>
           </div>
 
-          <div style={{ gridColumn: 'span 4', height: '240px' }}>
+          <div className="col-4 chart-tall">
             <ChartCard title="Workflow Distribution" icon={IconSparkles}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -322,7 +382,7 @@ export const AnalyticsDashboard = () => {
           </div>
 
           {/* Row 3 - Execution Stats & Thesis Validation */}
-          <div style={{ gridColumn: 'span 4', height: '220px' }}>
+          <div className="col-4 chart-medium">
             <ChartCard title="Execution Success Rate" icon={IconActivity}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -362,7 +422,7 @@ export const AnalyticsDashboard = () => {
             </ChartCard>
           </div>
 
-          <div style={{ gridColumn: 'span 8', height: '220px' }}>
+          <div className="col-8 chart-medium thesis-card">
             <Box
               style={{
                 background: '#FFF8F0',
@@ -386,7 +446,7 @@ export const AnalyticsDashboard = () => {
 
                 {/* Progress Bar 1 */}
                 <Stack gap={4}>
-                  <Group justify="space-between">
+                  <Group justify="space-between" wrap="wrap" gap={4}>
                     <Text size="10px" c="#5A4A3A" fw={600}>TIME REDUCTION TARGET</Text>
                     <Group gap={6}>
                       <Text size="11px" c={summary.timeSavedPercentage >= 60 ? '#2E7D32' : '#C9873D'} fw={700}>
@@ -423,7 +483,7 @@ export const AnalyticsDashboard = () => {
 
                 {/* Progress Bar 2 */}
                 <Stack gap={4}>
-                  <Group justify="space-between">
+                  <Group justify="space-between" wrap="wrap" gap={4}>
                     <Text size="10px" c="#5A4A3A" fw={600}>PRECISION TARGET</Text>
                     <Group gap={6}>
                       <Text size="11px" c={summary.successRate >= 75 ? '#2E7D32' : '#3B82F6'} fw={700}>
@@ -481,7 +541,7 @@ export const AnalyticsDashboard = () => {
           </div>
 
           {/* Row 4 - Performance Highlights */}
-          <div style={{ gridColumn: 'span 6' }}>
+          <div className="col-6">
             <Box
               style={{
                 background: '#C9873D',
@@ -501,7 +561,7 @@ export const AnalyticsDashboard = () => {
                     AI Performance
                   </Text>
                 </Group>
-                <Text size="28px" fw={900} c="#FFF8F0" style={{ lineHeight: 1 }}>
+                <Text fw={900} c="#FFF8F0" className="analytics-value" style={{ lineHeight: 1 }}>
                   {formatTime(Math.round(summary.avgCreationTimeAI))}
                 </Text>
                 <Text size="11px" c="#FFF8F0" fw={500}>
@@ -511,7 +571,7 @@ export const AnalyticsDashboard = () => {
             </Box>
           </div>
 
-          <div style={{ gridColumn: 'span 6' }}>
+          <div className="col-6">
             <Box
               style={{
                 background: '#5A4A3A',
@@ -531,7 +591,7 @@ export const AnalyticsDashboard = () => {
                     Efficiency Gain
                   </Text>
                 </Group>
-                <Text size="28px" fw={900} c="#FFF8F0" style={{ lineHeight: 1 }}>
+                <Text fw={900} c="#FFF8F0" className="analytics-value" style={{ lineHeight: 1 }}>
                   {summary.avgCreationTimeManual > 0 && summary.avgCreationTimeAI > 0
                     ? ((summary.avgCreationTimeManual - summary.avgCreationTimeAI) / summary.avgCreationTimeManual * 100).toFixed(1)
                     : '0'}%
