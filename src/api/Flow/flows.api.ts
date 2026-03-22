@@ -1,5 +1,6 @@
 import type { Flow } from "../../components/Flow/types/Flow";
-import type { Node as ReactFlowNode, Edge as ReactFlowEdge } from "@xyflow/react";
+import type { Edge as ReactFlowEdge } from "@xyflow/react";
+import type { FlowNode } from "../../components/Flow/types/NodeTypes";
 import { api } from "../client";
 import { transformEdgeForBackend, transformEdgeFromBackend, transformNodeForBackend, transformNodeFromBackend } from "../../components/Flow/types/NodeTypes";
 
@@ -34,7 +35,7 @@ export const updateFlowRequest = (id: string, data: Partial<Flow>) =>
 
 export const saveFlowDataRequest = (
   flowId: string,
-  nodes: ReactFlowNode[],
+  nodes: FlowNode[],
   edges: ReactFlowEdge[]
 ) => {
   const backendNodes = nodes.map(transformNodeForBackend);

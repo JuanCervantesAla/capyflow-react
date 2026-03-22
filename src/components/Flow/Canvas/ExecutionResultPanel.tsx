@@ -67,7 +67,7 @@ export function ExecutionResultPanel({
 }
 
 function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
-  // Crear mapa de nodeId a label
+  // Create map of nodeId to label
   const nodeLabels = nodes?.reduce((acc: any, node: any) => {
     acc[node.id] = node.data?.label || node.id;
     return acc;
@@ -84,7 +84,7 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
             }}>
               <Group gap="sm">
                 <Loader size="sm" color={theme.colors.ink} />
-                <Text size="xs" c={theme.colors.ink} fw={600}>Ejecutando flujo…</Text>
+                <Text size="xs" c={theme.colors.ink} fw={600}>Running flow…</Text>
               </Group>
             </Card>
           )}
@@ -116,10 +116,10 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
                   )}
                   <Text size="xs" fw={700} c={theme.colors.ink}>
                     {result.status === "success"
-                      ? "Ejecución Exitosa"
+                      ? "Successful Execution"
                       : result.status === "error"
-                      ? "Error en Ejecución"
-                      : "Ejecución en Progreso"}
+                      ? "Execution Error"
+                      : "Execution in Progress"}
                   </Text>
                 </Group>
                 <Badge size="sm" variant="light" color="gray" style={{
@@ -142,7 +142,7 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
           {result?.executedNodes?.length > 0 && (
             <div>
               <Text fw={700} size="sm" mb="xs" c={theme.colors.ink}>
-                Nodos Ejecutados ({result.executedNodes.length})
+                Executed Nodes ({result.executedNodes.length})
               </Text>
               <Stack gap="xs">
                 {result.executedNodes.map((nodeId: string) => {
@@ -231,7 +231,7 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
             }}>
               <Group justify="space-between" mb="xs">
                 <Text fw={700} size="sm" c={theme.colors.ink}>
-                  JSON Completo
+                  JSON Result:
                 </Text>
                 <CopyButton value={JSON.stringify(result, null, 2)}>
                   {({ copied }) => (

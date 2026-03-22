@@ -17,7 +17,6 @@ import {
   IconEdit,
   IconFolderOpen,
   IconWand,
-  IconKey,
   IconSparkles,
   IconChartBar,
 } from "@tabler/icons-react";

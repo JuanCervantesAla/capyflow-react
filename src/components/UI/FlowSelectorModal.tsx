@@ -4,7 +4,6 @@ import {
   Button,
   Stack,
   Text,
-  Divider,
   Group,
   CloseButton,
 } from "@mantine/core";
@@ -30,10 +29,10 @@ export function FlowSelectorModal({
     data: flows = [],
     isLoading,
     isError,
-  } = useFlows(opened);
+  } = useFlows();
 
   const flowOptions = useMemo(
-    () => flows.map((f) => ({ value: f.id, label: f.name })),
+    () => (flows as any[]).map((f: any) => ({ value: f.id, label: f.name })),
     [flows]
   );
 
@@ -60,7 +59,7 @@ export function FlowSelectorModal({
       }}
     >
       <Stack gap={0}>
-        {/* Header con fondo negro */}
+        {/* Header with black background */}
         <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
           <Group justify="space-between" align="center">
             <Stack gap={4}>
@@ -81,7 +80,7 @@ export function FlowSelectorModal({
           </Group>
         </div>
 
-        {/* Body con padding */}
+        {/* Body with padding */}
         <div className="px-6 py-6 bg-[#FFF8F0]">
           <Stack gap="lg">
             {/* Selector */}
@@ -124,7 +123,7 @@ export function FlowSelectorModal({
               />
             </Stack>
 
-            {/* Acción principal */}
+            {/* Primary action */}
             <Button
               fullWidth
               disabled={!selectedFlowId}
@@ -157,7 +156,7 @@ export function FlowSelectorModal({
               </div>
             </div>
 
-            {/* Acción secundaria */}
+            {/* Secondary action */}
             <Button
               fullWidth
               onClick={onCreateFlow}

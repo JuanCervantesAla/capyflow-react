@@ -1,5 +1,5 @@
 /**
- * Sistema de prompts y reglas para generación de flujos con IA
+ * Prompt and rules system for AI flow generation
  */
 
 export interface NodeTypeInfo {
@@ -11,16 +11,16 @@ export interface NodeTypeInfo {
 }
 
 /**
- * Genera el prompt del sistema con las reglas de CapyFlow
+ * Generates the system prompt with CapyFlow rules
  */
 export function generateSystemPrompt(nodeTypes: NodeTypeInfo[]): string {
   const nodeTypesDescription = nodeTypes
     .map(
       (node) => `
 ### ${node.name} (type: "${node.type}")
-- **Categoría**: ${node.category}
-- **Descripción**: ${node.description}
-- **Parámetros**: ${JSON.stringify(node.parameters, null, 2)}
+- **Category**: ${node.category}
+- **Description**: ${node.description}
+- **Parameters**: ${JSON.stringify(node.parameters, null, 2)}
 `
     )
     .join('\n');
@@ -33,7 +33,7 @@ Analyze the user's natural language description and generate a valid workflow in
 ## IMPORTANT RULES
 
 ### Flow Structure
-1. A flow MUST start with a trigger node (manual-trigger or webhook-trigger)
+1. A flow MUST start with a trigger node (manual-trigger, webhook-trigger, or telegram-trigger)
 2. Nodes are connected through edges that go from the output of one node to the input of the next
 3. Each node has a position (x, y) on the canvas
 4. Nodes must be adequately spaced (minimum 250px horizontally, 150px vertically)
@@ -303,7 +303,7 @@ Now process the following user request:`;
 }
 
 /**
- * Genera el prompt del usuario con contexto adicional
+ * Generates the user prompt with additional context
  */
 export function generateUserPrompt(description: string, context?: string): string {
   let prompt = description;
@@ -331,6 +331,13 @@ export const DEFAULT_NODE_TYPES: NodeTypeInfo[] = [
     name: 'Webhook Trigger',
     category: 'Trigger',
     description: 'Starts the flow via an HTTP POST request',
+    parameters: {},
+  },
+  {
+    type: 'telegram-trigger',
+    name: 'Telegram Trigger',
+    category: 'Trigger',
+    description: 'Starts the flow when your Telegram bot receives a message or file',
     parameters: {},
   },
   {

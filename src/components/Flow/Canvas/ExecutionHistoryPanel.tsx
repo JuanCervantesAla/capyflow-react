@@ -96,7 +96,7 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
               </Text>
             </Group>
             <Group justify="space-between">
-              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Duración:</Text>
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Duration:</Text>
               <Text size="xs" fw={600} c={theme.colors.ink}>{executionDetail.durationMs}ms</Text>
             </Group>
             {executionDetail.errorMessage && (

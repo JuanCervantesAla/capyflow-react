@@ -190,7 +190,7 @@ export const CustomNode = memo(
     // Memoize theme colors to prevent re-fetching during drag operations
     const themeColors = useMemo(() => getThemeColors(), []);
 
-    const { node, topBar, icon, content, mainContent, handle, handleTarget, handleSource, handleLabel, actionBtn, colors } = useMemo(
+    const { node, topBar, icon, content, mainContent, handleTarget, handleSource, handleLabel, actionBtn, colors } = useMemo(
       () => getStyles(!!selected, (data as NodeData).executionStatus || 'idle', themeColors),
       [selected, (data as NodeData).executionStatus, themeColors]
     );

@@ -76,12 +76,12 @@ export function useExecutionUpdates(flowId?: string) {
             };
           });
 
-          console.log(`Nodo ${nodeId}: ${status}`);
+          console.log(`Node ${nodeId}: ${status}`);
         }
         break;
 
       case 'complete':
-        // Invalidar queries cuando la ejecución se completa
+        // Invalidate queries when execution completes
         if (update.flowId) {
           queryClient.invalidateQueries({
             queryKey: queryKeys.executions.byFlow(update.flowId),
@@ -93,11 +93,11 @@ export function useExecutionUpdates(flowId?: string) {
             ? new Date().getTime() - new Date(prev.startedAt).getTime()
             : 0;
           
-          // Usar ID único basado en flowId y executionId para prevenir duplicados
+          // Use unique ID based on flowId and executionId to prevent duplicates
           const toastId = `execution-complete-${update.flowId || 'unknown'}-${update.executionId || Date.now()}`;
           showToast(
-            'Ejecución completada', 
-            `Flujo ejecutado exitosamente en ${durationMs}ms`,
+            'Execution completed', 
+            `Flow executed successfully in ${durationMs}ms`,
             'success',
             toastId
           );
@@ -121,23 +121,23 @@ export function useExecutionUpdates(flowId?: string) {
             ? new Date().getTime() - new Date(prev.startedAt).getTime()
             : 0,
         }));
-        console.error('Error en ejecución:', update.message);
+        console.error('Execution error:', update.message);
         const errorToastId = `execution-error-${update.flowId || 'unknown'}-${update.executionId || Date.now()}`;
-        showToast('Error en la ejecución', update.message || 'Error desconocido', 'error', errorToastId);
+        showToast('Execution error', update.message || 'Unknown error', 'error', errorToastId);
         break;
 
-      case 'execution-error':
+      case 'execution-error' as any:
         setExecutionData(prev => ({
           ...prev,
           status: 'error',
           completedAt: new Date().toISOString(),
           errorMessage: update.message,
         }));
-        console.error('Error de validación:', update.message);
+        console.error('Flow validation error:', update.message);
         const details = (update.data as any)?.details;
         const validationErrorToastId = `execution-validation-error-${update.flowId || 'unknown'}-${Date.now()}`;
         showToast(
-          'Error de validación del flujo', 
+          'Flow validation error', 
           `${update.message}\n\n${details || ''}`,
           'error',
           validationErrorToastId
@@ -149,10 +149,10 @@ export function useExecutionUpdates(flowId?: string) {
   const { isConnected } = useWebSocket({
     onUpdate: handleUpdate,
     onConnect: () => {
-      console.log('WebSocket conectado para actualizaciones');
+      console.log('WebSocket connected for updates');
     },
     onDisconnect: () => {
-      console.log('WebSocket desconectado');
+      console.log('WebSocket disconnected');
     },
   });
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { generateFlowWithOpenAI, validateGeneratedFlow } from '../api/AI/ai.api';
-import { generateSystemPrompt, DEFAULT_NODE_TYPES } from '../lib/ai-prompts';
+import { generateFlowWithAI, validateGeneratedFlow } from '../api/AI/ai.api';
+import { DEFAULT_NODE_TYPES } from '../lib/ai-prompts';
 import { useNodeTypes } from './useNodeTypes';
 import { showToast, toastError, toastSuccess } from '../lib/toast';
 
@@ -21,7 +21,7 @@ export function useAIGeneration() {
     setIsGenerating(true);
 
     try {
-      // Preparar tipos de nodos para el prompt
+      // Prepare node types for the prompt
       const nodeTypesInfo =
         nodeTypes?.map((nt) => ({
           type: nt.type,
@@ -31,25 +31,24 @@ export function useAIGeneration() {
           parameters: nt.defaultParams ? JSON.parse(nt.defaultParams) : {},
         })) || DEFAULT_NODE_TYPES;
 
-      // Generar el prompt del sistema
-      const systemPrompt = generateSystemPrompt(nodeTypesInfo);
+      const nodeTypesContext = `Available node types with defaults: ${JSON.stringify(nodeTypesInfo)}`;
 
-      // Llamar a la API (ahora usa Groq con API key del backend)
-      const response = await generateFlowWithOpenAI(
+      // Call API using backend-side canonical prompt + runtime contracts.
+      const response = await generateFlowWithAI({
         description,
-        systemPrompt
-      );
+        context: nodeTypesContext,
+      });
 
       if (!response.success || !response.flow) {
         throw new Error(response.error || 'Could not generate flow');
       }
 
-      console.log('🔍 [AI] Respuesta del backend:', response.flow);
-      console.log('🔍 [AI] Nodos recibidos:', response.flow.nodes);
+      console.log('🔍 [AI] Backend response:', response.flow);
+      console.log('🔍 [AI] Nodes received:', response.flow.nodes);
       
-      // Log de metadata de cada nodo
+      // Log metadata for each node
       response.flow.nodes.forEach((node: any, index: number) => {
-        console.log(`🎨 [AI] Nodo ${index + 1} "${node.data?.label || node.label}":`, {
+        console.log(`🎨 [AI] Node ${index + 1} "${node.data?.label || node.label}":`, {
           type: node.data?.type || node.type,
           subtitle: node.data?.subtitle,
           icon: node.data?.icon,
@@ -58,24 +57,24 @@ export function useAIGeneration() {
         });
       });
 
-      // Validar el flujo generado
+      // Validate the generated flow
       const validation = validateGeneratedFlow(response.flow);
       if (!validation.valid) {
         console.warn('Flow validation warnings:', validation.errors);
-        // Mostrar advertencias pero no bloquear
+        // Show warnings but don't block
         showToast(
-          'Advertencia',
-          `Flujo generado con advertencias: ${validation.errors.join(', ')}`,
+          'Warning',
+          `Flow generated with warnings: ${validation.errors.join(', ')}`,
           'warning'
         );
       }
 
-      // Transformar el flujo para React Flow
+      // Transform the flow for React Flow
       const transformedFlow = transformAIFlowToReactFlow(response.flow);
       
-      console.log('✅ [AI] Nodos transformados para React Flow:', transformedFlow.nodes);
+      console.log('✅ [AI] Nodes transformed for React Flow:', transformedFlow.nodes);
       transformedFlow.nodes.forEach((node: any, index: number) => {
-        console.log(`📦 [AI] Nodo transformado ${index + 1}:`, {
+        console.log(`📦 [AI] Transformed node ${index + 1}:`, {
           id: node.id,
           type: node.type,
           label: node.data?.label,
@@ -89,7 +88,7 @@ export function useAIGeneration() {
 
       toastSuccess('Flow generated successfully!');
 
-      // Callback de éxito
+      // Success callback
       if (onSuccess) {
         onSuccess({
           name: response.flow.flowName,
@@ -102,10 +101,11 @@ export function useAIGeneration() {
     } catch (error: any) {
       console.error('Error generating flow with AI:', error);
       
-      // Si es error de rate limit, mostrar mensaje especial
+      // If rate limit error, show special message
       if (error.isRateLimit && error.retryAfter) {
         const seconds = Math.ceil(error.retryAfter);
-        toastError(`Límite de API excedido. Espera ${seconds} segundos e intenta de nuevo.`, 'warning', 10000);
+        const message = `API rate limit exceeded. Wait ${seconds} seconds and try again.`;
+        toastError(message);
       } else {
         toastError(error.message || 'Error generating flow with AI');
       }
@@ -123,25 +123,25 @@ export function useAIGeneration() {
 }
 
 /**
- * Transforma el flujo generado por la IA al formato de React Flow
+ * Transforms the AI-generated flow to React Flow format
  */
 function transformAIFlowToReactFlow(aiFlow: any) {
-  // Transformar nodos
+  // Transform nodes
   const nodes = aiFlow.nodes.map((node: any) => {
-    // Si el nodo ya tiene estructura React Flow completa (data.label, data.subtitle, etc.), usarlo directamente
+    // If the node already has complete React Flow structure (data.label, data.subtitle, etc.), use it directly
     if (node.data && node.data.label && node.data.subtitle && node.data.icon) {
-      console.log(`✅ [Transform] Usando metadata del backend para "${node.data.label}"`);
+      console.log(`✅ [Transform] Using backend metadata for "${node.data.label}"`);
       return {
         id: node.id,
         type: 'custom',
         position: node.position,
-        data: node.data, // Usar data del backend que ya tiene metadata completa
+        data: node.data, // Use backend data that already has complete metadata
       };
     }
     
-    console.warn(`⚠️ [Transform] Generando metadata desde frontend para "${node.data?.label || node.id}" - backend no envió metadata completa`);
+    console.warn(`⚠️ [Transform] Generating metadata from frontend for "${node.data?.label || node.id}" - backend did not send complete metadata`);
     
-    // Si no tiene metadata completa, generarla desde el frontend (fallback)
+    // If no complete metadata, generate from frontend (fallback)
     return {
       id: node.id,
       type: 'custom',
@@ -160,7 +160,7 @@ function transformAIFlowToReactFlow(aiFlow: any) {
     };
   });
 
-  // Transformar edges
+  // Transform edges
   const edges = aiFlow.edges.map((edge: any) => ({
     id: edge.id,
     source: edge.source,
@@ -174,12 +174,13 @@ function transformAIFlowToReactFlow(aiFlow: any) {
 }
 
 /**
- * Obtiene la categoría para un tipo de nodo
+ * Gets the category for a node type
  */
 function getCategoryForType(type: string): string {
   const categoryMap: Record<string, string> = {
     'manual-trigger': 'Trigger',
     'webhook-trigger': 'Trigger',
+    'telegram-trigger': 'Trigger',
     'if-condition': 'Logic',
     'if-condition-v2': 'Logic',
     loop: 'Logic',
@@ -194,12 +195,13 @@ function getCategoryForType(type: string): string {
 }
 
 /**
- * Obtiene el icono para un tipo de nodo
+ * Gets the icon for a node type
  */
 function getIconForType(type: string): string {
   const iconMap: Record<string, string> = {
     'manual-trigger': 'IconPlayerPlay',
     'webhook-trigger': 'IconWebhook',
+    'telegram-trigger': 'IconBrandTelegram',
     'if-condition': 'IconGitBranch',
     'if-condition-v2': 'IconGitBranch',
     loop: 'IconRepeat',
@@ -214,12 +216,13 @@ function getIconForType(type: string): string {
 }
 
 /**
- * Obtiene el color para un tipo de nodo
+ * Gets the color for a node type
  */
 function getColorForType(type: string): string {
   const colorMap: Record<string, string> = {
     'manual-trigger': '#3B82F6',
     'webhook-trigger': '#06B6D4',
+    'telegram-trigger': '#0088CC',
     'if-condition': '#8B5CF6',
     'if-condition-v2': '#8B5CF6',
     loop: '#A855F7',

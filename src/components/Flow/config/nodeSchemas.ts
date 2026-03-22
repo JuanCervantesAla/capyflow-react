@@ -20,7 +20,7 @@ export interface NodeParameterSchema {
   description?: string;
   options?: string[] | Array<{ value: string; label: string }>;
   validation?: (value: any) => string | null;
-  advanced?: boolean; // Si true, solo mostrar en modo avanzado
+  advanced?: boolean; // If true, only show in advanced mode
 }
 
 export interface NodeTypeSchema {
@@ -36,15 +36,25 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'manual-trigger': {
     type: 'manual-trigger',
     displayName: 'Manual Trigger',
-    description: 'Inicia el flow manualmente',
+    description: 'Starts the flow manually. Optional CSV input is available in Advanced mode.',
     category: 'triggers',
-    parameters: [],
+    parameters: [
+      {
+        name: 'CSV Content',
+        key: 'csvContent',
+        type: 'textarea',
+        required: false,
+        advanced: true,
+        placeholder: 'Upload an Excel/CSV file or paste CSV data here...',
+        description: 'Optional CSV data to feed into a CSV Parser node. You can upload an .xls/.xlsx/.csv file from the editor or paste CSV text manually.',
+      },
+    ],
   },
 
   'set-data': {
     type: 'set-data',
     displayName: 'Set Data',
-    description: 'Define datos estáticos o variables',
+    description: 'Defines static data or variables',
     category: 'data',
     parameters: [
       {
@@ -52,7 +62,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         key: 'values',
         type: 'key-value',
         required: true,
-        description: 'Pares clave-valor que se establecerán en la salida',
+        description: 'Key-value pairs to be set in the output',
         defaultValue: {},
       },
     ],
@@ -70,7 +80,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'http-request': {
     type: 'http-request',
     displayName: 'HTTP Request',
-    description: 'Realiza peticiones HTTP a APIs externas con retry automático',
+    description: 'Makes HTTP requests to external APIs with automatic retry',
     category: 'actions',
     parameters: [
       {
@@ -79,8 +89,8 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: true,
         placeholder: 'https://api.example.com/users/{{userId}}',
-        description: 'URL del endpoint. Usa {{variable}} para interpolar valores',
-        advanced: false, // BÁSICO
+        description: 'Endpoint URL. Use {{variable}} to interpolate values',
+        advanced: false, // BASIC
       },
       {
         name: 'Method',
@@ -89,17 +99,17 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'GET',
         options: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-        description: 'Método HTTP',
-        advanced: false, // BÁSICO
+        description: 'HTTP method',
+        advanced: false, // BASIC
       },
       {
         name: 'Headers',
         key: 'headers',
-        type: 'keyvalue',
+        type: 'key-value',
         required: false,
         defaultValue: {},
-        description: 'Headers HTTP (Authorization, Content-Type, etc)',
-        advanced: true, // AVANZADO
+        description: 'HTTP headers (Authorization, Content-Type, etc)',
+        advanced: true, // ADVANCED
       },
       {
         name: 'Body',
@@ -107,9 +117,9 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: false,
         defaultValue: {},
-        placeholder: '{\n  "email": "{{email}}",\n  "name": "{{nombre}}"\n}',
+        placeholder: '{\n  "email": "{{email}}",\n  "name": "{{name}}"\n}',
         description: 'JSON body for POST/PUT/PATCH',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
       {
         name: 'Timeout (ms)',
@@ -118,7 +128,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 30000,
         description: 'Request timeout in milliseconds',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
       {
         name: 'Max Retries',
@@ -179,7 +189,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'log': {
     type: 'log',
     displayName: 'Log',
-    description: 'Registra información en la consola',
+    description: 'Logs information to the console',
     category: 'utils',
     parameters: [
       {
@@ -187,8 +197,8 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         key: 'message',
         type: 'string',
         required: true,
-        placeholder: 'Mensaje a registrar...',
-        description: 'Mensaje que se mostrará en el log',
+        placeholder: 'Message to log...',
+        description: 'Message to display in the log',
       },
       {
         name: 'Level',
@@ -197,7 +207,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 'info',
         options: ['debug', 'info', 'warn', 'error'],
-        description: 'Nivel de log',
+        description: 'Log level',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -220,7 +230,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: true,
         placeholder: 'data.status',
-        description: 'Campo a evaluar (usar notación de punto)',
+        description: 'Field to evaluate (use dot notation)',
       },
       {
         name: 'Operator',
@@ -229,7 +239,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: '==',
         options: ['==', '!=', '>', '<', '>=', '<=', 'contains', 'exists'],
-        description: 'Operador de comparación',
+        description: 'Comparison operator',
       },
       {
         name: 'Value',
@@ -253,7 +263,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'switch': {
     type: 'switch',
     displayName: 'Switch',
-    description: 'Enrutamiento multi-camino basado en valor',
+    description: 'Multi-path routing based on value',
     category: 'logic',
     parameters: [
       {
@@ -262,7 +272,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: true,
         placeholder: '{{ $json.status }}',
-        description: 'Valor a evaluar contra los casos',
+        description: 'Value to evaluate against cases',
       },
       {
         name: 'Cases',
@@ -274,7 +284,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
           { value: 'pending', output: 'case_pending' },
           { value: 'error', output: 'case_error' }
         ], null, 2),
-        description: 'Array de casos {value, output}',
+        description: 'Array of cases {value, output}',
       },
       {
         name: 'Mode',
@@ -283,7 +293,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'equals',
         options: ['equals', 'contains'],
-        description: 'Modo de comparación',
+        description: 'Comparison mode',
       },
       {
         name: 'Default Case',
@@ -314,7 +324,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'error-handler': {
     type: 'error-handler',
     displayName: 'Error Handler',
-    description: 'Manejo de errores con reintentos y fallback',
+    description: 'Error handling with retries and fallback',
     category: 'logic',
     parameters: [
       {
@@ -323,7 +333,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: true,
         placeholder: '{{ $json }}',
-        description: 'Datos a verificar por errores',
+        description: 'Data to check for errors',
       },
       {
         name: 'Max Retries',
@@ -331,7 +341,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'number',
         required: false,
         defaultValue: 3,
-        description: 'Número máximo de reintentos',
+        description: 'Maximum number of retries',
       },
       {
         name: 'Retry Delay (ms)',
@@ -339,7 +349,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'number',
         required: false,
         defaultValue: 1000,
-        description: 'Tiempo entre reintentos en milisegundos',
+        description: 'Time between retries in milliseconds',
       },
       {
         name: 'Fallback Mode',
@@ -348,7 +358,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'ignore',
         options: ['ignore', 'default', 'stop'],
-        description: 'Estrategia cuando se agotan reintentos',
+        description: 'Strategy when retries are exhausted',
       },
       {
         name: 'Default Value',
@@ -360,10 +370,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.inputData) return 'Input Data es requerido';
-      if (!params.fallbackMode) return 'Fallback Mode es requerido';
+      if (!params.inputData) return 'Input Data is required';
+      if (!params.fallbackMode) return 'Fallback Mode is required';
       if (params.fallbackMode === 'default' && !params.defaultValue) {
-        return 'Default Value es requerido cuando fallbackMode=default';
+        return 'Default Value is required when fallbackMode=default';
       }
       if (params.maxRetries && params.maxRetries < 0) {
         return 'Max Retries must be >= 0';
@@ -378,7 +388,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'stop': {
     type: 'stop',
     displayName: 'Stop',
-    description: 'Detiene el flujo condicionalmente',
+    description: 'Stops the flow conditionally',
     category: 'logic',
     parameters: [
       {
@@ -388,7 +398,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'always',
         options: ['always', 'if-true', 'if-false', 'if-error'],
-        description: 'Condición para detener el flujo',
+        description: 'Condition to stop the flow',
       },
       {
         name: 'Input Value',
@@ -396,7 +406,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: false,
         placeholder: '{{ $json }}',
-        description: 'Valor a evaluar (excepto always/if-error)',
+        description: 'Value to evaluate (except always/if-error)',
       },
       {
         name: 'Stop Message',
@@ -404,7 +414,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'Workflow stopped',
-        description: 'Mensaje al detener',
+        description: 'Message when stopping',
       },
       {
         name: 'Stop Code',
@@ -413,15 +423,15 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'success',
         options: ['success', 'error'],
-        description: 'Código de salida',
+        description: 'Exit code',
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.condition) return 'Condition es requerida';
+      if (!params.condition) return 'Condition is required';
       if ((params.condition === 'if-true' || params.condition === 'if-false') && !params.inputValue) {
-        return 'Input Value es requerido para if-true/if-false';
+        return 'Input Value is required for if-true/if-false';
       }
-      if (!params.stopCode) return 'Stop Code es requerido';
+      if (!params.stopCode) return 'Stop Code is required';
       return null;
     },
   },
@@ -437,7 +447,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         key: 'transformations',
         type: 'json',
         required: true,
-        description: 'Array de transformaciones a aplicar',
+        description: 'Array of transformations to apply',
         placeholder: JSON.stringify([
           {
             source: "body.name",
@@ -465,7 +475,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
       if (params.transformations.length === 0) {
         return 'You must define at least one transformation';
       }
-      // Validar cada transformación
+      // Validate each transformation
       for (const t of params.transformations) {
         if (!t.source || !t.target || !t.operation) {
           return 'Each transformation must have source, target, and operation';
@@ -482,7 +492,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'loop': {
     type: 'loop',
     displayName: 'Loop/ForEach',
-    description: 'Itera sobre un array y aplica operaciones',
+    description: 'Iterates over an array and applies operations',
     category: 'control',
     parameters: [
       {
@@ -491,7 +501,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: true,
         placeholder: 'body.users',
-        description: 'Path al array en el contexto (ej: body.users, items)',
+        description: 'Path to the array in context (e.g., body.users, items)',
       },
       {
         name: 'Operation',
@@ -500,7 +510,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'forEach',
         options: ['forEach', 'map', 'filter'],
-        description: 'Tipo de operación a realizar',
+        description: 'Type of operation to perform',
       },
       {
         name: 'Map Expression',
@@ -508,7 +518,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: '{{item.name}}',
-        description: 'Para "map": expresión a aplicar a cada item (usa {{item}} y {{index}})',
+        description: 'For "map": expression to apply to each item (use {{item}} and {{index}})',
       },
       {
         name: 'Filter Expression',
@@ -525,7 +535,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 'item',
         placeholder: 'item',
-        description: 'Nombre de la variable para cada item (default: item)',
+        description: 'Variable name for each item (default: item)',
       },
       {
         name: 'Index Variable',
@@ -534,7 +544,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 'index',
         placeholder: 'index',
-        description: 'Nombre de la variable para el índice (default: index)',
+        description: 'Variable name for the index (default: index)',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -554,7 +564,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'delay': {
     type: 'delay',
     displayName: 'Delay/Wait',
-    description: 'Pausa la ejecución por un tiempo determinado',
+    description: 'Pauses execution for a specified time',
     category: 'control',
     parameters: [
       {
@@ -572,7 +582,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'Wait for API rate limit reset',
-        description: 'Descripción opcional del motivo del delay (para logging)',
+        description: 'Optional description of delay reason (for logging)',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -580,10 +590,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         return 'Duration must be greater than 0ms';
       }
       if (params.duration > 300000) {
-        return 'La duración máxima es 300000ms (5 minutos)';
+        return 'Maximum duration is 300000ms (5 minutes)';
       }
       if (params.duration < 100) {
-        return 'La duración mínima es 100ms';
+        return 'Minimum duration is 100ms';
       }
       return null;
     },
@@ -592,7 +602,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'json-parser': {
     type: 'json-parser',
     displayName: 'JSON Parser',
-    description: 'Parsea texto JSON a objeto',
+    description: 'Parses JSON text to object',
     category: 'data',
     parameters: [
       {
@@ -601,7 +611,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: true,
         placeholder: '{"key": "value"}',
-        description: 'Cadena JSON a parsear',
+        description: 'JSON string to parse',
       },
       {
         name: 'Extract Path',
@@ -618,7 +628,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         JSON.parse(params.jsonString);
         return null;
       } catch {
-        return 'JSON inválido';
+        return 'Invalid JSON';
       }
     },
   },
@@ -626,7 +636,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'webhook-trigger': {
     type: 'webhook-trigger',
     displayName: 'Webhook Trigger',
-    description: 'Recibe peticiones HTTP externas para iniciar el flow',
+    description: 'Receives external HTTP requests to start the flow',
     category: 'triggers',
     parameters: [
       {
@@ -635,7 +645,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'boolean',
         required: false,
         defaultValue: false,
-        description: 'Habilitar validación de firma del webhook',
+        description: 'Enable webhook signature validation',
       },
       {
         name: 'Secret',
@@ -643,15 +653,43 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'webhook-secret-key',
-        description: 'Secret para validar firma del webhook (opcional)',
+        description: 'Secret for webhook signature validation (optional)',
       },
     ],
   },
 
+  'telegram-trigger': {
+    type: 'telegram-trigger',
+    displayName: 'Telegram Trigger',
+    description: 'Starts the flow when your Telegram bot receives a message or file',
+    category: 'triggers',
+    parameters: [],
+  },
+
+  'cron-trigger': {
+    type: 'cron-trigger',
+    displayName: 'Cron Trigger',
+    description: 'Automatically starts the flow on a fixed time interval',
+    category: 'triggers',
+    parameters: [
+      {
+        name: 'Interval (minutes)',
+        key: 'intervalMinutes',
+        type: 'number',
+        required: true,
+        defaultValue: 60,
+        placeholder: '60',
+        description: 'How often this flow should run (in minutes). Minimum: 1.',
+      },
+    ],
+  },
+
+  // Single AI node powered by Groq (backed by the 'groq' node type).
+
   'groq': {
     type: 'groq',
-    displayName: 'Groq',
-    description: 'Interactúa con Groq AI para generar texto ultrarrápido con modelos LLaMA y Mixtral',
+    displayName: 'AI',
+    description: 'Single AI node powered by Groq LLMs (OpenAI-compatible)',
     category: 'ai',
     parameters: [
       {
@@ -659,8 +697,18 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         key: 'prompt',
         type: 'textarea',
         required: true,
-        placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
-        description: 'El prompt o pregunta para el modelo Groq',
+        placeholder: 'Write your prompt here... Use {{variable}} to interpolate values',
+        description: 'The prompt or question for the AI model',
+        advanced: false, // BASIC
+      },
+      {
+        name: 'API Key',
+        key: 'apiKey',
+        type: 'string',
+        required: false,
+        placeholder: 'sk-... (optional, uses GROQ_API_KEY from the server if empty)',
+        description: 'Optional per-node API Key. If empty, the server will use GROQ_API_KEY environment variable if available.',
+        advanced: false, // BASIC
       },
       {
         name: 'Model',
@@ -669,12 +717,13 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 'llama-3.3-70b-versatile',
         options: [
-          { value: 'llama-3.3-70b-versatile', label: 'LLaMA 3.3 70B (Recommended)' },
-          { value: 'llama-3.1-8b-instant', label: 'LLaMA 3.1 8B (Fast)' },
-          { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' },
-          { value: 'gemma2-9b-it', label: 'Gemma 2 9B' },
+          'llama-3.3-70b-versatile',
+          'llama-3.1-70b-versatile',
+          'llama-3.1-8b-instant',
+          'llama-3.2-1b-preview',
         ],
-        description: 'Modelo de Groq a utilizar',
+        description: 'Groq model to use (OpenAI-compatible)',
+        advanced: true, // ADVANCED
       },
       {
         name: 'Temperature',
@@ -683,7 +732,8 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 0.7,
         placeholder: '0.7',
-        description: 'Creatividad de las respuestas (0 = determinístico, 2 = muy creativo)',
+        description: 'Response creativity (0 = deterministic, 2 = very creative)',
+        advanced: true, // ADVANCED
       },
       {
         name: 'Max Tokens',
@@ -692,84 +742,8 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 1024,
         placeholder: '1024',
-        description: 'Máximo número de tokens en la respuesta (1-32768)',
-      },
-      {
-        name: 'System Prompt',
-        key: 'systemPrompt',
-        type: 'textarea',
-        required: false,
-        placeholder: 'Eres un asistente experto en...',
-        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
-      },
-    ],
-    validateBeforeExecute: (params) => {
-      if (!params.prompt || params.prompt.trim() === '') {
-        return 'Prompt is required';
-      }
-      if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 2)) {
-        return 'Temperature must be between 0 and 2';
-      }
-      if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 32768)) {
-        return 'Max Tokens must be between 1 and 32768';
-      }
-      return null;
-    },
-  },
-
-  'gpt': {
-    type: 'gpt',
-    displayName: 'GPT',
-    description: 'Usa OpenAI GPT-4 para generación de texto, reasoning y tareas complejas',
-    category: 'ai',
-    parameters: [
-      {
-        name: 'Prompt',
-        key: 'prompt',
-        type: 'textarea',
-        required: true,
-        placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
-        description: 'El prompt o pregunta para el modelo GPT',
-        advanced: false, // BÁSICO
-      },
-      {
-        name: 'API Key',
-        key: 'apiKey',
-        type: 'string',
-        required: true,
-        placeholder: 'sk-...',
-        description: 'API Key de OpenAI (obtén una en https://platform.openai.com)',
-        advanced: false, // BÁSICO
-      },
-      {
-        name: 'Model',
-        key: 'model',
-        type: 'select',
-        required: false,
-        defaultValue: 'gpt-4o-mini',
-        options: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-        description: 'Modelo de GPT a utilizar',
-        advanced: true, // AVANZADO
-      },
-      {
-        name: 'Temperature',
-        key: 'temperature',
-        type: 'number',
-        required: false,
-        defaultValue: 0.7,
-        placeholder: '0.7',
-        description: 'Creatividad de las respuestas (0 = determinístico, 2 = muy creativo)',
-        advanced: true, // AVANZADO
-      },
-      {
-        name: 'Max Tokens',
-        key: 'maxTokens',
-        type: 'number',
-        required: false,
-        defaultValue: 1024,
-        placeholder: '1024',
-        description: 'Máximo número de tokens en la respuesta (1-16384)',
-        advanced: true, // AVANZADO
+        description: 'Maximum number of tokens in response (1-16384)',
+        advanced: true, // ADVANCED
       },
       {
         name: 'System Prompt',
@@ -778,96 +752,18 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         placeholder: 'You are a helpful assistant...',
         description: 'System instructions to define model behavior (optional)',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
     ],
     validateBeforeExecute: (params) => {
       if (!params.prompt || params.prompt.trim() === '') {
         return 'Prompt is required';
       }
-      if (!params.apiKey || params.apiKey.trim() === '') {
-        return 'OpenAI API Key is required';
-      }
       if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 2)) {
         return 'Temperature must be between 0 and 2';
       }
       if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 16384)) {
         return 'Max Tokens must be between 1 and 16384';
-      }
-      return null;
-    },
-  },
-
-  'claude': {
-    type: 'claude',
-    displayName: 'Claude',
-    description: 'Anthropic Claude para análisis profundo, escritura y tareas de razonamiento',
-    category: 'ai',
-    parameters: [
-      {
-        name: 'Prompt',
-        key: 'prompt',
-        type: 'textarea',
-        required: true,
-        placeholder: 'Escribe tu prompt aquí... Usa {{variable}} para interpolar valores',
-        description: 'El prompt o pregunta para el modelo Claude',
-      },
-      {
-        name: 'API Key',
-        key: 'apiKey',
-        type: 'string',
-        required: true,
-        placeholder: 'sk-ant-...',
-        description: 'API Key de Anthropic (obtén una en https://console.anthropic.com)',
-      },
-      {
-        name: 'Model',
-        key: 'model',
-        type: 'select',
-        required: false,
-        defaultValue: 'claude-3-5-sonnet-20241022',
-        options: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
-        description: 'Modelo de Claude a utilizar',
-      },
-      {
-        name: 'Temperature',
-        key: 'temperature',
-        type: 'number',
-        required: false,
-        defaultValue: 0.7,
-        placeholder: '0.7',
-        description: 'Creatividad de las respuestas (0 = determinístico, 1 = muy creativo)',
-      },
-      {
-        name: 'Max Tokens',
-        key: 'maxTokens',
-        type: 'number',
-        required: false,
-        defaultValue: 1024,
-        placeholder: '1024',
-        description: 'Máximo número de tokens en la respuesta (1-8192)',
-      },
-      {
-        name: 'System Prompt',
-        key: 'systemPrompt',
-        type: 'textarea',
-        required: false,
-        placeholder: 'You are a helpful assistant...',
-        description: 'Instrucciones del sistema para definir el comportamiento del modelo (opcional)',
-      },
-    ],
-    validateBeforeExecute: (params) => {
-      if (!params.prompt || params.prompt.trim() === '') {
-        return 'El prompt es requerido';
-      }
-      if (!params.apiKey || params.apiKey.trim() === '') {
-        return 'Anthropic API Key is required';
-      }
-      if (params.temperature !== undefined && (params.temperature < 0 || params.temperature > 1)) {
-        return 'Temperature must be between 0 and 1 for Claude';
-      }
-      if (params.maxTokens !== undefined && (params.maxTokens < 1 || params.maxTokens > 8192)) {
-        return 'Max Tokens must be between 1 and 8192';
       }
       return null;
     },
@@ -885,7 +781,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: true,
         placeholder: '[{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]',
-        description: 'Array de datos a filtrar',
+        description: 'Data array to filter',
       },
       {
         name: 'Mode',
@@ -894,7 +790,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'keep',
         options: ['keep', 'remove'],
-        description: 'Mantener o remover elementos que coincidan',
+        description: 'Keep or remove matching elements',
       },
       {
         name: 'Field',
@@ -902,7 +798,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: 'age',
-        description: 'Campo a evaluar (dejar vacío para evaluar el elemento completo)',
+        description: 'Field to evaluate (leave empty to evaluate the entire element)',
       },
       {
         name: 'Operator',
@@ -911,7 +807,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         defaultValue: 'equals',
         options: ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith', 'greaterThan', 'lessThan', 'greaterOrEqual', 'lessOrEqual', 'isEmpty', 'isNotEmpty'],
-        description: 'Operador de comparación',
+        description: 'Comparison operator',
       },
       {
         name: 'Value',
@@ -919,12 +815,12 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: false,
         placeholder: '25',
-        description: 'Valor con el que comparar',
+        description: 'Value to compare with',
       },
     ],
     validateBeforeExecute: (params) => {
       if (!params.inputData) {
-        return 'Input Data es requerido';
+        return 'Input Data is required';
       }
       if (!params.operator) {
         return 'Operator is required';
@@ -945,7 +841,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: true,
         placeholder: '[1, 2, 3, 4, 5]',
-        description: 'Array de datos a dividir',
+        description: 'Data array to split',
       },
       {
         name: 'Mode',
@@ -963,7 +859,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 1,
         placeholder: '1',
-        description: 'Tamaño de cada lote (solo para mode=batches)',
+        description: 'Size of each batch (only for mode=batches)',
       },
       {
         name: 'Field',
@@ -976,10 +872,10 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     ],
     validateBeforeExecute: (params) => {
       if (!params.inputData) {
-        return 'Input Data es requerido';
+        return 'Input Data is required';
       }
       if (!params.mode) {
-        return 'Mode es requerido';
+        return 'Mode is required';
       }
       if (params.mode === 'batches' && (!params.batchSize || params.batchSize < 1)) {
         return 'Batch Size must be at least 1 for mode=batches';
@@ -1028,7 +924,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: false,
         placeholder: '[7, 8, 9]',
-        description: 'Tercera entrada (opcional)',
+        description: 'Third input (optional)',
       },
       {
         name: 'Input 4',
@@ -1036,7 +932,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: false,
         placeholder: '[10, 11, 12]',
-        description: 'Cuarta entrada (opcional)',
+        description: 'Fourth input (optional)',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -1047,7 +943,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         return 'Input 2 is required';
       }
       if (!params.mode) {
-        return 'Mode es requerido';
+        return 'Mode is required';
       }
       return null;
     },
@@ -1065,7 +961,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'json',
         required: false,
         placeholder: '{"key": "value"}',
-        description: 'Datos de entrada (accesibles como "input" en el código)',
+        description: 'Input data (accessible as "input" in the code)',
       },
       {
         name: 'JavaScript Code',
@@ -1073,7 +969,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: true,
         defaultValue: 'return input;',
-        placeholder: '// Transforma los datos\nreturn input.map(x => x * 2);',
+        placeholder: '// Transform the data\nreturn input.map(x => x * 2);',
         description: 'JavaScript code. Use "input" for input data, "context" for flow context. Must return a value.',
       },
     ],
@@ -1113,11 +1009,11 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'select',
         required: true,
         options: [
-          { value: 'asc', label: 'Ascendente' },
-          { value: 'desc', label: 'Descendente' },
+          { value: 'asc', label: 'Ascending' },
+          { value: 'desc', label: 'Descending' },
         ],
         defaultValue: 'asc',
-        description: 'Orden de clasificación',
+        description: 'Sort order',
       },
       {
         name: 'Type',
@@ -1130,7 +1026,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
           { value: 'date', label: 'Date' },
         ],
         defaultValue: 'string',
-        description: 'Tipo de dato para comparación',
+        description: 'Data type for comparison',
       },
     ],
     validateBeforeExecute: (params) => {
@@ -1147,7 +1043,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'csv-parser': {
     type: 'csv-parser',
     displayName: 'CSV Parser',
-    description: 'Convierte entre CSV y JSON (parse/stringify)',
+    description: 'Converts between CSV and JSON (parse/stringify)',
     category: 'data',
     parameters: [
       {
@@ -1156,7 +1052,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: true,
         placeholder: 'name,age\nAna,25\nBob,30',
-        description: 'CSV string (modo parse) o JSON array (modo stringify)',
+        description: 'CSV string (parse mode) or JSON array (stringify mode)',
       },
       {
         name: 'Mode',
@@ -1168,7 +1064,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
           { value: 'stringify', label: 'Stringify (JSON → CSV)' },
         ],
         defaultValue: 'parse',
-        description: 'Modo de conversión',
+        description: 'Conversion mode',
       },
       {
         name: 'Delimiter',
@@ -1177,7 +1073,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: ',',
         placeholder: ',',
-        description: 'Delimitador de columnas (por defecto: coma)',
+        description: 'Column delimiter (default: comma)',
       },
       {
         name: 'Has Header',
@@ -1185,15 +1081,15 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'boolean',
         required: false,
         defaultValue: true,
-        description: 'La primera fila contiene nombres de columnas',
+        description: 'First row contains column names',
       },
     ],
     validateBeforeExecute: (params) => {
       if (!params.inputData) {
-        return 'Input Data es requerido';
+        return 'Input Data is required';
       }
       if (!params.mode) {
-        return 'Mode es requerido';
+        return 'Mode is required';
       }
       return null;
     },
@@ -1211,7 +1107,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'textarea',
         required: true,
         placeholder: 'Email: test@example.com, Phone: 555-1234',
-        description: 'Texto donde buscar coincidencias',
+        description: 'Text to search for matches',
       },
       {
         name: 'Pattern',
@@ -1219,7 +1115,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         type: 'string',
         required: true,
         placeholder: '\\d{3}-\\d{4}',
-        description: 'Expresión regular (sin delimitadores)',
+        description: 'Regular expression (without delimiters)',
       },
       {
         name: 'Mode',
@@ -1232,7 +1128,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
           { value: 'groups', label: 'Capture Groups' },
         ],
         defaultValue: 'first',
-        description: 'Modo de extracción',
+        description: 'Extraction mode',
       },
       {
         name: 'Flags',
@@ -1257,9 +1153,21 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   'email': {
     type: 'email',
     displayName: 'Email',
-    description: 'Sends emails via SMTP',
+    description: 'Simple email node (SendGrid API by default)',
     category: 'integration',
     parameters: [
+      {
+        name: 'Provider',
+        key: 'provider',
+        type: 'select',
+        required: false,
+        defaultValue: 'sendgrid-api',
+        options: [
+          { value: 'sendgrid-api', label: 'SendGrid API' },
+          { value: 'smtp', label: 'SMTP (advanced)' },
+        ],
+        description: 'Delivery provider. Use SendGrid API for simple setup.',
+      },
       {
         name: 'To',
         key: 'to',
@@ -1288,17 +1196,48 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         name: 'From',
         key: 'from',
         type: 'string',
-        required: true,
-        placeholder: 'sender@example.com',
-        description: 'Sender address',
+        required: false,
+        placeholder: 'sender@example.com (optional if SENDGRID_SENDER_EMAIL is configured)',
+        description: 'Sender address. Optional in SendGrid mode if env sender is configured.',
+      },
+      {
+        name: 'From Name',
+        key: 'fromName',
+        type: 'string',
+        required: false,
+        placeholder: 'CapyFlow Demo',
+        description: 'Optional sender display name',
+      },
+      {
+        name: 'SendGrid API Token',
+        key: 'sendgridApiToken',
+        type: 'password',
+        required: false,
+        placeholder: 'Paste token here or use SENDGRID_API_KEY env var',
+        description: 'Required only when provider = sendgrid-api (unless configured in backend env)',
+        advanced: true,
+      },
+      {
+        name: 'SendGrid Data Residency',
+        key: 'sendgridDataResidency',
+        type: 'select',
+        required: false,
+        defaultValue: '',
+        options: [
+          { value: '', label: 'Global (default)' },
+          { value: 'eu', label: 'EU' },
+        ],
+        description: 'Set to EU only when using an EU-pinned SendGrid subuser.',
+        advanced: true,
       },
       {
         name: 'SMTP Host',
         key: 'smtpHost',
         type: 'string',
-        required: true,
+        required: false,
         placeholder: 'smtp.gmail.com',
-        description: 'SMTP server',
+        description: 'SMTP server (required only when provider = smtp)',
+        advanced: true,
       },
       {
         name: 'SMTP Port',
@@ -1307,22 +1246,25 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: 587,
         description: 'SMTP port (587 for TLS, 465 for SSL)',
+        advanced: true,
       },
       {
         name: 'SMTP User',
         key: 'smtpUser',
         type: 'string',
-        required: true,
+        required: false,
         placeholder: 'user@example.com',
-        description: 'User for SMTP authentication',
+        description: 'User for SMTP authentication (provider = smtp)',
+        advanced: true,
       },
       {
         name: 'SMTP Password',
         key: 'smtpPassword',
         type: 'password',
-        required: true,
+        required: false,
         placeholder: '••••••••',
-        description: 'SMTP password',
+        description: 'SMTP password (provider = smtp)',
+        advanced: true,
       },
       {
         name: 'CC',
@@ -1351,18 +1293,28 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
       if (!params.body || params.body.trim() === '') {
         return 'Body is required';
       }
-      if (!params.from || params.from.trim() === '') {
-        return 'From is required';
+      const provider = (params.provider || 'sendgrid-api').toString().trim().toLowerCase();
+      if (provider === 'smtp') {
+        if (!params.from || params.from.trim() === '') {
+          return 'From is required when provider is SMTP';
+        }
+        if (!params.smtpHost || params.smtpHost.trim() === '') {
+          return 'SMTP Host is required when provider is SMTP';
+        }
+        if (!params.smtpUser || params.smtpUser.trim() === '') {
+          return 'SMTP User is required when provider is SMTP';
+        }
+        if (!params.smtpPassword || params.smtpPassword.trim() === '') {
+          return 'SMTP Password is required when provider is SMTP';
+        }
       }
-      if (!params.smtpHost || params.smtpHost.trim() === '') {
-        return 'SMTP Host is required';
+
+      if (provider === 'sendgrid-api') {
+        // In SendGrid mode, `from` can come from SENDGRID_SENDER_EMAIL env var.
+        // Token can come from node params or backend env var SENDGRID_API_KEY.
+        // We do not force it in UI to allow secure server-side configuration.
       }
-      if (!params.smtpUser || params.smtpUser.trim() === '') {
-        return 'SMTP User is required';
-      }
-      if (!params.smtpPassword || params.smtpPassword.trim() === '') {
-        return 'SMTP Password is required';
-      }
+
       return null;
     },
   },
@@ -1374,28 +1326,20 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
     category: 'integration',
     parameters: [
       {
-        name: 'Bot Token',
-        key: 'botToken',
-        type: 'password',
-        required: true,
-        placeholder: '123456789:ABCdefGHIjklMNOpqrsTUVwxyz',
-        description: 'Token del bot de Telegram (@BotFather)',
-      },
-      {
         name: 'Chat ID',
         key: 'chatId',
         type: 'string',
-        required: true,
-        placeholder: '123456789',
-        description: 'ID del chat o canal (usar @userinfobot)',
+        required: false,
+        placeholder: '123456789 (leave empty to use default chat)',
+        description: 'Chat or channel ID (optional if a default chat is configured)',
       },
       {
         name: 'Message',
         key: 'message',
         type: 'textarea',
         required: true,
-        placeholder: 'Tu mensaje aquí...',
-        description: 'Mensaje a enviar',
+        placeholder: 'Your message here...',
+        description: 'Message to send',
       },
       {
         name: 'Parse Mode',
@@ -1404,20 +1348,14 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: '',
         options: [
-          { value: '', label: 'Sin formato' },
+          { value: '', label: 'Plain text' },
           { value: 'Markdown', label: 'Markdown' },
           { value: 'HTML', label: 'HTML' },
         ],
-        description: 'Formato del mensaje',
+        description: 'Message format',
       },
     ],
     validateBeforeExecute: (params) => {
-      if (!params.botToken || params.botToken.trim() === '') {
-        return 'Bot Token is required';
-      }
-      if (!params.chatId || params.chatId.trim() === '') {
-        return 'Chat ID is required';
-      }
       if (!params.message || params.message.trim() === '') {
         return 'Message is required';
       }
@@ -1439,7 +1377,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 'postgres',
         options: ['postgres', 'mysql', 'sqlite3'],
         description: 'Database driver to use',
-        advanced: false, // BÁSICO
+        advanced: false, // BASIC
       },
       {
         name: 'Connection URL',
@@ -1448,7 +1386,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         placeholder: 'postgres://user:pass@localhost:5432/dbname?sslmode=disable',
         description: 'Database connection URL/DSN',
-        advanced: false, // BÁSICO
+        advanced: false, // BASIC
       },
       {
         name: 'Query',
@@ -1457,7 +1395,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: true,
         placeholder: 'SELECT * FROM users WHERE id = {{userId}}',
         description: 'SQL query to execute (use {{variable}} for interpolation)',
-        advanced: false, // BÁSICO
+        advanced: false, // BASIC
       },
       {
         name: 'Timeout (ms)',
@@ -1467,7 +1405,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 30000,
         placeholder: '30000',
         description: 'Query timeout in milliseconds',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
       {
         name: 'Max Retries',
@@ -1477,7 +1415,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 0,
         placeholder: '0',
         description: 'Maximum number of retries on failure',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
       {
         name: 'Retry Delay (ms)',
@@ -1487,7 +1425,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         defaultValue: 1000,
         placeholder: '1000',
         description: 'Delay between retries in milliseconds',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
       {
         name: 'Query Parameters',
@@ -1496,7 +1434,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: {},
         description: 'Named parameters for parameterized queries',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
       {
         name: 'Return Metadata',
@@ -1505,7 +1443,7 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
         required: false,
         defaultValue: false,
         description: 'Include query metadata in response',
-        advanced: true, // AVANZADO
+        advanced: true, // ADVANCED
       },
     ],
     validateBeforeExecute: (params) => {
@@ -1532,7 +1470,7 @@ export function validateNodeParameters(
   parameters: Record<string, any>
 ): string | null {
   const schema = getNodeSchema(nodeType);
-  if (!schema) return `Tipo de nodo desconocido: ${nodeType}`;
+  if (!schema) return `Unknown node type: ${nodeType}`;
 
   for (const param of schema.parameters) {
     if (param.required && (parameters[param.key] === undefined || parameters[param.key] === null || parameters[param.key] === '')) {
@@ -1566,7 +1504,7 @@ export function getDefaultNodeParameters(nodeType: string): Record<string, any> 
 }
 
 /**
- * Filtra parámetros según el modo (basic o advanced)
+ * Filters parameters by mode (basic or advanced)
  */
 export function getFilteredParameters(
   nodeType: string,
@@ -1576,16 +1514,16 @@ export function getFilteredParameters(
   if (!schema) return [];
 
   if (mode === 'basic') {
-    // Solo retornar parámetros no-avanzados
+    // Only return non-advanced parameters
     return schema.parameters.filter(param => !param.advanced);
   }
 
-  // Modo advanced: retornar todos
+  // Advanced mode: return all
   return schema.parameters;
 }
 
 /**
- * Cuenta cuántos parámetros avanzados tiene un nodo
+ * Counts how many advanced parameters a node has
  */
 export function countAdvancedParameters(nodeType: string): number {
   const schema = getNodeSchema(nodeType);
@@ -1595,7 +1533,7 @@ export function countAdvancedParameters(nodeType: string): number {
 }
 
 /**
- * Verifica si un nodo tiene parámetros avanzados
+ * Checks if a node has advanced parameters
  */
 export function hasAdvancedParameters(nodeType: string): boolean {
   return countAdvancedParameters(nodeType) > 0;

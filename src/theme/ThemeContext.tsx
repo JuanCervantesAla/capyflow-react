@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, useCallback, useEffect } from "react";
+import { createContext, useContext, useState, useMemo, useCallback, useEffect, type ReactNode } from "react";
 import { LIGHT_THEME, DARK_THEME } from "./constants";
 import { themeCache } from "./themeCache";
 
@@ -11,7 +11,7 @@ const ThemeActionContext = createContext({
   isDark: false,
 });
 
-export function ThemeProvider({ children }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const theme = useMemo(() => (isDark ? DARK_THEME : LIGHT_THEME), [isDark]);
 

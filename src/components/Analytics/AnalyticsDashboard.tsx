@@ -13,8 +13,6 @@ import { useAnalyticsSummary } from '../../hooks/useAnalytics';
 import { 
   BarChart, 
   Bar, 
-  LineChart, 
-  Line, 
   PieChart, 
   Pie, 
   Cell,
@@ -68,11 +66,11 @@ export const AnalyticsDashboard = () => {
     }
   };
 
-  // Data para gráficos
+  // Data for charts
   const comparisonData = [
     {
       name: 'AI Generated',
-      'Creation Time': Math.round(summary.avgCreationTimeAI / 60), // en minutos
+      'Creation Time': Math.round(summary.avgCreationTimeAI / 60), // in minutes
       'Complexity': summary.avgComplexityAI,
       'Count': summary.aiGeneratedFlows,
     },
@@ -94,7 +92,7 @@ export const AnalyticsDashboard = () => {
     { name: 'Failed', value: summary.totalExecutions - summary.successfulExecutions, color: '#D32F2F' },
   ];
 
-  // Componentes
+  // Components
   const MetricCard = ({ icon: Icon, label, value, subtitle, color = "#C9873D", trend }: any) => (
     <Box
       style={{

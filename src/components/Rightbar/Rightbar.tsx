@@ -80,7 +80,7 @@ export const Rightbar = memo(function Rightbar({
               </Box>
 
               <ScrollArea style={{ flex: 1 }} px="md" py="md">
-                {/* Webhook Panel - mostrar solo si es webhook-trigger */}
+                {/* Webhook Panel - show only if webhook-trigger */}
                 {node.data.type === 'webhook-trigger' && flowId && (
                   <WebhookPanel 
                     flowId={flowId} 
@@ -95,6 +95,11 @@ export const Rightbar = memo(function Rightbar({
                   currentParameters={
                     node.data.parameters as Record<string, any>
                   }
+                  onChangeLive={(params) => {
+                    if (node) {
+                      updateNodeParameters(node.id, params);
+                    }
+                  }}
                   onSave={handleSaveParameters}
                   onCancel={onClose}
                 />

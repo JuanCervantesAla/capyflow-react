@@ -7,7 +7,6 @@ interface ControlButtonProps {
   onClick: () => void;
   tooltip?: string;
   active?: boolean;
-  highlight?: boolean;
 }
 
 export function ControlButton({ 
@@ -15,7 +14,6 @@ export function ControlButton({
   onClick, 
   tooltip,
   active = false,
-  highlight = false
 }: ControlButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { theme } = useTheme();

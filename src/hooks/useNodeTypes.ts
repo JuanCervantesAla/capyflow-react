@@ -5,6 +5,6 @@ export const useNodeTypes = () => {
   return useQuery({
     queryKey: ['nodeTypes'],
     queryFn: ({ signal }) => fetchAllNodeTypes(signal),
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

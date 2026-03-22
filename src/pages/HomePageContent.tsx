@@ -135,7 +135,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         }
       });
     } catch (error) {
-      console.error('Error generando flujo:', error);
+      console.error('Error generating flow:', error);
 }
   };
 
@@ -144,8 +144,8 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
 
     setIsRepairing(true);
     try {
-      // Enviar nodos en formato React Flow directamente
-      // El backend puede manejar tanto formato plano como React Flow (con data anidado)
+      // Send nodes in React Flow format directly
+      // The backend can handle both flat format and React Flow (with nested data)
       const currentFlow = {
         flowName: flowName || "Untitled Workflow",
         flowDescription: "",
@@ -186,16 +186,16 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
           toastSuccess("Flow repaired successfully");
         }
       } else {
-        // Mostrar error con más contexto si está disponible
+        // Show error with more context if available
         const errorMessage = response.hint 
           ? `${response.error}\n\n💡 ${response.hint}`
           : response.error || "Could not repair flow";
         
         toastError(errorMessage);
         
-        // Log adicional para el desarrollador
+        // Additional log for the developer
         if (response.rawResponse) {
-          console.error("🔍 Detalles del error:", {
+          console.error("🔍 Error details:", {
             error: response.error,
             hint: response.hint,
             rawResponse: response.rawResponse,

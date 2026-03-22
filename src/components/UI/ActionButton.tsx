@@ -8,7 +8,6 @@ interface ActionButtonProps {
   children: React.ReactNode;
   variant?: "primary" | "secondary";
   onClick?: () => void;
-  hoverColor?: string;
 }
 
 export const ActionButton: FC<ActionButtonProps> = ({
@@ -16,7 +15,6 @@ export const ActionButton: FC<ActionButtonProps> = ({
   children,
   variant = "secondary",
   onClick,
-  hoverColor,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const isPrimary = variant === "primary";

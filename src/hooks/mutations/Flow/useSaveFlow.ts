@@ -15,7 +15,7 @@ export function useSaveFlow() {
 
   return useMutation({
     mutationFn: ({ flowId, nodes, edges }: SaveFlowPayload) => {
-      console.log("💾 Enviando flujo al backend:", {
+      console.log("💾 Sending flow to backend:", {
         flowId,
         nodesCount: nodes.length,
         nodes: nodes.map(n => ({
@@ -30,7 +30,8 @@ export function useSaveFlow() {
     },
 
     onSuccess: (data, { flowId }) => {
-      toastSuccess(data.message || "Flow saved successfully");
+      const message = (data as any)?.message || "Flow saved successfully";
+      toastSuccess(message);
 
       // Refetch flows list to ensure fresh data
       queryClient.refetchQueries({

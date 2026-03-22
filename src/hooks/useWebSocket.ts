@@ -136,17 +136,17 @@ export function useWebSocket(options?: UseWebSocketOptions) {
   }, []);
 
   useEffect(() => {
-    // Solo conectar si no hay una conexión existente
+    // Only connect if there is no existing connection
     if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
       connect();
     }
 
     return () => {
-      // Limpiar la conexión cuando el componente se desmonte
+      // Clean up connection when component unmounts
       disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Array vacío: solo ejecutar en mount/unmount
+  }, []); // Empty array: only run on mount/unmount
 
   return {
     isConnected,
