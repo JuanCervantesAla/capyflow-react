@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Stack, Collapse, UnstyledButton, Text } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
-import { ICONS } from "../../utils/iconLoader";
+import { getIconComponent } from "../../utils/iconLoader";
 
 interface DropdownProps {
   title: string;
@@ -12,7 +12,7 @@ interface DropdownProps {
 
 export function Dropdown({ title, children, defaultOpen = false, icon }: DropdownProps) {
   const [opened, setOpened] = useState(defaultOpen);
-  const IconComponent = icon ? ICONS[icon] : null;
+  const IconComponent = icon ? (getIconComponent(icon) as React.ComponentType<{ size?: number; color?: string }>) : null;
 
   return (
     <Card
@@ -90,7 +90,7 @@ export function Dropdown({ title, children, defaultOpen = false, icon }: Dropdow
       </UnstyledButton>
 
       <Collapse in={opened} transitionDuration={250}>
-        <Stack spacing="xs" p="sm" style={{ background: "#0F0F1A" }}>
+        <Stack gap="xs" p="sm" style={{ background: "#0F0F1A" }}>
           {children}
         </Stack>
       </Collapse>

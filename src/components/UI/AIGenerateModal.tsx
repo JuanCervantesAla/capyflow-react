@@ -65,7 +65,7 @@ export function AIGenerateModal({
         },
       }}
     >
-      {/* Header con fondo negro */}
+      {/* Header with black background */}
       <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
         <Group justify="space-between" align="center">
           <Group gap="sm">
@@ -82,7 +82,7 @@ export function AIGenerateModal({
         </Group>
       </div>
 
-      {/* Body con padding */}
+      {/* Body with padding */}
       <div className="px-6 py-6 bg-[#FFF8F0]">
       <Stack gap="md">
         <div className="bg-[#e8f4ff] border-[2.5px] border-[#2d3436] p-4">

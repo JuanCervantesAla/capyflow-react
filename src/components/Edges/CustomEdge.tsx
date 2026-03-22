@@ -26,7 +26,7 @@ export function CustomEdge({
   const { deleteElements } = useReactFlow();
   const colors = useMemo(() => getThemeColors(), []);
   
-  // Colores para el edge
+  // Colors for the edge
   const stroke = selected ? colors.accent : colors.borderNode;
   const strokeWidth = selected ? 3 : 2.5;
 
@@ -37,7 +37,7 @@ export function CustomEdge({
 
   return (
     <>
-      {/* Edge con animación de contorno cuando está seleccionado */}
+      {/* Edge with outline animation when selected */}
       {selected && (
         <>
           {/* Glow exterior */}
@@ -82,7 +82,7 @@ export function CustomEdge({
         interactionWidth={20}
       />
 
-      {/* Botón de eliminar cuando está seleccionado */}
+      {/* Delete button when selected */}
       {selected && (
         <EdgeLabelRenderer>
           <div

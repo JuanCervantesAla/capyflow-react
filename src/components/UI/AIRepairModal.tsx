@@ -5,7 +5,6 @@ import {
   Button,
   Text,
   Group,
-  Alert,
   Textarea,
   Loader,
   List,
@@ -15,7 +14,7 @@ import {
   IconAlertCircle,
   IconInfoCircle,
 } from '@tabler/icons-react';
-import { useTheme } from '../../theme/ThemeContext';
+// no theme usage needed here currently
 
 interface AIRepairModalProps {
   opened: boolean;
@@ -30,7 +29,6 @@ export function AIRepairModal({
   onRepair,
   loading = false,
 }: AIRepairModalProps) {
-  const { theme } = useTheme();
   const [issues, setIssues] = useState('');
 
   const handleRepair = async () => {
@@ -63,7 +61,7 @@ export function AIRepairModal({
         },
       }}
     >
-      {/* Header con fondo negro */}
+      {/* Header with black background */}
       <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
         <Group justify="space-between" align="center">
           <Group gap="sm">
@@ -80,10 +78,10 @@ export function AIRepairModal({
         </Group>
       </div>
 
-      {/* Body con padding */}
+      {/* Body with padding */}
       <div className="px-6 py-6 bg-[#FFF8F0]">
       <Stack gap="md">
-        {/* Información */}
+        {/* Information */}
         <div className="bg-[#e8f4ff] border-[2.5px] border-[#2d3436] p-4">
           <Group gap="sm" mb="xs">
             <IconInfoCircle size={18} className="text-[#2d3436]" />

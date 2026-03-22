@@ -16,9 +16,10 @@ import {
   Panel,
   addEdge,
   useReactFlow,
+  ConnectionMode,
+  BackgroundVariant,
 } from "@xyflow/react";
 import type { Connection } from "@xyflow/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { FlowContext } from "../context/FlowContext";
 import { CustomNode } from "../../Nodes/CustomNode";
 import { CustomEdge } from "../../Edges/CustomEdge";
@@ -66,7 +67,6 @@ function FlowCanvasComponent({
 
   const reactFlow = useReactFlow();
   const { theme } = useTheme();
-  const queryClient = useQueryClient();
 
   const [isDragging, setIsDragging] = useState(false);
 
@@ -76,7 +76,7 @@ function FlowCanvasComponent({
   const { executionData } = useExecutionUpdates(flowId);
 
   // Creation session tracking
-  const { formatTime, trackActivity, trackSave, isActive } = useCreationSession({
+  const { formatTime, trackActivity, isActive } = useCreationSession({
     flowId: flowId || '',
     creationMethod: 'manual', // TODO: Detect from flow creation
     enabled: !!flowId,
@@ -120,7 +120,7 @@ function FlowCanvasComponent({
       if (node && onNodeSelected) {
         onNodeSelected(node);
       }
-      // Si hay un edge seleccionado y no hay nodos, dejar de mostrar el panel de nodo
+      // If an edge is selected and no nodes are selected, hide the node panel
       if (edges.length > 0 && nodes.length === 0 && onNodeSelected) {
         onNodeSelected(null);
       }
@@ -130,16 +130,16 @@ function FlowCanvasComponent({
 
   const onEdgeClick = useCallback(
     (_event: React.MouseEvent, edge: any) => {
-      // Deseleccionar todos los nodos cuando se selecciona un edge
+      // Deselect all nodes when an edge is selected
       setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
-      // Seleccionar el edge clickeado
+      // Select the clicked edge
       setEdges((eds) =>
         eds.map((e) => ({
           ...e,
           selected: e.id === edge.id,
         }))
       );
-      // Deseleccionar el panel de configuración de nodos
+      // Deselect the node configuration panel
       if (onNodeSelected) {
         onNodeSelected(null);
       }
@@ -153,7 +153,7 @@ function FlowCanvasComponent({
   );
 
   const onPaneClick = useCallback(() => {
-    // Deseleccionar todos los edges cuando se hace clic en el canvas vacío
+    // Deselect all edges when clicking on the empty canvas
     setEdges((eds) =>
       eds.map((e) => ({
         ...e,
@@ -265,7 +265,7 @@ function FlowCanvasComponent({
         edgesReconnectable
         autoPanOnConnect={false}
         autoPanOnNodeDrag={false}
-        connectionMode="loose"
+        connectionMode={ConnectionMode.Loose}
         connectionRadius={50}
         translateExtent={[
           [-2000, -2000],
@@ -277,7 +277,7 @@ function FlowCanvasComponent({
         <FlowInternals />
 
         <MemoBackground
-          variant="lines"
+          variant={BackgroundVariant.Lines}
           gap={50}
           size={1}
           color="#2d343608"
@@ -285,7 +285,7 @@ function FlowCanvasComponent({
         />
         
         <MemoBackground
-          variant="lines"
+          variant={BackgroundVariant.Lines}
           gap={250}
           size={1}
           color="#2d343612"

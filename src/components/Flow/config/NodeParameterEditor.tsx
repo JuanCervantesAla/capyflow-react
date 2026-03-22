@@ -1,10 +1,11 @@
 import { Stack, TextInput, NumberInput, Select, Button, Group, Text, Checkbox, Textarea, Alert, ActionIcon, SegmentedControl, Anchor } from "@mantine/core";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import * as XLSX from "xlsx";
 import { useTheme } from "../../../theme/ThemeContext";
 import { IconCheck, IconX, IconAlertCircle, IconPlus, IconTrash, IconInfoCircle } from "@tabler/icons-react";
 import { getNodeSchema, validateNodeParameters, getDefaultNodeParameters, getFilteredParameters, hasAdvancedParameters, countAdvancedParameters } from "./nodeSchemas";
 
-// Componentes de editores especializados
+// Specialized editor components
 function JsonEditor({ value, onChange, placeholder }: { value: string; onChange: (val: any) => void; placeholder?: string }) {
   const { theme } = useTheme();
   const [jsonValue, setJsonValue] = useState(value);
@@ -21,7 +22,7 @@ function JsonEditor({ value, onChange, placeholder }: { value: string; onChange:
       onChange(parsed);
       setError(null);
     } catch (e) {
-      setError("JSON inválido");
+      setError("Invalid JSON");
     }
   };
 
@@ -52,11 +53,17 @@ function JsonEditor({ value, onChange, placeholder }: { value: string; onChange:
   );
 }
 
-function KeyValueEditor({ value, onChange }: { value: Record<string, any>; onChange: (val: Record<string, any>) => void }) {
+function KeyValueEditor({ value, onChange, syncKey }: { value: Record<string, any>; onChange: (val: Record<string, any>) => void; syncKey?: string }) {
   const { theme } = useTheme();
   const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(() => {
     return Object.entries(value || {}).map(([k, v]) => ({ key: k, value: String(v) }));
   });
+
+  // Mantener sincronizado el estado interno solo cuando cambia el contexto
+  // (por ejemplo, al cambiar de nodo), para no borrar filas recién añadidas.
+  useEffect(() => {
+    setPairs(Object.entries(value || {}).map(([k, v]) => ({ key: k, value: String(v) })));
+  }, [syncKey]);
 
   useEffect(() => {
     const obj = pairs.reduce((acc, p) => {
@@ -160,8 +167,8 @@ function KeyValueEditor({ value, onChange }: { value: Record<string, any>; onCha
   );
 }
 
-function HttpHeadersEditor({ value, onChange }: { value: Record<string, string>; onChange: (val: Record<string, string>) => void }) {
-  return <KeyValueEditor value={value} onChange={onChange} />;
+function HttpHeadersEditor({ value, onChange, syncKey }: { value: Record<string, string>; onChange: (val: Record<string, string>) => void; syncKey?: string }) {
+  return <KeyValueEditor value={value} onChange={onChange} syncKey={syncKey} />;
 }
 
 interface NodeParameterEditorProps {
@@ -170,6 +177,8 @@ interface NodeParameterEditorProps {
   nodeType: string;
   currentParameters?: Record<string, any>;
   onSave?: (params: Record<string, any>) => void;
+  // Se dispara en cada cambio de parámetro para auto-guardar en el flujo
+  onChangeLive?: (params: Record<string, any>) => void;
   onCancel?: () => void;
 }
 
@@ -179,10 +188,12 @@ export function NodeParameterEditor({
   nodeType,
   currentParameters = {},
   onSave,
+  onChangeLive,
   onCancel,
 }: NodeParameterEditorProps) {
   const { theme } = useTheme();
   const schema = getNodeSchema(nodeType);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const [parameters, setParameters] = useState<Record<string, any>>(() => {
     const defaults = getDefaultNodeParameters(nodeType);
@@ -192,9 +203,10 @@ export function NodeParameterEditor({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [configMode, setConfigMode] = useState<'basic' | 'advanced'>('basic');
 
-  // Verificar si este nodo tiene parámetros avanzados
+  // Check if this node has advanced parameters
   const hasAdvanced = hasAdvancedParameters(nodeType);
   const advancedCount = countAdvancedParameters(nodeType);
+  const visibleParameters = getFilteredParameters(nodeType, configMode);
 
   useEffect(() => {
     const defaults = getDefaultNodeParameters(nodeType);
@@ -203,7 +215,12 @@ export function NodeParameterEditor({
   }, [nodeId, nodeType, currentParameters]);
 
   const handleParameterChange = (key: string, value: any) => {
-    setParameters((prev) => ({ ...prev, [key]: value }));
+    setParameters((prev) => {
+      const updated = { ...prev, [key]: value };
+      // Auto-guardar hacia arriba si se proporcionó callback
+      onChangeLive?.(updated);
+      return updated;
+    });
     setValidationError(null);
   };
 
@@ -234,7 +251,7 @@ export function NodeParameterEditor({
             },
           }}
         >
-          Tipo de nodo desconocido: {nodeType}
+          Unknown node type: {nodeType}
         </Alert>
       </Stack>
     );
@@ -252,7 +269,7 @@ export function NodeParameterEditor({
           </Text>
         </div>
 
-        {/* Toggle Básico/Avanzado - Solo mostrar si hay parámetros avanzados */}
+        {/* Basic/Advanced toggle - Only show if there are advanced parameters */}
         {hasAdvanced && (
           <SegmentedControl
             size="xs"
@@ -300,14 +317,16 @@ export function NodeParameterEditor({
         </Alert>
       )}
 
-      {schema.parameters.length === 0 ? (
+      {visibleParameters.length === 0 ? (
         <Text size="sm" c={theme.colors.ink} ta="center" style={{ opacity: 0.5 }}>
-          Este nodo no tiene parámetros configurables
+          {hasAdvanced && configMode === 'basic'
+            ? 'This node has only optional advanced parameters'
+            : 'This node has no configurable parameters'}
         </Text>
       ) : (
         <Stack gap="sm">
-          {/* Usar parámetros filtrados según el modo */}
-          {getFilteredParameters(nodeType, configMode).map((param) => {
+          {/* Use filtered parameters based on mode */}
+          {visibleParameters.map((param) => {
             const value = parameters[param.key];
 
             return (
@@ -362,7 +381,7 @@ export function NodeParameterEditor({
 
                 {param.type === "boolean" && (
                   <Checkbox
-                    label="Activado"
+                    label="Enabled"
                     checked={value || false}
                     onChange={(e) => handleParameterChange(param.key, e.currentTarget.checked)}
                   />
@@ -388,25 +407,103 @@ export function NodeParameterEditor({
                 )}
 
                 {param.type === "textarea" && (
-                  <Textarea
-                    size="xs"
-                    placeholder={param.placeholder}
-                    value={value || ""}
-                    onChange={(e) => handleParameterChange(param.key, e.currentTarget.value)}
-                    minRows={3}
-                    maxRows={6}
-                    styles={{
-                      input: {
-                        border: `2px solid ${theme.colors.ink}`,
-                        background: theme.colors.paper,
-                        color: theme.colors.ink,
-                        fontFamily: 'monospace',
-                        '&:focus': {
-                          borderColor: theme.colors.ink,
+                  nodeType === "manual-trigger" && param.key === "csvContent" ? (
+                    <Stack gap="xs">
+                      <Group justify="space-between" align="center">
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => fileInputRef.current?.click()}
+                          styles={{
+                            root: {
+                              border: `2px solid ${theme.colors.ink}`,
+                              background: theme.colors.paper,
+                              color: theme.colors.ink,
+                              fontWeight: 600,
+                              '&:hover': {
+                                background: 'rgba(45, 52, 54, 0.05)',
+                              },
+                            },
+                          }}
+                        >
+                          Upload CSV / Excel file
+                        </Button>
+                        <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
+                          We will read the file as text (CSV) or convert Excel to CSV and store its contents.
+                        </Text>
+                      </Group>
+                      <input
+                        type="file"
+                        accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        style={{ display: "none" }}
+                        ref={fileInputRef}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const extension = file.name.toLowerCase();
+                          const reader = new FileReader();
+                          if (extension.endsWith(".xls") || extension.endsWith(".xlsx")) {
+                            reader.onload = (event) => {
+                              const data = new Uint8Array(event.target?.result as ArrayBuffer);
+                              const workbook = XLSX.read(data, { type: "array" });
+                              const firstSheetName = workbook.SheetNames[0];
+                              const worksheet = workbook.Sheets[firstSheetName];
+                              const csv = XLSX.utils.sheet_to_csv(worksheet || {} as XLSX.WorkSheet);
+                              handleParameterChange(param.key, csv || "");
+                            };
+                            reader.readAsArrayBuffer(file);
+                          } else {
+                            reader.onload = (event) => {
+                              const text = (event.target?.result as string) || "";
+                              handleParameterChange(param.key, text);
+                            };
+                            reader.readAsText(file);
+                          }
+                          // Allow selecting the same file again
+                          e.target.value = "";
+                        }}
+                      />
+                      <Textarea
+                        size="xs"
+                        placeholder={param.placeholder}
+                        value={value || ""}
+                        onChange={(e) => handleParameterChange(param.key, e.currentTarget.value)}
+                        minRows={3}
+                        maxRows={6}
+                        styles={{
+                          input: {
+                            border: `2px solid ${theme.colors.ink}`,
+                            background: theme.colors.paper,
+                            color: theme.colors.ink,
+                            fontFamily: 'monospace',
+                            '&:focus': {
+                              borderColor: theme.colors.ink,
+                            },
+                          },
+                        }}
+                      />
+                    </Stack>
+                  ) : (
+                    <Textarea
+                      size="xs"
+                      placeholder={param.placeholder}
+                      value={value || ""}
+                      onChange={(e) => handleParameterChange(param.key, e.currentTarget.value)}
+                      minRows={3}
+                      maxRows={6}
+                      styles={{
+                        input: {
+                          border: `2px solid ${theme.colors.ink}`,
+                          background: theme.colors.paper,
+                          color: theme.colors.ink,
+                          fontFamily: 'monospace',
+                          '&:focus': {
+                            borderColor: theme.colors.ink,
+                          },
                         },
-                      },
-                    }}
-                  />
+                      }}
+                    />
+                  )
                 )}
 
                 {param.type === "json" && (
@@ -421,6 +518,7 @@ export function NodeParameterEditor({
                   <KeyValueEditor
                     value={value || {}}
                     onChange={(val) => handleParameterChange(param.key, val)}
+                    syncKey={`${nodeId}:${param.key}`}
                   />
                 )}
 
@@ -428,6 +526,7 @@ export function NodeParameterEditor({
                   <HttpHeadersEditor
                     value={value || {}}
                     onChange={(val) => handleParameterChange(param.key, val)}
+                    syncKey={`${nodeId}:${param.key}`}
                   />
                 )}
               </div>
@@ -436,7 +535,7 @@ export function NodeParameterEditor({
         </Stack>
       )}
 
-      {/* Mostrar indicador de parámetros ocultos en modo básico */}
+      {/* Show indicator for hidden parameters in basic mode */}
       {configMode === 'basic' && hasAdvanced && (
         <Alert 
           icon={<IconInfoCircle size={16} />} 

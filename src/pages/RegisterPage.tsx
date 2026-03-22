@@ -62,7 +62,7 @@ export default function RegisterPage() {
 
         <div className="grid lg:grid-cols-2 overflow-hidden">
 
-          {/* Panel de visualización a la IZQUIERDA */}
+          {/* Display panel on the LEFT */}
           <div className="relative hidden lg:flex items-center justify-center bg-[#e8e3d8] overflow-hidden animate-[slideInLeft_0.5s_0.1s_cubic-bezier(.2,1,.4,1)_both]">
 
             <div className="absolute inset-0 [background-image:repeating-linear-gradient(0deg,transparent,transparent_27px,rgba(232,160,32,0.08)_27px,rgba(232,160,32,0.08)_28px),repeating-linear-gradient(90deg,transparent,transparent_27px,rgba(232,160,32,0.08)_27px,rgba(232,160,32,0.08)_28px)] [background-size:28px_28px]" />

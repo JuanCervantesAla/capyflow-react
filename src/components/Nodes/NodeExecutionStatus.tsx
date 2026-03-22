@@ -14,13 +14,13 @@ export function NodeExecutionStatus({ status, error, durationMs }: NodeExecution
         return {
           icon: <IconLoader size={12} style={{ animation: 'spin 1s linear infinite' }} />,
           color: '#3b82f6',
-          text: 'Ejecutando...',
+          text: 'Running...',
         };
       case 'success':
         return {
           icon: <IconCheck size={12} />,
           color: '#10b981',
-          text: durationMs !== undefined ? `${durationMs}ms` : 'Éxito',
+          text: durationMs !== undefined ? `${durationMs}ms` : 'Success',
         };
       case 'error':
         return {

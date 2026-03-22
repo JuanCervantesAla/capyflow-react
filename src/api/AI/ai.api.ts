@@ -71,11 +71,11 @@ export async function generateFlowWithOpenAI(
   } catch (error: any) {
     console.error('❌ Error generating flow with AI:', error);
     
-    // Extraer información detallada del error
+    // Extract detailed error information
     const errorData = error.data || error.response?.data;
     const errorMessage = errorData?.error || error.message || 'Failed to generate flow with AI';
     
-    // Si es error de rate limit (429), preservar esa información
+    // If it's a rate limit error (429), preserve that information
     if (error.status === 429 || errorData?.retryAfter) {
       const err = new Error(errorMessage) as any;
       err.retryAfter = errorData.retryAfter || 60;
@@ -94,14 +94,14 @@ export function validateGeneratedFlow(flow: AIGeneratedFlow): {
   const errors: string[] = [];
 
   if (!flow.nodes || flow.nodes.length === 0) {
-    errors.push('El flujo no tiene nodos');
+    errors.push('Flow has no nodes');
   }
 
   if (flow.nodes && flow.nodes.length > 0) {
     const firstNode = flow.nodes[0];
     const triggerTypes = ['manual-trigger', 'webhook-trigger'];
     if (!triggerTypes.includes(firstNode.data?.type)) {
-      errors.push('El primer nodo debe ser un trigger');
+      errors.push('First node must be a trigger');
     }
   }
 
@@ -109,7 +109,7 @@ export function validateGeneratedFlow(flow: AIGeneratedFlow): {
     const nodeIds = flow.nodes.map((n) => n.id);
     const uniqueIds = new Set(nodeIds);
     if (nodeIds.length !== uniqueIds.size) {
-      errors.push('Hay nodos con IDs duplicados');
+      errors.push('There are nodes with duplicate IDs');
     }
   }
 
@@ -117,10 +117,10 @@ export function validateGeneratedFlow(flow: AIGeneratedFlow): {
     const nodeIds = new Set(flow.nodes?.map((n) => n.id) || []);
     for (const edge of flow.edges) {
       if (!nodeIds.has(edge.source)) {
-        errors.push(`Edge ${edge.id} referencia nodo fuente inexistente: ${edge.source}`);
+        errors.push(`Edge ${edge.id} references non-existent source node: ${edge.source}`);
       }
       if (!nodeIds.has(edge.target)) {
-        errors.push(`Edge ${edge.id} referencia nodo destino inexistente: ${edge.target}`);
+        errors.push(`Edge ${edge.id} references non-existent target node: ${edge.target}`);
       }
     }
   }
@@ -143,7 +143,7 @@ export async function repairFlowWithAI(
   } catch (error: any) {
     console.error('❌ Error repairing flow with AI:', error);
     
-    // Extraer información detallada del error
+    // Extract detailed error information
     const errorData = error.data || error.response?.data;
     const errorMessage = errorData?.error || error.message || 'Failed to repair flow with AI';
     const rawResponse = errorData?.rawResponse;
@@ -151,7 +151,7 @@ export async function repairFlowWithAI(
     const hint = errorData?.hint;
     const truncated = errorData?.truncated;
     
-    // Log detallado para debugging
+    // Detailed log for debugging
     if (rawResponse) {
       console.log('📄 Raw AI Response:', rawResponse);
     }

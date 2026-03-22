@@ -16,18 +16,10 @@ export const useTriggerWebhook = () => {
     mutationFn: ({ flowId, payload }: { flowId: string; payload: Record<string, any> }) =>
       webhooksApi.triggerWebhook(flowId, payload),
     onSuccess: (data) => {
-      showToast({
-        title: 'Webhook triggered',
-        description: `Execution ID: ${data.executionId}`,
-        type: 'success',
-      });
+      showToast('Webhook triggered', `Execution ID: ${data.executionId}`, 'success');
     },
     onError: (error: any) => {
-      showToast({
-        title: 'Failed to trigger webhook',
-        description: error.message || 'Unknown error',
-        type: 'error',
-      });
+      showToast('Failed to trigger webhook', error.message || 'Unknown error', 'error');
     },
   });
 };

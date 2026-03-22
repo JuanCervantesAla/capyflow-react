@@ -27,7 +27,7 @@ interface FlowContextType {
   duplicateNode: (id: string) => void;
   setNodes: React.Dispatch<React.SetStateAction<FlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
-  onNodesChange: (changes: NodeChange[]) => void;
+  onNodesChange: (changes: NodeChange<FlowNode>[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   centerOnNode: (nodeId: string) => void;
   registerCenterHandler: (fn: (nodeId: string) => void) => void;
@@ -74,10 +74,10 @@ export function FlowProvider({
   const edgesRef = useRef<Edge[]>(edges as Edge[]);
   
   // Throttle position updates during drag to improve performance
-  const pendingChangesRef = useRef<NodeChange[]>([]);
+  const pendingChangesRef = useRef<NodeChange<FlowNode>[]>([]);
   const throttleTimeoutRef = useRef<number | null>(null);
 
-  const onNodesChange = useCallback((changes: NodeChange[]) => {
+  const onNodesChange = useCallback((changes: NodeChange<FlowNode>[]) => {
     // Check if all changes are position updates (dragging)
     const allPositionChanges = changes.every(
       (change) => change.type === 'position' && (change as any).dragging
@@ -89,7 +89,7 @@ export function FlowProvider({
       
       if (throttleTimeoutRef.current === null) {
         throttleTimeoutRef.current = window.requestAnimationFrame(() => {
-          onNodesChangeInternal(pendingChangesRef.current);
+          onNodesChangeInternal(pendingChangesRef.current as NodeChange<FlowNode>[]);
           pendingChangesRef.current = [];
           throttleTimeoutRef.current = null;
         });
@@ -104,9 +104,9 @@ export function FlowProvider({
         }
         throttleTimeoutRef.current = null;
       }
-      onNodesChangeInternal(changes);
+        onNodesChangeInternal(changes as NodeChange<FlowNode>[]);
     }
-  }, [onNodesChangeInternal]);
+      }, [onNodesChangeInternal]);
 
   useEffect(() => {
     nodesRef.current = nodes as FlowNode[];

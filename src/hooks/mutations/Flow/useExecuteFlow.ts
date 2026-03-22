@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
-import type { UseMutationOptions } from "@tanstack/query-core";
 import { api } from "../../../api/client";
-import { toastError, toastSuccess } from "../../../lib/toast";
+import { toastError } from "../../../lib/toast";
 import { ApiError } from "../../../api/ApiClient";
 
 export interface ExecutionResult {
@@ -27,7 +26,10 @@ const executeFlowRequest = (flowId: string) => {
   return api.post<ExecutionResult>(`/flows/${flowId}/execute`, {});
 };
 
-interface UseExecuteFlowOptions extends Omit<UseMutationOptions<ExecutionResult, Error, string>, 'mutationFn'> {}
+interface UseExecuteFlowOptions {
+  onSuccess?: (data: ExecutionResult, variables: string, context: unknown) => void;
+  onError?: (error: Error, variables: string, context: unknown) => void;
+}
 
 export function useExecuteFlow(options?: UseExecuteFlowOptions) {
   return useMutation({

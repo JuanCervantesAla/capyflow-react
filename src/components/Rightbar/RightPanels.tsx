@@ -65,7 +65,7 @@ export function RightPanels({
           ) : (
             <Box p={32} style={{ textAlign: "center" }}>
               <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.5 }}>
-                Selecciona un flujo para ver la ejecución
+                Select a flow to view its execution
               </Text>
             </Box>
           )}

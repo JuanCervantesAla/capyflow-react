@@ -1,11 +1,10 @@
 import * as TablerIcons from "@tabler/icons-react";
-import { memo } from "react";
 
 export const ICONS = {
   ...TablerIcons,
 };
 
-const iconCache = new Map();
+const iconCache = new Map<string, any>();
 
 export function getIconComponent(name?: string) {
   if (!name) return ICONS["IconBrandReact"];
@@ -14,7 +13,7 @@ export function getIconComponent(name?: string) {
     return iconCache.get(name);
   }
   
-  const icon = ICONS[name] || ICONS["IconBrandReact"];
+  const icon = (ICONS as any)[name] || (ICONS as any)["IconBrandReact"];
   iconCache.set(name, icon);
   return icon;
 }

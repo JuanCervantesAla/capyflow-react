@@ -27,7 +27,7 @@ export function useUsers() {
       localStorage.setItem("token", data.token);
       queryClient.setQueryData(["me"], data.user);
 
-      toastSuccess(data.message || "Log in");
+      toastSuccess("Log in");
       navigate("/home");
     },
 
@@ -56,7 +56,7 @@ export function useUsers() {
 
       queryClient.setQueryData(["me"], data.user);
 
-      toastSuccess(data.message || "Sign up");
+      toastSuccess("Sign up");
 
       navigate("/home");
     },

@@ -45,7 +45,7 @@ export function CreateFlowModal({
         },
       }}
     >
-      {/* Header con fondo negro */}
+      {/* Header with black background */}
       <div className="bg-[#0a0a08] px-6 py-4 border-b-[3px] border-[#2d3436]">
         <Stack gap={4}>
           <Text className="!text-white font-black text-lg tracking-tight uppercase">
@@ -57,7 +57,7 @@ export function CreateFlowModal({
         </Stack>
       </div>
 
-      {/* Body con padding */}
+      {/* Body with padding */}
       <div className="px-6 py-6 bg-[#FFF8F0]">
         <Stack gap="lg">
           {/* Description */}

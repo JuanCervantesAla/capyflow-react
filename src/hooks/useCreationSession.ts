@@ -28,7 +28,7 @@ interface SessionActivityTracker {
 export const useCreationSession = ({ flowId, creationMethod, enabled = true }: UseCreationSessionOptions) => {
   const [session, setSession] = useState<WorkflowCreationSession | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
   const activityTrackerRef = useRef<SessionActivityTracker>({
     nodeAdditions: 0,
     nodeDeletions: 0,
@@ -47,11 +47,11 @@ export const useCreationSession = ({ flowId, creationMethod, enabled = true }: U
       setElapsedTime(0);
       
       // Start timer
-      if (timerRef.current) {
+      if (timerRef.current !== null) {
         clearInterval(timerRef.current);
       }
-      
-      timerRef.current = setInterval(() => {
+
+      timerRef.current = window.setInterval(() => {
         setElapsedTime((prev) => prev + 1);
       }, 1000);
     },
@@ -61,7 +61,7 @@ export const useCreationSession = ({ flowId, creationMethod, enabled = true }: U
   const endSessionMutation = useMutation({
     mutationFn: (sessionId: string) => endCreationSession(sessionId),
     onSuccess: () => {
-      if (timerRef.current) {
+      if (timerRef.current !== null) {
         clearInterval(timerRef.current);
       }
       

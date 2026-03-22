@@ -1,8 +1,5 @@
-
-
 import { useState } from "react";
 import { UnstyledButton, Text } from "@mantine/core";
-import { THEME } from "../../theme/constants";
 
 interface MyButtonProps {
   icon?: React.ReactNode;
@@ -21,10 +18,10 @@ export function MyButton({ icon, onClick, children }: MyButtonProps) {
       style={{
         width: "100%",
         padding: "10px 12px",
-        background: isHovered ? THEME.colors.background.tertiary : "transparent",
-        border: `1px solid ${isHovered ? THEME.colors.accent.primary : THEME.colors.border.primary}`,
-        borderRadius: THEME.borderRadius.sm,
-        color: isHovered ? THEME.colors.text.primary : THEME.colors.text.secondary,
+        background: isHovered ? "#f0ebe0" : "transparent",
+        border: `1px solid ${isHovered ? "#E8950C" : "#C2C2C2"}`,
+        borderRadius: 6,
+        color: isHovered ? "#111111" : "#6B6B6B",
         display: "flex",
         alignItems: "center",
         gap: 10,
@@ -35,7 +32,7 @@ export function MyButton({ icon, onClick, children }: MyButtonProps) {
         <span style={{ 
           display: "flex", 
           alignItems: "center",
-          color: isHovered ? THEME.colors.accent.primary : THEME.colors.text.secondary,
+          color: isHovered ? "#E8950C" : "#6B6B6B",
         }}>
           {icon}
         </span>
