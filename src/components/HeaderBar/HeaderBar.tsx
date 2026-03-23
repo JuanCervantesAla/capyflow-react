@@ -24,7 +24,7 @@ import {
 import { useTheme } from "../../theme/ThemeContext";
 import { useUsers } from "../../hooks/useUsers";
 import { useNavigate } from "react-router-dom";
-import miLogo from '../../assets/logo_orange.png';
+import miLogo from "../../assets/logo_orange.png";
 import { useState, useEffect } from "react";
 
 interface HeaderBarProps {
@@ -78,36 +78,30 @@ export function HeaderBar({
     >
       <Group justify="space-between" align="center" w="100%" wrap="nowrap">
         <Group gap={0} wrap="nowrap" style={{ minWidth: 0 }}>
-          {/* <Group gap={10} wrap="nowrap" px={16}>
-            <img src={miLogo} style={{ width: 28, height: 28 }} alt="Logo" />
-          </Group> */}
-
-          {/* <div style={{ 
-            width: 2, 
-            height: 40, 
-            background: "#222222" 
-          }} /> */}
-
           <Group gap={5} wrap="nowrap" px={8}>
             <img src={miLogo} style={{ width: 33, height: 33 }} alt="Logo" />
-            <Text
-              fw={900}
-              size="20px"
-              c="#E8950C"
-              style={{
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                letterSpacing: '0.5px',
-              }}
-            >
-              CapyFlow
-            </Text>
+            <span className="hidden sm:inline">
+              <Text
+                fw={900}
+                size="20px"
+                c="#E8950C"
+                style={{
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                CapyFlow
+              </Text>
+            </span>
           </Group>
 
-          <div style={{ 
-            width: 2, 
-            height: 40, 
-            background: "#222222" 
-          }} />
+          <div
+            style={{
+              width: 2,
+              height: 40,
+              background: "#222222",
+            }}
+          />
 
           {!editing ? (
             <Group gap={8} wrap="nowrap" px={16}>
@@ -120,25 +114,27 @@ export function HeaderBar({
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  fontFamily: "system-ui, -apple-system, sans-serif",
                 }}
               >
                 {title}
               </Text>
-              <UnstyledButton
-                onClick={() => setEditing(true)}
-                style={{
-                  width: 18,
-                  height: 18,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#666666",
-                  opacity: 0.9,
-                }}
-              >
-                <IconEdit size={13} />
-              </UnstyledButton>
+              <span className="hidden sm:inline">
+                <UnstyledButton
+                  onClick={() => setEditing(true)}
+                  style={{
+                    width: 18,
+                    height: 18,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#666666",
+                    opacity: 0.9,
+                  }}
+                >
+                  <IconEdit size={13} />
+                </UnstyledButton>
+              </span>
             </Group>
           ) : (
             <input
@@ -160,17 +156,200 @@ export function HeaderBar({
               }}
             />
           )}
-          <div style={{ 
-            width: 2, 
-            height: 40, 
-            background: "#333333" 
-          }} />
+
+          <div
+            style={{
+              width: 2,
+              height: 40,
+              background: "#333333",
+            }}
+          />
         </Group>
 
         <Group gap={0} wrap="nowrap">
-          {onAIRepair && (
+          <span className="sm:hidden">
+            <Menu shadow="md" width={180} position="bottom-end" offset={8}>
+              <Menu.Target>
+                <UnstyledButton
+                  style={{
+                    height: 56,
+                    padding: "0 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    borderRadius: 4,
+                    background: "#222",
+                    color: "#E8950C",
+                    border: "none",
+                  }}
+                >
+                  <IconChevronDown size={18} />
+                </UnstyledButton>
+              </Menu.Target>
+
+              <Menu.Dropdown
+                style={{
+                  background: "#1a1a1a",
+                  border: "1px solid #333333",
+                  borderRadius: 8,
+                }}
+              >
+                {onAIRepair && (
+                  <Menu.Item
+                    leftSection={<IconWand size={16} />}
+                    onClick={onAIRepair}
+                    style={{ color: "#FFF" }}
+                  >
+                    Fix
+                  </Menu.Item>
+                )}
+                {onAIGenerate && (
+                  <Menu.Item
+                    leftSection={<IconSparkles size={16} />}
+                    onClick={onAIGenerate}
+                    style={{ color: "#E8950C" }}
+                  >
+                    AI
+                  </Menu.Item>
+                )}
+                {onOpenFlowSelector && (
+                  <Menu.Item
+                    leftSection={<IconFolderOpen size={16} />}
+                    onClick={onOpenFlowSelector}
+                    style={{ color: "#FFF" }}
+                  >
+                    Flows
+                  </Menu.Item>
+                )}
+                <Menu.Item
+                  leftSection={<IconDeviceFloppy size={16} />}
+                  onClick={onSave}
+                  style={{ color: "#FFF" }}
+                >
+                  Save
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconDownload size={16} />}
+                  onClick={onExport}
+                  style={{ color: "#FFF" }}
+                >
+                  Export
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconShare3 size={16} />}
+                  onClick={onShare}
+                  style={{ color: "#FFF" }}
+                >
+                  Share
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </span>
+
+          <span className="hidden sm:flex">
+            {onAIRepair && (
+              <UnstyledButton
+                onClick={onAIRepair}
+                style={{
+                  height: 56,
+                  padding: "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  borderRadius: 0,
+                  background: "transparent",
+                  border: "none",
+                  color: "#AAAAAA",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.8px",
+                  textTransform: "uppercase",
+                  transition: "all 0.15s",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                  e.currentTarget.style.color = "#FFFFFF";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#AAAAAA";
+                }}
+              >
+                <IconWand size={16} />
+                Fix
+              </UnstyledButton>
+            )}
+
+            {onAIGenerate && (
+              <UnstyledButton
+                onClick={onAIGenerate}
+                style={{
+                  height: 56,
+                  padding: "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  borderRadius: 0,
+                  background: "transparent",
+                  border: "none",
+                  color: "#AAAAAA",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.8px",
+                  textTransform: "uppercase",
+                  transition: "all 0.15s",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(232, 149, 12, 0.1)";
+                  e.currentTarget.style.color = "#E8950C";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#AAAAAA";
+                }}
+              >
+                <IconSparkles size={16} />
+                AI
+              </UnstyledButton>
+            )}
+
+            {onOpenFlowSelector && (
+              <UnstyledButton
+                onClick={onOpenFlowSelector}
+                style={{
+                  height: 56,
+                  padding: "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  borderRadius: 0,
+                  background: "transparent",
+                  border: "none",
+                  color: "#AAAAAA",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.8px",
+                  textTransform: "uppercase",
+                  transition: "all 0.15s",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                  e.currentTarget.style.color = "#FFFFFF";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#AAAAAA";
+                }}
+              >
+                <IconFolderOpen size={16} />
+                Flows
+              </UnstyledButton>
+            )}
+
             <UnstyledButton
-              onClick={onAIRepair}
+              onClick={onSave}
               style={{
                 height: 56,
                 padding: "0 20px",
@@ -183,10 +362,10 @@ export function HeaderBar({
                 color: "#AAAAAA",
                 fontSize: 12,
                 fontWeight: 700,
-                letterSpacing: '0.8px',
-                textTransform: 'uppercase',
-                transition: 'all 0.15s',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                letterSpacing: "0.8px",
+                textTransform: "uppercase",
+                transition: "all 0.15s",
+                fontFamily: "system-ui, -apple-system, sans-serif",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
@@ -197,14 +376,12 @@ export function HeaderBar({
                 e.currentTarget.style.color = "#AAAAAA";
               }}
             >
-              <IconWand size={16} />
-              Fix
+              <IconDeviceFloppy size={16} />
+              Save
             </UnstyledButton>
-          )}
 
-          {onAIGenerate && (
             <UnstyledButton
-              onClick={onAIGenerate}
+              onClick={onExport}
               style={{
                 height: 56,
                 padding: "0 20px",
@@ -217,44 +394,10 @@ export function HeaderBar({
                 color: "#AAAAAA",
                 fontSize: 12,
                 fontWeight: 700,
-                letterSpacing: '0.8px',
-                textTransform: 'uppercase',
-                transition: 'all 0.15s',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(232, 149, 12, 0.1)";
-                e.currentTarget.style.color = "#E8950C";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "#AAAAAA";
-              }}
-            >
-              <IconSparkles size={16} />
-              AI
-            </UnstyledButton>
-          )}
-
-          {onOpenFlowSelector && (
-            <UnstyledButton
-              onClick={onOpenFlowSelector}
-              style={{
-                height: 56,
-                padding: "0 20px",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                borderRadius: 0,
-                background: "transparent",
-                border: "none",
-                color: "#AAAAAA",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: '0.8px',
-                textTransform: 'uppercase',
-                transition: 'all 0.15s',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                letterSpacing: "0.8px",
+                textTransform: "uppercase",
+                transition: "all 0.15s",
+                fontFamily: "system-ui, -apple-system, sans-serif",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
@@ -265,114 +408,52 @@ export function HeaderBar({
                 e.currentTarget.style.color = "#AAAAAA";
               }}
             >
-              <IconFolderOpen size={16} />
-              Flows
+              <IconDownload size={16} />
+              Export
             </UnstyledButton>
-          )}
 
-          <UnstyledButton
-            onClick={onSave}
+            <UnstyledButton
+              onClick={onShare}
+              style={{
+                height: 56,
+                padding: "0 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: 0,
+                background: "transparent",
+                border: "none",
+                color: "#AAAAAA",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.8px",
+                textTransform: "uppercase",
+                transition: "all 0.15s",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.color = "#FFFFFF";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#AAAAAA";
+              }}
+            >
+              <IconShare3 size={16} />
+              Share
+            </UnstyledButton>
+          </span>
+
+          <div
             style={{
-              height: 56,
-              padding: "0 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              borderRadius: 0,
-              background: "transparent",
-              border: "none",
-              color: "#AAAAAA",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              width: 2,
+              height: 40,
+              background: "#333333",
+              marginLeft: 8,
+              marginRight: 8,
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-              e.currentTarget.style.color = "#FFFFFF";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#AAAAAA";
-            }}
-          >
-            <IconDeviceFloppy size={16} />
-            Save
-          </UnstyledButton>
-
-          <UnstyledButton
-            onClick={onExport}
-            style={{
-              height: 56,
-              padding: "0 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              borderRadius: 0,
-              background: "transparent",
-              border: "none",
-              color: "#AAAAAA",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-              e.currentTarget.style.color = "#FFFFFF";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#AAAAAA";
-            }}
-          >
-            <IconDownload size={16} />
-            Export
-          </UnstyledButton>
-
-          <UnstyledButton
-            onClick={onShare}
-            style={{
-              height: 56,
-              padding: "0 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              borderRadius: 0,
-              background: "transparent",
-              border: "none",
-              color: "#AAAAAA",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-              e.currentTarget.style.color = "#FFFFFF";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#AAAAAA";
-            }}
-          >
-            <IconShare3 size={16} />
-            Share
-          </UnstyledButton>
-
-          <div style={{ 
-            width: 2, 
-            height: 40, 
-            background: "#333333",
-            marginLeft: 8,
-            marginRight: 8,
-          }} />
+          />
 
           <UnstyledButton
             onClick={onRun}
@@ -383,37 +464,43 @@ export function HeaderBar({
               alignItems: "center",
               gap: 8,
               borderRadius: 4,
-              background: '#E8950C',
-              border: 'none',
-              color: '#000000',
+              background: "#E8950C",
+              border: "none",
+              color: "#000000",
               fontSize: 12,
               fontWeight: 700,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              letterSpacing: "0.8px",
+              textTransform: "uppercase",
+              transition: "all 0.15s",
+              fontFamily: "system-ui, -apple-system, sans-serif",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#D68508';
+              e.currentTarget.style.background = "#D68508";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#E8950C';
+              e.currentTarget.style.background = "#E8950C";
             }}
           >
-            <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
+            <div style={{ display: "flex", gap: 0, alignItems: "center" }}>
               <IconPlayerPlay size={12} fill="#000" stroke="#000" strokeWidth={0} />
-              <IconPlayerPlay size={12} fill="#000" stroke="#000" strokeWidth={0} />
+              <span className="hidden sm:inline">
+                <IconPlayerPlay size={12} fill="#000" stroke="#000" strokeWidth={0} />
+              </span>
             </div>
-            Run
+            <Text size="12px" c="#000000" fw={700} ml={4} className="hidden sm:inline">
+              Run
+            </Text>
           </UnstyledButton>
 
-          <div style={{ 
-            width: 2, 
-            height: 40, 
-            background: "#333333",
-            marginLeft: 16,
-            marginRight: 8,
-          }} />
+          <div
+            style={{
+              width: 2,
+              height: 40,
+              background: "#333333",
+              marginLeft: 16,
+              marginRight: 8,
+            }}
+          />
 
           <Menu shadow="md" width={200} position="bottom-end" offset={8}>
             <Menu.Target>
@@ -447,15 +534,16 @@ export function HeaderBar({
                 borderRadius: 8,
               }}
             >
-              <Menu.Item 
+              <Menu.Item
                 leftSection={<IconUser size={16} />}
+                onClick={() => navigate("/profile")}
                 style={{ color: "#FFFFFF" }}
               >
                 Profile
               </Menu.Item>
-              <Menu.Item 
+              <Menu.Item
                 leftSection={<IconChartBar size={16} />}
-                onClick={() => navigate('/analytics')}
+                onClick={() => navigate("/analytics")}
                 style={{ color: "#FFFFFF" }}
               >
                 Analytics
