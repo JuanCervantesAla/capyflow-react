@@ -12,6 +12,16 @@ export interface AIRepairFlowRequest {
   apiKey?: string;
 }
 
+export interface AIFixFlowRequest {
+  flow: any;
+  goal?: string;
+  issues?: string;
+  adjustParametersOnly?: boolean;
+  strictMode?: boolean;
+  maxAttempts?: number;
+  apiKey?: string;
+}
+
 export interface AIRepairFlowResponse {
   success: boolean;
   flow?: AIGeneratedFlow;
@@ -21,6 +31,12 @@ export interface AIRepairFlowResponse {
   cleaned?: string;
   hint?: string;
   truncated?: boolean;
+  strictMode?: boolean;
+  attempts?: number;
+  coherence?: {
+    valid: boolean;
+    issues: string[];
+  };
 }
 
 export interface AIGeneratedFlow {
@@ -172,6 +188,32 @@ export async function repairFlowWithAI(
       cleaned,
       hint,
       truncated,
+    };
+  }
+}
+
+export async function fixFlowWithAI(
+  request: AIFixFlowRequest
+): Promise<AIRepairFlowResponse> {
+  try {
+    const response = await api.post<AIRepairFlowResponse>(
+      '/ai/fix-flow',
+      request
+    );
+    return response;
+  } catch (error: any) {
+    console.error('Error fixing flow with AI:', error);
+
+    const errorData = error.data || error.response?.data;
+    const errorMessage = errorData?.error || error.message || 'Failed to fix flow with AI';
+
+    return {
+      success: false,
+      error: errorMessage,
+      rawResponse: errorData?.rawResponse,
+      cleaned: errorData?.cleaned,
+      hint: errorData?.hint,
+      truncated: errorData?.truncated,
     };
   }
 }

@@ -1,0 +1,648 @@
+import type { Edge as ReactFlowEdge } from '@xyflow/react';
+import type { FlowNode } from '../types/NodeTypes';
+
+export type DemoTemplateId =
+  | 'blank'
+  | 'webhook-log'
+  | 'manual-http-log'
+  | 'manual-email-alert'
+  | 'telegram-filter-reply'
+  | 'manual-ai-telegram'
+  | 'webhook-notion-intake'
+  | 'manual-db-report-email'
+  | 'webhook-slack-alert';
+
+export interface DemoTemplateOption {
+  id: DemoTemplateId;
+  name: string;
+  description: string;
+}
+
+interface DemoTemplateDefinition {
+  option: DemoTemplateOption;
+  nodes: FlowNode[];
+  edges: ReactFlowEdge[];
+}
+
+const TEMPLATE_DEFINITIONS: DemoTemplateDefinition[] = [
+  {
+    option: {
+      id: 'webhook-log',
+      name: 'Webhook Monitor',
+      description: 'Receives webhook calls and logs an audit message.',
+    },
+    nodes: [
+      {
+        id: 'tpl-webhook-trigger',
+        type: 'custom',
+        position: { x: 120, y: 140 },
+        data: {
+          label: 'Webhook Trigger',
+          subtitle: 'trigger',
+          icon: 'IconWebhook',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'webhook-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-webhook-log',
+        type: 'custom',
+        position: { x: 420, y: 140 },
+        data: {
+          label: 'Log Event',
+          subtitle: 'io',
+          icon: 'IconListDetails',
+          color: '#10B981',
+          category: 'io',
+          type: 'log',
+          parameters: {
+            level: 'info',
+            message: 'Webhook received successfully',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-webhook-edge-1',
+        source: 'tpl-webhook-trigger',
+        target: 'tpl-webhook-log',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+  {
+    option: {
+      id: 'manual-http-log',
+      name: 'HTTP Poll + Log',
+      description: 'Runs manually, calls a public API, then logs the result.',
+    },
+    nodes: [
+      {
+        id: 'tpl-http-manual',
+        type: 'custom',
+        position: { x: 80, y: 220 },
+        data: {
+          label: 'Manual Trigger',
+          subtitle: 'trigger',
+          icon: 'IconPlayerPlay',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'manual-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-http-request',
+        type: 'custom',
+        position: { x: 360, y: 220 },
+        data: {
+          label: 'Get Data',
+          subtitle: 'io',
+          icon: 'IconWorld',
+          color: '#F59E0B',
+          category: 'io',
+          type: 'http-request',
+          parameters: {
+            method: 'GET',
+            url: 'https://jsonplaceholder.typicode.com/todos/1',
+          },
+        },
+      },
+      {
+        id: 'tpl-http-log',
+        type: 'custom',
+        position: { x: 650, y: 220 },
+        data: {
+          label: 'Log Result',
+          subtitle: 'io',
+          icon: 'IconListDetails',
+          color: '#10B981',
+          category: 'io',
+          type: 'log',
+          parameters: {
+            level: 'info',
+            message: 'HTTP request completed',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-http-edge-1',
+        source: 'tpl-http-manual',
+        target: 'tpl-http-request',
+        type: 'customEdge',
+        animated: false,
+      },
+      {
+        id: 'tpl-http-edge-2',
+        source: 'tpl-http-request',
+        target: 'tpl-http-log',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+  {
+    option: {
+      id: 'manual-email-alert',
+      name: 'Manual Email Alert',
+      description: 'Builds data and sends an email alert (SendGrid).',
+    },
+    nodes: [
+      {
+        id: 'tpl-email-manual',
+        type: 'custom',
+        position: { x: 80, y: 80 },
+        data: {
+          label: 'Manual Trigger',
+          subtitle: 'trigger',
+          icon: 'IconPlayerPlay',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'manual-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-email-setdata',
+        type: 'custom',
+        position: { x: 360, y: 80 },
+        data: {
+          label: 'Prepare Alert',
+          subtitle: 'data',
+          icon: 'IconDatabase',
+          color: '#F97316',
+          category: 'data',
+          type: 'set-data',
+          parameters: {
+            values: {
+              severity: 'high',
+              source: 'CapyFlow Demo',
+            },
+          },
+        },
+      },
+      {
+        id: 'tpl-email-send',
+        type: 'custom',
+        position: { x: 660, y: 80 },
+        data: {
+          label: 'Send Email',
+          subtitle: 'io',
+          icon: 'IconMail',
+          color: '#EF4444',
+          category: 'io',
+          type: 'email',
+          parameters: {
+            provider: 'sendgrid-api',
+            to: 'ops@example.com',
+            subject: 'Demo alert from CapyFlow',
+            body: 'Alert generated by demo flow. Review severity and source fields.',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-email-edge-1',
+        source: 'tpl-email-manual',
+        target: 'tpl-email-setdata',
+        type: 'customEdge',
+        animated: false,
+      },
+      {
+        id: 'tpl-email-edge-2',
+        source: 'tpl-email-setdata',
+        target: 'tpl-email-send',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+  {
+    option: {
+      id: 'telegram-filter-reply',
+      name: 'Telegram Smart Reply',
+      description: 'Listens in Telegram, filters command, and replies.',
+    },
+    nodes: [
+      {
+        id: 'tpl-telegram-trigger',
+        type: 'custom',
+        position: { x: 60, y: 330 },
+        data: {
+          label: 'Telegram Trigger',
+          subtitle: 'trigger',
+          icon: 'IconBrandTelegram',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'telegram-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-telegram-if',
+        type: 'custom',
+        position: { x: 350, y: 330 },
+        data: {
+          label: 'Command Filter',
+          subtitle: 'logic',
+          icon: 'IconGitBranch',
+          color: '#A855F7',
+          category: 'logic',
+          type: 'if-condition',
+          parameters: {
+            field: 'message',
+            operator: 'contains',
+            value: '/status',
+          },
+        },
+      },
+      {
+        id: 'tpl-telegram-send',
+        type: 'custom',
+        position: { x: 650, y: 330 },
+        data: {
+          label: 'Send Reply',
+          subtitle: 'io',
+          icon: 'IconMessage',
+          color: '#10B981',
+          category: 'io',
+          type: 'telegram',
+          parameters: {
+            message: 'System status: operational',
+            parseMode: '',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-telegram-edge-1',
+        source: 'tpl-telegram-trigger',
+        target: 'tpl-telegram-if',
+        type: 'customEdge',
+        animated: false,
+      },
+      {
+        id: 'tpl-telegram-edge-2',
+        source: 'tpl-telegram-if',
+        target: 'tpl-telegram-send',
+        sourceHandle: 'true',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+  {
+    option: {
+      id: 'manual-ai-telegram',
+      name: 'AI Summary to Telegram',
+      description: 'Generates text with Groq and posts it to Telegram.',
+    },
+    nodes: [
+      {
+        id: 'tpl-ai-manual',
+        type: 'custom',
+        position: { x: 90, y: 500 },
+        data: {
+          label: 'Manual Trigger',
+          subtitle: 'trigger',
+          icon: 'IconPlayerPlay',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'manual-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-ai-groq',
+        type: 'custom',
+        position: { x: 380, y: 500 },
+        data: {
+          label: 'Generate Summary',
+          subtitle: 'ai',
+          icon: 'IconBrain',
+          color: '#F59E0B',
+          category: 'ai',
+          type: 'groq',
+          parameters: {
+            prompt: 'Write a short positive status update for stakeholders.',
+            temperature: 0.4,
+            maxTokens: 180,
+          },
+        },
+      },
+      {
+        id: 'tpl-ai-telegram',
+        type: 'custom',
+        position: { x: 680, y: 500 },
+        data: {
+          label: 'Send to Telegram',
+          subtitle: 'io',
+          icon: 'IconBrandTelegram',
+          color: '#10B981',
+          category: 'io',
+          type: 'telegram',
+          parameters: {
+            message: 'AI summary generated. Check latest output.',
+            parseMode: '',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-ai-edge-1',
+        source: 'tpl-ai-manual',
+        target: 'tpl-ai-groq',
+        type: 'customEdge',
+        animated: false,
+      },
+      {
+        id: 'tpl-ai-edge-2',
+        source: 'tpl-ai-groq',
+        target: 'tpl-ai-telegram',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+  {
+    option: {
+      id: 'webhook-notion-intake',
+      name: 'Webhook to Notion Intake',
+      description: 'Receives a webhook payload and creates a Notion page via HTTP API.',
+    },
+    nodes: [
+      {
+        id: 'tpl-notion-webhook',
+        type: 'custom',
+        position: { x: 100, y: 640 },
+        data: {
+          label: 'Webhook Trigger',
+          subtitle: 'trigger',
+          icon: 'IconWebhook',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'webhook-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-notion-http',
+        type: 'custom',
+        position: { x: 390, y: 640 },
+        data: {
+          label: 'Create Notion Page',
+          subtitle: 'io',
+          icon: 'IconWorld',
+          color: '#F59E0B',
+          category: 'io',
+          type: 'http-request',
+          parameters: {
+            method: 'POST',
+            url: 'https://api.notion.com/v1/pages',
+            headers: {
+              Authorization: 'Bearer {{notionToken}}',
+              'Notion-Version': '2022-06-28',
+              'Content-Type': 'application/json',
+            },
+            body: {
+              parent: { database_id: '{{databaseId}}' },
+              properties: {
+                Name: {
+                  title: [{ text: { content: '{{title}}' } }],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        id: 'tpl-notion-log',
+        type: 'custom',
+        position: { x: 700, y: 640 },
+        data: {
+          label: 'Log Intake',
+          subtitle: 'io',
+          icon: 'IconListDetails',
+          color: '#10B981',
+          category: 'io',
+          type: 'log',
+          parameters: {
+            level: 'info',
+            message: 'New webhook item sent to Notion',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-notion-edge-1',
+        source: 'tpl-notion-webhook',
+        target: 'tpl-notion-http',
+        type: 'customEdge',
+        animated: false,
+      },
+      {
+        id: 'tpl-notion-edge-2',
+        source: 'tpl-notion-http',
+        target: 'tpl-notion-log',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+  {
+    option: {
+      id: 'manual-db-report-email',
+      name: 'DB Report to Email',
+      description: 'Runs SQL query and sends a report by email.',
+    },
+    nodes: [
+      {
+        id: 'tpl-db-manual',
+        type: 'custom',
+        position: { x: 110, y: 790 },
+        data: {
+          label: 'Manual Trigger',
+          subtitle: 'trigger',
+          icon: 'IconPlayerPlay',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'manual-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-db-query',
+        type: 'custom',
+        position: { x: 390, y: 790 },
+        data: {
+          label: 'Run Query',
+          subtitle: 'io',
+          icon: 'IconDatabase',
+          color: '#F97316',
+          category: 'io',
+          type: 'database',
+          parameters: {
+            driver: 'postgres',
+            connectionUrl: 'postgres://user:pass@localhost:5432/db?sslmode=disable',
+            query: 'SELECT NOW() as generated_at',
+          },
+        },
+      },
+      {
+        id: 'tpl-db-email',
+        type: 'custom',
+        position: { x: 700, y: 790 },
+        data: {
+          label: 'Send Report',
+          subtitle: 'io',
+          icon: 'IconMail',
+          color: '#EF4444',
+          category: 'io',
+          type: 'email',
+          parameters: {
+            provider: 'sendgrid-api',
+            to: 'report@example.com',
+            subject: 'Automated database report',
+            body: 'Query executed successfully. Check execution output for details.',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-db-edge-1',
+        source: 'tpl-db-manual',
+        target: 'tpl-db-query',
+        type: 'customEdge',
+        animated: false,
+      },
+      {
+        id: 'tpl-db-edge-2',
+        source: 'tpl-db-query',
+        target: 'tpl-db-email',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+  {
+    option: {
+      id: 'webhook-slack-alert',
+      name: 'Webhook to Slack Alert',
+      description: 'Validates webhook content and sends alert to Slack.',
+    },
+    nodes: [
+      {
+        id: 'tpl-slack-webhook',
+        type: 'custom',
+        position: { x: 120, y: 940 },
+        data: {
+          label: 'Webhook Trigger',
+          subtitle: 'trigger',
+          icon: 'IconWebhook',
+          color: '#0EA5E9',
+          category: 'trigger',
+          type: 'webhook-trigger',
+          parameters: {},
+        },
+      },
+      {
+        id: 'tpl-slack-if',
+        type: 'custom',
+        position: { x: 390, y: 940 },
+        data: {
+          label: 'Check Severity',
+          subtitle: 'logic',
+          icon: 'IconGitBranch',
+          color: '#A855F7',
+          category: 'logic',
+          type: 'if-condition',
+          parameters: {
+            field: 'severity',
+            operator: 'contains',
+            value: 'high',
+          },
+        },
+      },
+      {
+        id: 'tpl-slack-http',
+        type: 'custom',
+        position: { x: 700, y: 940 },
+        data: {
+          label: 'Slack Alert',
+          subtitle: 'io',
+          icon: 'IconWorld',
+          color: '#10B981',
+          category: 'io',
+          type: 'http-request',
+          parameters: {
+            method: 'POST',
+            url: 'https://slack.com/api/chat.postMessage',
+            headers: {
+              Authorization: 'Bearer {{slackBotToken}}',
+              'Content-Type': 'application/json',
+            },
+            body: {
+              channel: '{{channelId}}',
+              text: 'High severity alert received from webhook',
+            },
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'tpl-slack-edge-1',
+        source: 'tpl-slack-webhook',
+        target: 'tpl-slack-if',
+        type: 'customEdge',
+        animated: false,
+      },
+      {
+        id: 'tpl-slack-edge-2',
+        source: 'tpl-slack-if',
+        target: 'tpl-slack-http',
+        sourceHandle: 'true',
+        type: 'customEdge',
+        animated: false,
+      },
+    ],
+  },
+];
+
+export const DEMO_TEMPLATE_OPTIONS: DemoTemplateOption[] = [
+  {
+    id: 'blank',
+    name: 'Blank Flow',
+    description: 'Start from scratch with an empty canvas.',
+  },
+  ...TEMPLATE_DEFINITIONS.map((template) => template.option),
+];
+
+export function getTemplateById(
+  templateId: DemoTemplateId,
+): { nodes: FlowNode[]; edges: ReactFlowEdge[] } | null {
+  if (templateId === 'blank') {
+    return { nodes: [], edges: [] };
+  }
+
+  const found = TEMPLATE_DEFINITIONS.find((template) => template.option.id === templateId);
+  if (!found) {
+    return null;
+  }
+
+  return {
+    nodes: found.nodes,
+    edges: found.edges,
+  };
+}

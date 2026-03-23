@@ -1,3 +1,5 @@
+import { fetchNodeSchemas } from '../../../api/NodeTypes/nodeTypes.api';
+
 export type NodeParameterType = 
   | 'string' 
   | 'number' 
@@ -1461,8 +1463,12 @@ export const NODE_SCHEMAS: Record<string, NodeTypeSchema> = {
   },
 };
 
+let runtimeNodeSchemas: Record<string, NodeTypeSchema> = NODE_SCHEMAS;
+
+let backendSchemasLoaded = false;
+
 export function getNodeSchema(nodeType: string): NodeTypeSchema | null {
-  return NODE_SCHEMAS[nodeType] || null;
+  return runtimeNodeSchemas[nodeType] || null;
 }
 
 export function validateNodeParameters(
@@ -1537,4 +1543,142 @@ export function countAdvancedParameters(nodeType: string): number {
  */
 export function hasAdvancedParameters(nodeType: string): boolean {
   return countAdvancedParameters(nodeType) > 0;
+}
+
+function toNodeParameterType(rawType: string): NodeParameterType {
+  switch ((rawType || '').toLowerCase()) {
+    case 'string':
+      return 'string';
+    case 'number':
+      return 'number';
+    case 'boolean':
+      return 'boolean';
+    case 'array':
+      return 'json';
+    case 'object':
+      return 'key-value';
+    default:
+      return 'string';
+  }
+}
+
+function toLabelFromKey(key: string): string {
+  if (!key) return key;
+  const withSpaces = key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]/g, ' ')
+    .trim();
+  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+}
+
+function mergeSchemasWithBackend(
+  localSchemas: Record<string, NodeTypeSchema>,
+  backendSchemas: Record<string, any>
+): Record<string, NodeTypeSchema> {
+  const merged: Record<string, NodeTypeSchema> = {};
+
+  for (const [nodeType, localSchema] of Object.entries(localSchemas)) {
+    const backendSchema = backendSchemas[nodeType];
+    const localParameters = localSchema.parameters || [];
+
+    if (!backendSchema) {
+      merged[nodeType] = localSchema;
+      continue;
+    }
+
+    const backendParams: Record<string, any> = backendSchema.parameters || {};
+    const localParamsByKey = new Map(localParameters.map((p) => [p.key, p]));
+
+    const updatedParams: NodeParameterSchema[] = localParameters.map((param) => {
+      const backendParam = backendParams[param.key];
+      if (!backendParam) return param;
+
+      const options = Array.isArray(backendParam.enum)
+        ? backendParam.enum.map((value: unknown) => String(value))
+        : param.options;
+
+      return {
+        ...param,
+        required: backendParam.required ?? param.required,
+        defaultValue: backendParam.default ?? param.defaultValue,
+        description: backendParam.description || param.description,
+        advanced: backendParam.advanced ?? param.advanced,
+        options,
+      };
+    });
+
+    for (const [key, backendParam] of Object.entries<any>(backendParams)) {
+      if (localParamsByKey.has(key)) continue;
+
+      const options = Array.isArray(backendParam.enum)
+        ? backendParam.enum.map((value: unknown) => String(value))
+        : undefined;
+
+      updatedParams.push({
+        name: toLabelFromKey(key),
+        key,
+        type: toNodeParameterType(backendParam.type),
+        required: backendParam.required,
+        defaultValue: backendParam.default,
+        description: backendParam.description,
+        advanced: backendParam.advanced,
+        options,
+      });
+    }
+
+    merged[nodeType] = {
+      ...localSchema,
+      parameters: updatedParams,
+    };
+  }
+
+  for (const [nodeType, backendSchema] of Object.entries<any>(backendSchemas)) {
+    if (merged[nodeType]) continue;
+
+    const backendParams: Record<string, any> = backendSchema?.parameters || {};
+    const requiredSet = new Set<string>(Array.isArray(backendSchema?.required) ? backendSchema.required : []);
+
+    const generatedParams: NodeParameterSchema[] = Object.entries<any>(backendParams).map(([key, backendParam]) => {
+      const options = Array.isArray(backendParam?.enum)
+        ? backendParam.enum.map((value: unknown) => String(value))
+        : undefined;
+
+      return {
+        name: toLabelFromKey(key),
+        key,
+        type: toNodeParameterType(backendParam?.type),
+        required: backendParam?.required ?? requiredSet.has(key),
+        defaultValue: backendParam?.default,
+        description: backendParam?.description,
+        advanced: backendParam?.advanced,
+        options,
+      };
+    });
+
+    merged[nodeType] = {
+      type: nodeType,
+      displayName: toLabelFromKey(nodeType),
+      category: 'data',
+      description: `Auto-synced backend node type: ${nodeType}`,
+      parameters: generatedParams,
+    };
+  }
+
+  return merged;
+}
+
+export async function syncNodeSchemasFromBackend(
+  mode: 'basic' | 'advanced' = 'advanced'
+): Promise<boolean> {
+  try {
+    const backendSchemas = await fetchNodeSchemas(mode);
+    runtimeNodeSchemas = mergeSchemasWithBackend(NODE_SCHEMAS, backendSchemas);
+    backendSchemasLoaded = true;
+    return true;
+  } catch {
+    if (!backendSchemasLoaded) {
+      runtimeNodeSchemas = NODE_SCHEMAS;
+    }
+    return false;
+  }
 }

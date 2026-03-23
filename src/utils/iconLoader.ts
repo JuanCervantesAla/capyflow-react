@@ -1,7 +1,45 @@
-import * as TablerIcons from "@tabler/icons-react";
+import {
+  IconApi,
+  IconBolt,
+  IconBrandReact,
+  IconBrandTelegram,
+  IconBrain,
+  IconBraces,
+  IconClock,
+  IconDatabase,
+  IconFileText,
+  IconGitBranch,
+  IconListDetails,
+  IconMail,
+  IconMessage,
+  IconPlayerPlay,
+  IconRepeat,
+  IconTransform,
+  IconVariable,
+  IconWebhook,
+  IconWorld,
+} from "@tabler/icons-react";
 
-export const ICONS = {
-  ...TablerIcons,
+export const ICONS: Record<string, any> = {
+  IconApi,
+  IconBolt,
+  IconBrandReact,
+  IconBrandTelegram,
+  IconBrain,
+  IconBraces,
+  IconClock,
+  IconDatabase,
+  IconFileText,
+  IconGitBranch,
+  IconListDetails,
+  IconMail,
+  IconMessage,
+  IconPlayerPlay,
+  IconRepeat,
+  IconTransform,
+  IconVariable,
+  IconWebhook,
+  IconWorld,
 };
 
 const iconCache = new Map<string, any>();

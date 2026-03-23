@@ -19,7 +19,7 @@ import {
 interface AIRepairModalProps {
   opened: boolean;
   onClose: () => void;
-  onRepair: (issues?: string) => Promise<void>;
+  onRepair: (issues?: string, goal?: string) => Promise<void>;
   loading?: boolean;
 }
 
@@ -30,14 +30,16 @@ export function AIRepairModal({
   loading = false,
 }: AIRepairModalProps) {
   const [issues, setIssues] = useState('');
+  const [goal, setGoal] = useState('');
 
   const handleRepair = async () => {
-    await onRepair(issues.trim() || undefined);
+    await onRepair(issues.trim() || undefined, goal.trim() || undefined);
     handleClose();
   };
 
   const handleClose = () => {
     setIssues('');
+    setGoal('');
     onClose();
   };
 
@@ -102,6 +104,37 @@ export function AIRepairModal({
             <List.Item className="font-medium">Orphaned nodes or connections</List.Item>
           </List>
         </div>
+
+        <Textarea
+          label={
+            <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
+              What do you want to optimize? (Optional but recommended)
+            </Text>
+          }
+          placeholder="e.g: Optimize this flow for finance receipts, reduce manual params, and make all messages professional in English"
+          value={goal}
+          onChange={(e) => setGoal(e.currentTarget.value)}
+          minRows={3}
+          maxRows={6}
+          radius={0}
+          styles={{
+            input: {
+              background: '#faf8f4',
+              border: '2.5px solid #2d3436',
+              color: '#2d3436',
+              fontWeight: 600,
+              fontSize: '14px',
+              padding: '12px',
+              fontFamily: 'inherit',
+            },
+          }}
+          className="
+            focus-within:shadow-[4px_4px_0_#e8a020]
+            focus-within:-translate-x-[2px]
+            focus-within:-translate-y-[2px]
+            transition-all
+          "
+        />
 
         <Textarea
           label={

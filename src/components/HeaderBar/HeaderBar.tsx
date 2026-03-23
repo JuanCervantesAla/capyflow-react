@@ -11,6 +11,7 @@ import {
   IconPlayerPlay,
   IconDeviceFloppy,
   IconDownload,
+  IconShare3,
   IconUser,
   IconChevronDown,
   IconLogout,
@@ -31,6 +32,7 @@ interface HeaderBarProps {
   onRun?: () => void;
   onSave?: () => void;
   onExport?: () => void;
+  onShare?: () => void;
   onSettings?: () => void;
   onOpenFlowSelector?: () => void;
   onAIGenerate?: () => void;
@@ -42,6 +44,7 @@ export function HeaderBar({
   onRun = () => {},
   onSave = () => {},
   onExport = () => {},
+  onShare = () => {},
   onOpenFlowSelector,
   onAIRepair,
   onAIGenerate,
@@ -329,6 +332,38 @@ export function HeaderBar({
           >
             <IconDownload size={16} />
             Export
+          </UnstyledButton>
+
+          <UnstyledButton
+            onClick={onShare}
+            style={{
+              height: 56,
+              padding: "0 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 0,
+              background: "transparent",
+              border: "none",
+              color: "#AAAAAA",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.8px',
+              textTransform: 'uppercase',
+              transition: 'all 0.15s',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              e.currentTarget.style.color = "#FFFFFF";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#AAAAAA";
+            }}
+          >
+            <IconShare3 size={16} />
+            Share
           </UnstyledButton>
 
           <div style={{ 
