@@ -1,31 +1,26 @@
-import { MantineProvider } from "@mantine/core";
-import { Notifications } from "@mantine/notifications";
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { ThemeProvider } from "./theme/ThemeContext";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import { HomePage } from "./pages/HomePage";
-import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ProfilePage } from "./pages/ProfilePage";
 
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage").then((module) => ({ default: module.AnalyticsPage })));
+const PublicSharedFlowPage = lazy(() => import("./pages/PublicSharedFlowPage").then((module) => ({ default: module.PublicSharedFlowPage })));
+
 export default function App() {
   return (
-    <MantineProvider>
-      <Notifications
-        position="top-right"
-        zIndex={1000}
-        autoClose={4000}
-        limit={3}
-      />
-
-      <ThemeProvider>
-        <BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/shared/:shareId" element={<PublicSharedFlowPage />} />
             <Route
               path="/home"
               element={
@@ -52,8 +47,8 @@ export default function App() {
             />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </MantineProvider>
+        </Suspense>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

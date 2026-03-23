@@ -1,10 +1,11 @@
-import { Modal, TextInput, Button, Stack, Text, Group } from "@mantine/core";
+import { Modal, TextInput, Button, Stack, Text, Group, Select } from "@mantine/core";
 import { useState, useEffect } from "react";
+import { DEMO_TEMPLATE_OPTIONS, type DemoTemplateId } from "../Flow/templates/demoTemplates";
 
 interface CreateFlowModalProps {
   opened: boolean;
   onClose: () => void;
-  onCreate: (name: string) => void;
+  onCreate: (name: string, templateId: DemoTemplateId) => void;
   loading?: boolean;
 }
 
@@ -15,14 +16,18 @@ export function CreateFlowModal({
   loading,
 }: CreateFlowModalProps) {
   const [name, setName] = useState("");
+  const [templateId, setTemplateId] = useState<DemoTemplateId>('blank');
 
   useEffect(() => {
-    if (!opened) setName("");
+    if (!opened) {
+      setName("");
+      setTemplateId('blank');
+    }
   }, [opened]);
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    onCreate(name.trim());
+    onCreate(name.trim(), templateId);
   };
 
   return (
@@ -94,6 +99,34 @@ export function CreateFlowModal({
               focus-within:-translate-y-[2px]
               transition-all
             "
+          />
+
+          <Select
+            label={
+              <Text className="text-[#e8a020] text-xs font-bold uppercase tracking-[2px] mb-2">
+                Demo Template
+              </Text>
+            }
+            data={DEMO_TEMPLATE_OPTIONS.map((option) => ({
+              value: option.id,
+              label: `${option.name} - ${option.description}`,
+            }))}
+            value={templateId}
+            onChange={(value) => setTemplateId((value as DemoTemplateId) || 'blank')}
+            radius={0}
+            size="sm"
+            styles={{
+              input: {
+                background: '#faf8f4',
+                border: '2.5px solid #2d3436',
+                color: '#2d3436',
+                fontWeight: 600,
+              },
+              dropdown: {
+                border: '2.5px solid #2d3436',
+                background: '#FFF8F0',
+              },
+            }}
           />
 
           {/* Actions */}

@@ -1,9 +1,166 @@
-import { Stack, TextInput, NumberInput, Select, Button, Group, Text, Checkbox, Textarea, Alert, ActionIcon, SegmentedControl, Anchor } from "@mantine/core";
-import { useState, useEffect, useRef } from "react";
-import * as XLSX from "xlsx";
+import { Stack, TextInput, NumberInput, Select, Button, Group, Text, Checkbox, Textarea, Alert, ActionIcon, SegmentedControl, Anchor, Badge } from "@mantine/core";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTheme } from "../../../theme/ThemeContext";
 import { IconCheck, IconX, IconAlertCircle, IconPlus, IconTrash, IconInfoCircle } from "@tabler/icons-react";
-import { getNodeSchema, validateNodeParameters, getDefaultNodeParameters, getFilteredParameters, hasAdvancedParameters, countAdvancedParameters } from "./nodeSchemas";
+import { getNodeSchema, validateNodeParameters, getDefaultNodeParameters, getFilteredParameters, hasAdvancedParameters, countAdvancedParameters, syncNodeSchemasFromBackend } from "./nodeSchemas";
+import type { NodeParameterSchema } from "./nodeSchemas";
+import { fetchConnections } from "../../../api/Connections/connections.api";
+
+type ConnectionOption = {
+  value: string;
+  label: string;
+};
+
+type VariableOption = {
+  value: string;
+  label: string;
+};
+
+type UpstreamOutputPreview = {
+  nodeId: string;
+  nodeLabel: string;
+  output: unknown;
+};
+
+type NodeExecutionDebug = {
+  status?: string;
+  durationMs?: number;
+  error?: string;
+  output?: unknown;
+};
+
+type ConfigCopilotHint = {
+  id: string;
+  title: string;
+  description: string;
+  actionLabel?: string;
+  actionKey?: 'fill-required' | 'show-advanced' | 'apply-resilience' | 'set-http-defaults' | 'harden-timeout';
+};
+
+type ParameterGuidance = {
+  key: string;
+  title: string;
+  why: string;
+  risk: string;
+  example: string;
+  actionLabel?: string;
+  actionKey?: ConfigCopilotHint['actionKey'];
+};
+
+type HttpPresetKey =
+  | 'google-sheets'
+  | 'notion'
+  | 'slack'
+  | 'teams'
+  | 'twilio'
+  | 'ocr-space';
+
+type HttpPreset = {
+  key: HttpPresetKey;
+  label: string;
+  description: string;
+  method: string;
+  url: string;
+  headers?: Record<string, string>;
+  body?: Record<string, unknown>;
+};
+
+const HTTP_PRESETS: HttpPreset[] = [
+  {
+    key: 'google-sheets',
+    label: 'Google Sheets - Append Row',
+    description: 'Appends a row through Google Sheets API v4.',
+    method: 'POST',
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/{{spreadsheetId}}/values/{{sheetName}}!A1:append?valueInputOption=USER_ENTERED',
+    headers: {
+      Authorization: 'Bearer {{googleAccessToken}}',
+      'Content-Type': 'application/json',
+    },
+    body: {
+      values: [['{{col1}}', '{{col2}}', '{{col3}}']],
+    },
+  },
+  {
+    key: 'notion',
+    label: 'Notion - Create Page',
+    description: 'Creates a page in a Notion database.',
+    method: 'POST',
+    url: 'https://api.notion.com/v1/pages',
+    headers: {
+      Authorization: 'Bearer {{notionToken}}',
+      'Notion-Version': '2022-06-28',
+      'Content-Type': 'application/json',
+    },
+    body: {
+      parent: { database_id: '{{databaseId}}' },
+      properties: {
+        Name: {
+          title: [{ text: { content: '{{title}}' } }],
+        },
+      },
+    },
+  },
+  {
+    key: 'slack',
+    label: 'Slack - Send Message',
+    description: 'Sends a chat message using Slack Web API.',
+    method: 'POST',
+    url: 'https://slack.com/api/chat.postMessage',
+    headers: {
+      Authorization: 'Bearer {{slackBotToken}}',
+      'Content-Type': 'application/json',
+    },
+    body: {
+      channel: '{{channelId}}',
+      text: '{{message}}',
+    },
+  },
+  {
+    key: 'teams',
+    label: 'Teams - Incoming Webhook',
+    description: 'Posts a simple card into Microsoft Teams.',
+    method: 'POST',
+    url: '{{teamsWebhookUrl}}',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: {
+      text: '{{message}}',
+    },
+  },
+  {
+    key: 'twilio',
+    label: 'Twilio - Send WhatsApp/SMS',
+    description: 'Sends outbound message using Twilio Messages API.',
+    method: 'POST',
+    url: 'https://api.twilio.com/2010-04-01/Accounts/{{twilioAccountSid}}/Messages.json',
+    headers: {
+      Authorization: 'Basic {{twilioBase64Auth}}',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: {
+      To: '{{to}}',
+      From: '{{from}}',
+      Body: '{{message}}',
+    },
+  },
+  {
+    key: 'ocr-space',
+    label: 'OCR Space - Parse Image',
+    description: 'Extracts text from image URL using OCR.Space.',
+    method: 'POST',
+    url: 'https://api.ocr.space/parse/image',
+    headers: {
+      apikey: '{{ocrApiKey}}',
+      'Content-Type': 'application/json',
+    },
+    body: {
+      url: '{{imageUrl}}',
+      language: 'eng',
+      isOverlayRequired: false,
+    },
+  },
+];
 
 // Specialized editor components
 function JsonEditor({ value, onChange, placeholder }: { value: string; onChange: (val: any) => void; placeholder?: string }) {
@@ -175,6 +332,9 @@ interface NodeParameterEditorProps {
   nodeId: string;
   nodeLabel: string;
   nodeType: string;
+  variableOptions?: VariableOption[];
+  upstreamOutputPreviews?: UpstreamOutputPreview[];
+  executionDebug?: NodeExecutionDebug;
   currentParameters?: Record<string, any>;
   onSave?: (params: Record<string, any>) => void;
   // Se dispara en cada cambio de parámetro para auto-guardar en el flujo
@@ -186,14 +346,19 @@ export function NodeParameterEditor({
   nodeId,
   nodeLabel: _nodeLabel,
   nodeType,
+  variableOptions = [],
+  upstreamOutputPreviews = [],
+  executionDebug,
   currentParameters = {},
   onSave,
   onChangeLive,
   onCancel,
 }: NodeParameterEditorProps) {
   const { theme } = useTheme();
-  const schema = getNodeSchema(nodeType);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [, setSchemaVersion] = useState(0);
+  const schema = getNodeSchema(nodeType);
+  const schemaParamKeys = new Set((schema?.parameters || []).map((param) => param.key));
   
   const [parameters, setParameters] = useState<Record<string, any>>(() => {
     const defaults = getDefaultNodeParameters(nodeType);
@@ -202,6 +367,41 @@ export function NodeParameterEditor({
   
   const [validationError, setValidationError] = useState<string | null>(null);
   const [configMode, setConfigMode] = useState<'basic' | 'advanced'>('basic');
+  const [connectionOptions, setConnectionOptions] = useState<ConnectionOption[]>([]);
+  const [selectedHttpPreset, setSelectedHttpPreset] = useState<HttpPresetKey | ''>('');
+
+  const canApplyResiliencePreset =
+    schemaParamKeys.has('maxRetries') ||
+    schemaParamKeys.has('retryDelay') ||
+    schemaParamKeys.has('fallbackMode');
+
+  const isEmptyValue = (value: unknown): boolean => {
+    if (value == null) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length === 0;
+    return false;
+  };
+
+  const requiredMissing = (schema?.parameters || []).filter(
+    (param) => param.required && isEmptyValue(parameters[param.key]),
+  );
+
+  const shouldShowVariablePicker = (paramType: string, paramKey: string): boolean => {
+    if (paramKey === 'connectionId') return false;
+    return (paramType === 'string' || paramType === 'textarea') && variableOptions.length > 0;
+  };
+
+  const insertVariableToken = (paramKey: string, token: string) => {
+    const currentValue = parameters[paramKey];
+    const base = typeof currentValue === 'string'
+      ? currentValue
+      : currentValue == null
+        ? ''
+        : String(currentValue);
+    const separator = base.length > 0 && !base.endsWith(' ') && !base.endsWith('\n') ? ' ' : '';
+    handleParameterChange(paramKey, `${base}${separator}${token}`);
+  };
 
   // Check if this node has advanced parameters
   const hasAdvanced = hasAdvancedParameters(nodeType);
@@ -212,7 +412,59 @@ export function NodeParameterEditor({
     const defaults = getDefaultNodeParameters(nodeType);
     setParameters({ ...defaults, ...currentParameters });
     setValidationError(null);
+    setSelectedHttpPreset('');
   }, [nodeId, nodeType, currentParameters]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    syncNodeSchemasFromBackend('advanced').then((updated) => {
+      if (!mounted || !updated) return;
+      setSchemaVersion((v) => v + 1);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (nodeType !== 'email' && nodeType !== 'telegram') {
+      setConnectionOptions([]);
+      return;
+    }
+
+    const provider = nodeType === 'email' ? 'sendgrid' : 'telegram';
+    const fallbackLabel = nodeType === 'email'
+      ? 'No reusable connection (use manual SendGrid/SMTP fields)'
+      : 'No reusable connection (use manual chatId/default bot config)';
+
+    let mounted = true;
+
+    fetchConnections(provider)
+      .then((connections) => {
+        if (!mounted) return;
+
+        const activeConnections = connections.filter((connection) => connection.isActive);
+        const options: ConnectionOption[] = [
+          { value: '', label: fallbackLabel },
+          ...activeConnections.map((connection) => ({
+            value: connection.id,
+            label: connection.name,
+          })),
+        ];
+
+        setConnectionOptions(options);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setConnectionOptions([{ value: '', label: fallbackLabel }]);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [nodeType]);
 
   const handleParameterChange = (key: string, value: any) => {
     setParameters((prev) => {
@@ -233,6 +485,349 @@ export function NodeParameterEditor({
 
     onSave?.(parameters);
   };
+
+  const applyResiliencePreset = () => {
+    const updated = { ...parameters };
+
+    if (schemaParamKeys.has('maxRetries')) {
+      updated.maxRetries = 2;
+    }
+    if (schemaParamKeys.has('retryDelay')) {
+      updated.retryDelay = 1000;
+    }
+    if (schemaParamKeys.has('backoffMultiplier')) {
+      updated.backoffMultiplier = 2;
+    }
+    if (schemaParamKeys.has('fallbackMode')) {
+      updated.fallbackMode = 'default';
+    }
+    if (schemaParamKeys.has('defaultValue')) {
+      updated.defaultValue = {
+        handled: true,
+        reason: 'fallback-applied',
+      };
+    }
+
+    setParameters(updated);
+    onChangeLive?.(updated);
+    setValidationError(null);
+  };
+
+  const applyHttpPreset = () => {
+    if (nodeType !== 'http-request' || !selectedHttpPreset) return;
+
+    const preset = HTTP_PRESETS.find((item) => item.key === selectedHttpPreset);
+    if (!preset) return;
+
+    const updated: Record<string, unknown> = {
+      ...parameters,
+      method: preset.method,
+      url: preset.url,
+    };
+
+    if (preset.headers) {
+      updated.headers = preset.headers;
+    }
+
+    if (preset.body) {
+      updated.body = preset.body;
+    }
+
+    setParameters(updated);
+    onChangeLive?.(updated);
+    setValidationError(null);
+  };
+
+  const suggestValue = (paramKey: string, paramType: string, placeholder?: string): unknown => {
+    if (placeholder && placeholder.trim().length > 0) {
+      return placeholder;
+    }
+
+    switch (paramKey) {
+      case 'url':
+        return 'https://api.example.com/resource';
+      case 'method':
+        return 'GET';
+      case 'to':
+        return 'user@example.com';
+      case 'subject':
+        return 'CapyFlow demo notification';
+      case 'body':
+        return 'Automated message from CapyFlow';
+      case 'message':
+        return 'Hello from CapyFlow';
+      case 'prompt':
+        return 'Summarize the input data in 3 bullet points';
+      case 'query':
+        return 'SELECT 1';
+      default:
+        break;
+    }
+
+    if (paramType === 'number') return 0;
+    if (paramType === 'boolean') return false;
+    if (paramType === 'json') return {};
+    if (paramType === 'key-value' || paramType === 'http-headers') return {};
+    return `sample-${paramKey}`;
+  };
+
+  const applyCopilotAutofill = () => {
+    const updated = { ...parameters };
+
+    for (const param of requiredMissing) {
+      if (!isEmptyValue(updated[param.key])) continue;
+
+      if (param.defaultValue !== undefined) {
+        updated[param.key] = param.defaultValue;
+      } else {
+        updated[param.key] = suggestValue(param.key, param.type, param.placeholder);
+      }
+    }
+
+    setParameters(updated);
+    onChangeLive?.(updated);
+    setValidationError(null);
+  };
+
+  const applyHintAction = (actionKey: ConfigCopilotHint['actionKey']) => {
+    if (!actionKey) return;
+
+    if (actionKey === 'fill-required') {
+      applyCopilotAutofill();
+      return;
+    }
+
+    if (actionKey === 'show-advanced') {
+      setConfigMode('advanced');
+      return;
+    }
+
+    if (actionKey === 'apply-resilience') {
+      applyResiliencePreset();
+      return;
+    }
+
+    if (actionKey === 'set-http-defaults') {
+      const updated = {
+        ...parameters,
+        method: isEmptyValue(parameters.method) ? 'GET' : parameters.method,
+        url: isEmptyValue(parameters.url) ? 'https://api.example.com/resource' : parameters.url,
+      };
+      setParameters(updated);
+      onChangeLive?.(updated);
+      setValidationError(null);
+      return;
+    }
+
+    if (actionKey === 'harden-timeout') {
+      const updated = { ...parameters };
+
+      if (schemaParamKeys.has('timeout')) {
+        const currentTimeout = Number(updated.timeout || 0);
+        updated.timeout = currentTimeout >= 30000 ? currentTimeout : 30000;
+      }
+
+      if (schemaParamKeys.has('maxRetries')) {
+        const currentRetries = Number(updated.maxRetries || 0);
+        updated.maxRetries = currentRetries >= 2 ? currentRetries : 2;
+      }
+
+      if (schemaParamKeys.has('retryDelay')) {
+        const currentRetryDelay = Number(updated.retryDelay || 0);
+        updated.retryDelay = currentRetryDelay >= 1000 ? currentRetryDelay : 1000;
+      }
+
+      setParameters(updated);
+      onChangeLive?.(updated);
+      setValidationError(null);
+    }
+  };
+
+  const configCopilotHints = useMemo<ConfigCopilotHint[]>(() => {
+    const hints: ConfigCopilotHint[] = [];
+
+    if (requiredMissing.length > 0) {
+      hints.push({
+        id: 'required-fields',
+        title: 'Complete required fields',
+        description: `Missing: ${requiredMissing.map((param) => param.name).join(', ')}.`,
+        actionLabel: 'Autofill now',
+        actionKey: 'fill-required',
+      });
+    }
+
+    if (nodeType === 'http-request' && (isEmptyValue(parameters.method) || isEmptyValue(parameters.url))) {
+      hints.push({
+        id: 'http-defaults',
+        title: 'Prepare request skeleton',
+        description: 'Set a safe default method/URL before mapping headers and body.',
+        actionLabel: 'Use defaults',
+        actionKey: 'set-http-defaults',
+      });
+    }
+
+    if ((nodeType === 'email' || nodeType === 'telegram') && isEmptyValue(parameters.connectionId)) {
+      hints.push({
+        id: 'reusable-connection',
+        title: 'Use reusable credentials',
+        description: 'Selecting connectionId avoids exposing provider tokens in every node.',
+        actionLabel: 'Open advanced',
+        actionKey: 'show-advanced',
+      });
+    }
+
+    if (canApplyResiliencePreset && isEmptyValue(parameters.maxRetries) && isEmptyValue(parameters.retryDelay)) {
+      hints.push({
+        id: 'resilience-profile',
+        title: 'Increase execution resilience',
+        description: 'Apply retry/fallback profile to reduce transient failures.',
+        actionLabel: 'Apply resilience',
+        actionKey: 'apply-resilience',
+      });
+    }
+
+    if (hasAdvanced && configMode === 'basic' && hints.length > 0) {
+      hints.push({
+        id: 'review-advanced',
+        title: 'Review advanced options',
+        description: `${advancedCount} advanced parameter${advancedCount > 1 ? 's are' : ' is'} available for fine tuning.`,
+        actionLabel: 'Show advanced',
+        actionKey: 'show-advanced',
+      });
+    }
+
+    return hints.slice(0, 4);
+  }, [
+    requiredMissing,
+    nodeType,
+    parameters,
+    canApplyResiliencePreset,
+    hasAdvanced,
+    configMode,
+    advancedCount,
+  ]);
+
+  const executionAwareHints = useMemo<ConfigCopilotHint[]>(() => {
+    if (!executionDebug) return [];
+
+    const hints: ConfigCopilotHint[] = [];
+    const errorText = String(executionDebug.error || '').toLowerCase();
+    const hasError = !!executionDebug.error;
+    const isSlow = typeof executionDebug.durationMs === 'number' && executionDebug.durationMs > 5000;
+
+    if (hasError && (errorText.includes('timeout') || errorText.includes('timed out') || errorText.includes('deadline'))) {
+      hints.push({
+        id: 'exec-timeout',
+        title: 'Timeout detected in last run',
+        description: 'Increase timeout/retries to absorb slow upstream responses.',
+        actionLabel: 'Harden timeout',
+        actionKey: 'harden-timeout',
+      });
+    }
+
+    if (hasError && (errorText.includes('401') || errorText.includes('403') || errorText.includes('unauthorized') || errorText.includes('forbidden'))) {
+      hints.push({
+        id: 'exec-auth',
+        title: 'Authentication issue detected',
+        description: 'Review connectionId and auth headers/tokens before next run.',
+        actionLabel: 'Open advanced',
+        actionKey: 'show-advanced',
+      });
+    }
+
+    if (hasError && (errorText.includes('429') || errorText.includes('rate limit') || errorText.includes('too many requests'))) {
+      hints.push({
+        id: 'exec-rate-limit',
+        title: 'Rate limit detected',
+        description: 'Retry strategy helps with burst traffic and provider throttling.',
+        actionLabel: 'Apply resilience',
+        actionKey: 'apply-resilience',
+      });
+    }
+
+    if (!hasError && isSlow) {
+      hints.push({
+        id: 'exec-slow',
+        title: 'Slow execution in last run',
+        description: 'Consider tuning timeout and payload size to improve responsiveness.',
+        actionLabel: schemaParamKeys.has('timeout') ? 'Harden timeout' : undefined,
+        actionKey: schemaParamKeys.has('timeout') ? 'harden-timeout' : undefined,
+      });
+    }
+
+    return hints.slice(0, 2);
+  }, [executionDebug, schemaParamKeys]);
+
+  const buildParameterGuidance = (param: NodeParameterSchema): ParameterGuidance | null => {
+    const missing = param.required && isEmptyValue(parameters[param.key]);
+
+    if (missing) {
+      return {
+        key: param.key,
+        title: `${param.name} is required`,
+        why: 'This field is mandatory for the node execution contract.',
+        risk: 'If it stays empty, this node can fail before or during execution.',
+        example: param.placeholder || String(param.defaultValue ?? suggestValue(param.key, param.type, param.placeholder)),
+        actionLabel: 'Autofill',
+        actionKey: 'fill-required',
+      };
+    }
+
+    if (param.key === 'connectionId' && (nodeType === 'email' || nodeType === 'telegram') && isEmptyValue(parameters.connectionId)) {
+      return {
+        key: param.key,
+        title: 'Use reusable credentials',
+        why: 'connectionId centralizes secrets and avoids repeating API keys in each node.',
+        risk: 'Manual credentials are harder to rotate and more likely to drift between flows.',
+        example: 'Pick a saved connection from the dropdown.',
+        actionLabel: 'Show advanced',
+        actionKey: 'show-advanced',
+      };
+    }
+
+    if (nodeType === 'http-request' && (param.key === 'url' || param.key === 'method') && isEmptyValue(parameters[param.key])) {
+      return {
+        key: param.key,
+        title: 'Prepare HTTP request base',
+        why: 'URL and method define the request target and behavior.',
+        risk: 'Without them, the request cannot be composed correctly.',
+        example: param.key === 'method' ? 'GET' : 'https://api.example.com/resource',
+        actionLabel: 'Use defaults',
+        actionKey: 'set-http-defaults',
+      };
+    }
+
+    if ((param.key === 'maxRetries' || param.key === 'retryDelay') && canApplyResiliencePreset) {
+      return {
+        key: param.key,
+        title: 'Tune failure recovery',
+        why: 'Retries absorb transient API/network errors.',
+        risk: 'With zero retries, temporary failures can stop the full flow.',
+        example: 'maxRetries: 2, retryDelay: 1000',
+        actionLabel: 'Apply resilience',
+        actionKey: 'apply-resilience',
+      };
+    }
+
+    if (param.type === 'json' && !isEmptyValue(parameters[param.key])) {
+      return {
+        key: param.key,
+        title: `Validate ${param.name}`,
+        why: 'Structured JSON keeps downstream mapping predictable.',
+        risk: 'Unexpected shape can break data mapping in next nodes.',
+        example: param.placeholder || '{"key":"value"}',
+      };
+    }
+
+    return null;
+  };
+
+  const parameterGuidance = useMemo<ParameterGuidance[]>(() => {
+    return visibleParameters
+      .map((param) => buildParameterGuidance(param as NodeParameterSchema))
+      .filter((item): item is ParameterGuidance => item != null)
+      .slice(0, 3);
+  }, [visibleParameters, parameters, nodeType, canApplyResiliencePreset]);
 
   if (!schema) {
     return (
@@ -317,6 +912,430 @@ export function NodeParameterEditor({
         </Alert>
       )}
 
+      {canApplyResiliencePreset && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="yellow"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Text size="xs" c={theme.colors.ink}>
+              Apply standard retry/fallback settings for resilient execution.
+            </Text>
+            <Button
+              size="xs"
+              variant="light"
+              onClick={applyResiliencePreset}
+              styles={{
+                root: {
+                  border: `2px solid ${theme.colors.ink}`,
+                  background: theme.colors.paper,
+                  color: theme.colors.ink,
+                  fontWeight: 700,
+                },
+              }}
+            >
+              Apply preset
+            </Button>
+          </Group>
+        </Alert>
+      )}
+
+      {nodeType === 'http-request' && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="grape"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Stack gap="xs">
+            <Text size="xs" fw={700} c={theme.colors.ink}>
+              Connector presets (HTTP semi-native)
+            </Text>
+            <Select
+              size="xs"
+              placeholder="Choose connector preset"
+              value={selectedHttpPreset}
+              onChange={(value) => setSelectedHttpPreset((value as HttpPresetKey) || '')}
+              data={HTTP_PRESETS.map((preset) => ({
+                value: preset.key,
+                label: `${preset.label} - ${preset.description}`,
+              }))}
+              searchable
+              nothingFoundMessage="No preset found"
+              styles={{
+                input: {
+                  border: `2px solid ${theme.colors.ink}`,
+                  background: theme.colors.paper,
+                  color: theme.colors.ink,
+                },
+              }}
+            />
+            <Group justify="flex-end">
+              <Button
+                size="xs"
+                variant="light"
+                disabled={!selectedHttpPreset}
+                onClick={applyHttpPreset}
+                styles={{
+                  root: {
+                    border: `2px solid ${theme.colors.ink}`,
+                    background: theme.colors.paper,
+                    color: theme.colors.ink,
+                    fontWeight: 700,
+                  },
+                }}
+              >
+                Apply connector
+              </Button>
+            </Group>
+          </Stack>
+        </Alert>
+      )}
+
+      {requiredMissing.length > 0 && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="teal"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Stack gap="xs">
+            <Text size="xs" fw={700} c={theme.colors.ink}>
+              Config copilot
+            </Text>
+            <Text size="xs" c={theme.colors.ink}>
+              Missing required fields: {requiredMissing.map((param) => param.name).join(', ')}
+            </Text>
+            <Group justify="flex-end">
+              <Button
+                size="xs"
+                variant="light"
+                onClick={applyCopilotAutofill}
+                styles={{
+                  root: {
+                    border: `2px solid ${theme.colors.ink}`,
+                    background: theme.colors.paper,
+                    color: theme.colors.ink,
+                    fontWeight: 700,
+                  },
+                }}
+              >
+                Autofill suggestions
+              </Button>
+            </Group>
+          </Stack>
+        </Alert>
+      )}
+
+      {configCopilotHints.length > 0 && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="indigo"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Stack gap="xs">
+            <Text size="xs" fw={700} c={theme.colors.ink}>
+              Smart recommendations
+            </Text>
+
+            {configCopilotHints.map((hint) => (
+              <Group key={hint.id} justify="space-between" align="flex-start" wrap="nowrap">
+                <div>
+                  <Text size="xs" fw={600} c={theme.colors.ink}>
+                    {hint.title}
+                  </Text>
+                  <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.7 }}>
+                    {hint.description}
+                  </Text>
+                </div>
+                {hint.actionKey && hint.actionLabel && (
+                  <Button
+                    size="compact-xs"
+                    variant="light"
+                    onClick={() => applyHintAction(hint.actionKey)}
+                    styles={{
+                      root: {
+                        border: `1.5px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        fontWeight: 700,
+                      },
+                    }}
+                  >
+                    {hint.actionLabel}
+                  </Button>
+                )}
+              </Group>
+            ))}
+          </Stack>
+        </Alert>
+      )}
+
+      {executionAwareHints.length > 0 && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="orange"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Stack gap="xs">
+            <Text size="xs" fw={700} c={theme.colors.ink}>
+              Runtime recommendations
+            </Text>
+
+            {executionAwareHints.map((hint) => (
+              <Group key={hint.id} justify="space-between" align="flex-start" wrap="nowrap">
+                <div>
+                  <Text size="xs" fw={600} c={theme.colors.ink}>
+                    {hint.title}
+                  </Text>
+                  <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.7 }}>
+                    {hint.description}
+                  </Text>
+                </div>
+                {hint.actionKey && hint.actionLabel && (
+                  <Button
+                    size="compact-xs"
+                    variant="light"
+                    onClick={() => applyHintAction(hint.actionKey)}
+                    styles={{
+                      root: {
+                        border: `1.5px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        fontWeight: 700,
+                      },
+                    }}
+                  >
+                    {hint.actionLabel}
+                  </Button>
+                )}
+              </Group>
+            ))}
+          </Stack>
+        </Alert>
+      )}
+
+      {parameterGuidance.length > 0 && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="cyan"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Stack gap="xs">
+            <Text size="xs" fw={700} c={theme.colors.ink}>
+              Parameter guidance
+            </Text>
+
+            {parameterGuidance.map((guide) => (
+              <Stack key={guide.key} gap={2}>
+                <Group justify="space-between" align="center" wrap="nowrap">
+                  <Text size="xs" fw={700} c={theme.colors.ink}>{guide.title}</Text>
+                  {guide.actionKey && guide.actionLabel && (
+                    <Button
+                      size="compact-xs"
+                      variant="light"
+                      onClick={() => applyHintAction(guide.actionKey)}
+                      styles={{
+                        root: {
+                          border: `1.5px solid ${theme.colors.ink}`,
+                          background: theme.colors.paper,
+                          color: theme.colors.ink,
+                          fontWeight: 700,
+                        },
+                      }}
+                    >
+                      {guide.actionLabel}
+                    </Button>
+                  )}
+                </Group>
+                <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.75 }}>
+                  Why: {guide.why}
+                </Text>
+                <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.75 }}>
+                  Risk: {guide.risk}
+                </Text>
+                <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.75 }}>
+                  Example: {guide.example}
+                </Text>
+              </Stack>
+            ))}
+          </Stack>
+        </Alert>
+      )}
+
+      {upstreamOutputPreviews.length > 0 && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="blue"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Stack gap="xs">
+            <Text size="xs" fw={700} c={theme.colors.ink}>
+              Upstream output preview
+            </Text>
+            {upstreamOutputPreviews.slice(0, 2).map((preview) => (
+              <Stack key={preview.nodeId} gap={4}>
+                <Text size="xs" fw={600} c={theme.colors.ink}>
+                  {preview.nodeLabel}
+                </Text>
+                <Textarea
+                  size="xs"
+                  readOnly
+                  minRows={2}
+                  maxRows={4}
+                  value={JSON.stringify(preview.output, null, 2)}
+                  styles={{
+                    input: {
+                      border: `2px solid ${theme.colors.ink}`,
+                      background: theme.colors.paper,
+                      color: theme.colors.ink,
+                      fontFamily: 'monospace',
+                      '&:focus': {
+                        borderColor: theme.colors.ink,
+                      },
+                    },
+                  }}
+                />
+              </Stack>
+            ))}
+          </Stack>
+        </Alert>
+      )}
+
+      {(executionDebug?.status || executionDebug?.error || executionDebug?.output !== undefined) && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="blue"
+          variant="light"
+          styles={{
+            root: {
+              border: `2px solid ${theme.colors.ink}`,
+              background: theme.colors.paper,
+            },
+            message: {
+              color: theme.colors.ink,
+            },
+          }}
+        >
+          <Stack gap="xs">
+            <Group justify="space-between" align="center">
+              <Text size="xs" fw={700} c={theme.colors.ink}>
+                Node debugger
+              </Text>
+              {executionDebug?.status && (
+                <Badge variant="outline" color={executionDebug.status === 'error' ? 'red' : executionDebug.status === 'success' ? 'green' : 'blue'}>
+                  {executionDebug.status}
+                </Badge>
+              )}
+            </Group>
+
+            {typeof executionDebug?.durationMs === 'number' && (
+              <Text size="xs" c={theme.colors.ink}>
+                Latency: {executionDebug.durationMs} ms
+              </Text>
+            )}
+
+            {executionDebug?.error && (
+              <Textarea
+                size="xs"
+                readOnly
+                minRows={2}
+                maxRows={4}
+                value={executionDebug.error}
+                styles={{
+                  input: {
+                    border: `2px solid #f43f5e`,
+                    background: theme.colors.paper,
+                    color: '#f43f5e',
+                    fontFamily: 'monospace',
+                  },
+                }}
+              />
+            )}
+
+            {executionDebug?.output !== undefined && (
+              <Textarea
+                size="xs"
+                readOnly
+                minRows={2}
+                maxRows={6}
+                value={JSON.stringify(executionDebug.output, null, 2)}
+                styles={{
+                  input: {
+                    border: `2px solid ${theme.colors.ink}`,
+                    background: theme.colors.paper,
+                    color: theme.colors.ink,
+                    fontFamily: 'monospace',
+                  },
+                }}
+              />
+            )}
+          </Stack>
+        </Alert>
+      )}
+
       {visibleParameters.length === 0 ? (
         <Text size="sm" c={theme.colors.ink} ta="center" style={{ opacity: 0.5 }}>
           {hasAdvanced && configMode === 'basic'
@@ -341,7 +1360,34 @@ export function NodeParameterEditor({
                   </Text>
                 )}
 
-                {param.type === "string" && (
+                {shouldShowVariablePicker(param.type, param.key) && (
+                  <Select
+                    size="xs"
+                    data={variableOptions}
+                    value={null}
+                    placeholder="Insert variable..."
+                    onChange={(val) => {
+                      if (!val) return;
+                      insertVariableToken(param.key, val);
+                    }}
+                    searchable
+                    clearable
+                    nothingFoundMessage="No variables available"
+                    mb="6px"
+                    styles={{
+                      input: {
+                        border: `2px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        '&:focus': {
+                          borderColor: theme.colors.ink,
+                        },
+                      },
+                    }}
+                  />
+                )}
+
+                {param.type === "string" && !(param.key === "connectionId" && (nodeType === "email" || nodeType === "telegram")) && (
                   <TextInput
                     size="xs"
                     placeholder={param.placeholder}
@@ -406,6 +1452,27 @@ export function NodeParameterEditor({
                   />
                 )}
 
+                {param.key === "connectionId" && (nodeType === "email" || nodeType === "telegram") && (
+                  <Select
+                    size="xs"
+                    data={connectionOptions}
+                    value={typeof value === 'string' ? value : ''}
+                    onChange={(val) => handleParameterChange(param.key, val || '')}
+                    searchable
+                    nothingFoundMessage="No reusable connections found"
+                    styles={{
+                      input: {
+                        border: `2px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        '&:focus': {
+                          borderColor: theme.colors.ink,
+                        },
+                      },
+                    }}
+                  />
+                )}
+
                 {param.type === "textarea" && (
                   nodeType === "manual-trigger" && param.key === "csvContent" ? (
                     <Stack gap="xs">
@@ -443,12 +1510,13 @@ export function NodeParameterEditor({
                           const extension = file.name.toLowerCase();
                           const reader = new FileReader();
                           if (extension.endsWith(".xls") || extension.endsWith(".xlsx")) {
-                            reader.onload = (event) => {
+                            reader.onload = async (event) => {
                               const data = new Uint8Array(event.target?.result as ArrayBuffer);
+                              const XLSX = await import("xlsx");
                               const workbook = XLSX.read(data, { type: "array" });
                               const firstSheetName = workbook.SheetNames[0];
                               const worksheet = workbook.Sheets[firstSheetName];
-                              const csv = XLSX.utils.sheet_to_csv(worksheet || {} as XLSX.WorkSheet);
+                              const csv = XLSX.utils.sheet_to_csv(worksheet || {});
                               handleParameterChange(param.key, csv || "");
                             };
                             reader.readAsArrayBuffer(file);

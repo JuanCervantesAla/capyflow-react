@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState, useRef } from "react";
+import { Button, Checkbox, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { HeaderBar } from "../components/HeaderBar/HeaderBar";
 import { Sidebar } from "../components/SideBar/SideBar";
 import { FlowCanvas } from "../components/Flow/Canvas/FlowCanvas";
@@ -11,7 +12,14 @@ import { useExecuteFlow } from "../hooks/mutations/Flow/useExecuteFlow";
 import { useSaveFlow } from "../hooks/mutations/Flow/useSaveFlow";
 import { useFlow } from "../hooks/useFlow";
 import { useAIGeneration } from "../hooks/useAIGeneration";
-import { repairFlowWithAI } from "../api/AI/ai.api";
+import { fixFlowWithAI } from "../api/AI/ai.api";
+import {
+  createFlowShareRequest,
+  exportFlowRequest,
+  regenerateFlowShareRequest,
+  updateFlowShareRequest,
+  type FlowShareResponse,
+} from "../api/Flow/flows.api";
 import { toastSuccess, toastError } from "../lib/toast";
 import type { ExecutionResult } from "../hooks/mutations/Flow/useExecuteFlow";
 import { transformNodeFromBackend, transformEdgeFromBackend } from "../components/Flow/types/NodeTypes";
@@ -26,6 +34,11 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [aiModalOpened, setAiModalOpened] = useState(false);
   const [aiRepairModalOpened, setAiRepairModalOpened] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
+  const [shareModalOpened, setShareModalOpened] = useState(false);
+  const [shareData, setShareData] = useState<FlowShareResponse | null>(null);
+  const [shareActive, setShareActive] = useState(true);
+  const [shareExpiryInput, setShareExpiryInput] = useState("");
+  const [isShareSaving, setIsShareSaving] = useState(false);
 
   const [ignoreNextSelection, setIgnoreNextSelection] = useState(false);
   const deselectAllRef = useRef<(() => void) | null>(null);
@@ -106,6 +119,100 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
     await executeFlow(flowId);
   };
 
+  const handleExport = async () => {
+    if (!flowId) return;
+
+    try {
+      const exported = await exportFlowRequest(flowId);
+      const fileName = `${(exported.flow.name || 'flow').replace(/\s+/g, '-').toLowerCase()}.json`;
+      const content = JSON.stringify(exported, null, 2);
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+      toastSuccess('Flow exported successfully');
+    } catch (error: any) {
+      toastError(error?.message || 'Failed to export flow');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!flowId) return;
+
+    try {
+      const share = await createFlowShareRequest(flowId);
+      setShareData(share);
+      setShareActive(share.isActive);
+      setShareExpiryInput(toDatetimeLocalValue(share.expiresAt));
+      setShareModalOpened(true);
+    } catch (error: any) {
+      toastError(error?.message || 'Failed to create share link');
+    }
+  };
+
+  const copySharedUrl = async () => {
+    if (!shareData) return;
+    const link = `${window.location.origin}/shared/${shareData.shareId}`;
+
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(link);
+      toastSuccess('Shared view link copied');
+      return;
+    }
+
+    const input = document.createElement('textarea');
+    input.value = link;
+    input.style.position = 'fixed';
+    input.style.left = '-9999px';
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    toastSuccess('Shared view link copied');
+  };
+
+  const handleSaveShareSettings = async () => {
+    if (!flowId || !shareData) return;
+
+    try {
+      setIsShareSaving(true);
+      const expiresAt = fromDatetimeLocalValue(shareExpiryInput);
+      const updated = await updateFlowShareRequest(flowId, {
+        isActive: shareActive,
+        expiresAt,
+      });
+      setShareData(updated);
+      toastSuccess('Share settings updated');
+    } catch (error: any) {
+      toastError(error?.message || 'Failed to update share settings');
+    } finally {
+      setIsShareSaving(false);
+    }
+  };
+
+  const handleRegenerateShareLink = async () => {
+    if (!flowId) return;
+
+    try {
+      setIsShareSaving(true);
+      const regenerated = await regenerateFlowShareRequest(flowId);
+      setShareData(regenerated);
+      setShareActive(regenerated.isActive);
+      setShareExpiryInput(toDatetimeLocalValue(regenerated.expiresAt));
+      toastSuccess('Share link regenerated');
+    } catch (error: any) {
+      toastError(error?.message || 'Failed to regenerate share link');
+    } finally {
+      setIsShareSaving(false);
+    }
+  };
+
   const handleNodeSelected = (node: any) => {
     if (ignoreNextSelection) return;
 
@@ -139,7 +246,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
 }
   };
 
-  const handleAIRepair = async (issues?: string) => {
+  const handleAIRepair = async (issues?: string, goal?: string) => {
     if (!flowContext) return;
 
     setIsRepairing(true);
@@ -153,9 +260,13 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         edges: flowContext.edges,
       };
 
-      const response = await repairFlowWithAI({
+      const response = await fixFlowWithAI({
         flow: currentFlow,
+        goal,
         issues,
+        adjustParametersOnly: true,
+        strictMode: true,
+        maxAttempts: 3,
       });
 
       if (response.success && response.flow) {
@@ -227,11 +338,78 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         onRepair={handleAIRepair}
         loading={isRepairing}
       />
+
+      <Modal
+        opened={shareModalOpened}
+        onClose={() => setShareModalOpened(false)}
+        title="Share flow"
+        centered
+      >
+        <Stack gap="sm">
+          <Text size="sm" c="#2d3436">
+            Public view URL
+          </Text>
+          <Group gap="xs" align="end">
+            <TextInput
+              value={shareData ? `${window.location.origin}/shared/${shareData.shareId}` : ''}
+              readOnly
+              style={{ flex: 1 }}
+            />
+            <Button variant="light" color="dark" onClick={copySharedUrl}>
+              Copy
+            </Button>
+          </Group>
+
+          {shareData && (
+            <Stack gap={2}>
+              <Text size="xs" c="#2d3436" style={{ opacity: 0.75 }}>
+                Created: {formatDateTime(shareData.createdAt)}
+              </Text>
+              <Text size="xs" c="#2d3436" style={{ opacity: 0.75 }}>
+                Last access: {shareData.lastAccessAt ? formatDateTime(shareData.lastAccessAt) : 'Never'}
+              </Text>
+            </Stack>
+          )}
+
+          <Checkbox
+            label="Share link active"
+            checked={shareActive}
+            onChange={(e) => setShareActive(e.currentTarget.checked)}
+          />
+
+          <TextInput
+            label="Expires at (optional)"
+            type="datetime-local"
+            value={shareExpiryInput}
+            onChange={(e) => setShareExpiryInput(e.currentTarget.value)}
+            description="Leave empty for no expiration"
+          />
+
+          <Group justify="flex-end" mt="xs">
+            <Button
+              variant="light"
+              color="red"
+              loading={isShareSaving}
+              onClick={handleRegenerateShareLink}
+            >
+              Regenerate link
+            </Button>
+            <Button variant="default" onClick={() => setShareModalOpened(false)}>
+              Close
+            </Button>
+            <Button loading={isShareSaving} onClick={handleSaveShareSettings} color="dark">
+              Save settings
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
       
       <HeaderBar
         workflowName={flowName}
         onOpenFlowSelector={onOpenFlowSelector}
         onSave={handleSave}
+        onExport={handleExport}
+        onShare={handleShare}
         onRun={handleExecute}
         onAIGenerate={() => setAiModalOpened(true)}
         onAIRepair={() => setAiRepairModalOpened(true)}
@@ -270,4 +448,30 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
       </div>
     </div>
   );
+}
+
+function toDatetimeLocalValue(value?: string) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+function fromDatetimeLocalValue(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString();
+}
+
+function formatDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
 }
