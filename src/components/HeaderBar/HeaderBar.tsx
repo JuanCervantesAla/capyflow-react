@@ -1,4 +1,4 @@
-import {
+﻿import {
   Group,
   Text,
   UnstyledButton,
@@ -30,6 +30,9 @@ import { useState, useEffect } from "react";
 interface HeaderBarProps {
   workflowName?: string;
   onRun?: () => void;
+  isFlowActive?: boolean;
+  onToggleFlowActive?: () => void;
+  flowStatusLoading?: boolean;
   onSave?: () => void;
   onExport?: () => void;
   onShare?: () => void;
@@ -42,6 +45,9 @@ interface HeaderBarProps {
 export function HeaderBar({
   workflowName = "Untitled Workflow",
   onRun = () => {},
+  isFlowActive = false,
+  onToggleFlowActive = () => {},
+  flowStatusLoading = false,
   onSave = () => {},
   onExport = () => {},
   onShare = () => {},
@@ -405,6 +411,40 @@ export function HeaderBar({
               <IconPlayerPlay size={12} fill="#000" stroke="#000" strokeWidth={0} />
             </div>
             Run
+          </UnstyledButton>
+
+          <UnstyledButton
+            onClick={onToggleFlowActive}
+            disabled={flowStatusLoading}
+            style={{
+              height: 36,
+              padding: "0 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 4,
+              background: isFlowActive ? '#2E7D32' : '#3A3A3A',
+              border: 'none',
+              color: '#FFFFFF',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.8px',
+              textTransform: 'uppercase',
+              transition: 'all 0.15s',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              opacity: flowStatusLoading ? 0.7 : 1,
+              marginLeft: 8,
+              cursor: flowStatusLoading ? 'not-allowed' : 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              if (flowStatusLoading) return;
+              e.currentTarget.style.background = isFlowActive ? '#256A2A' : '#4A4A4A';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = isFlowActive ? '#2E7D32' : '#3A3A3A';
+            }}
+          >
+            {flowStatusLoading ? 'Saving...' : isFlowActive ? 'Active' : 'Draft'}
           </UnstyledButton>
 
           <div style={{ 

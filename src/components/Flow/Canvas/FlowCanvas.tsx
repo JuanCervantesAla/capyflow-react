@@ -52,6 +52,7 @@ const MemoMiniMap = memo(MiniMap);
 const MemoPanel = memo(Panel);
 
 const GRID_SIZE = 20;
+const CANVAS_PAN_EXTENT = 50000;
 
 function FlowCanvasComponent({
   onNodeSelected,
@@ -268,8 +269,8 @@ function FlowCanvasComponent({
         connectionMode={ConnectionMode.Loose}
         connectionRadius={50}
         translateExtent={[
-          [-2000, -2000],
-          [2000, 2000],
+          [-CANVAS_PAN_EXTENT, -CANVAS_PAN_EXTENT],
+          [CANVAS_PAN_EXTENT, CANVAS_PAN_EXTENT],
         ]}
         zoomActivationKeyCode={null}
         preventScrolling
