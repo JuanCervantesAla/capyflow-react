@@ -1,4 +1,4 @@
-﻿import {
+import {
   Group,
   Text,
   UnstyledButton,
@@ -489,6 +489,7 @@ export function HeaderBar({
             >
               <Menu.Item 
                 leftSection={<IconUser size={16} />}
+                onClick={() => navigate('/profile')}
                 style={{ color: "#FFFFFF" }}
               >
                 Profile
