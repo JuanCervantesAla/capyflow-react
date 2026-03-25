@@ -41,7 +41,7 @@ export default defineConfig({
           }
 
           if (id.includes('react') || id.includes('scheduler')) {
-            return 'react-core'
+            return 'vendor'
           }
 
           return 'vendor'
