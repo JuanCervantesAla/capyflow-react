@@ -11,11 +11,11 @@ export default function ProfileContent() {
     newPassword: '',
     confirmPassword: '',
   });
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showCurrentPassword] = useState(false);
+  const [showNewPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
     setTimeout(() => setIsSaving(false), 1500);
