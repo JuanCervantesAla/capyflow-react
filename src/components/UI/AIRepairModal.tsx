@@ -72,9 +72,6 @@ export function AIRepairModal({
               <Text className="!text-white font-black text-lg tracking-tight uppercase">
                 Repair with AI
               </Text>
-              <Text className="!text-white/70 text-xs font-medium">
-                Powered by Groq
-              </Text>
             </Stack>
           </Group>
         </Group>

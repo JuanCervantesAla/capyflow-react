@@ -17,6 +17,7 @@ import {
   createFlowShareRequest,
   exportFlowRequest,
   regenerateFlowShareRequest,
+  updateFlowRequest,
   updateFlowShareRequest,
   type FlowShareResponse,
 } from "../api/Flow/flows.api";
@@ -39,6 +40,8 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [shareActive, setShareActive] = useState(true);
   const [shareExpiryInput, setShareExpiryInput] = useState("");
   const [isShareSaving, setIsShareSaving] = useState(false);
+  const [isFlowActive, setIsFlowActive] = useState(false);
+  const [isFlowStatusSaving, setIsFlowStatusSaving] = useState(false);
 
   const [ignoreNextSelection, setIgnoreNextSelection] = useState(false);
   const deselectAllRef = useRef<(() => void) | null>(null);
@@ -89,6 +92,11 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   }, [flowId, flowData]);
 
   useEffect(() => {
+    const status = (flowData as any)?.status;
+    setIsFlowActive(status === "active");
+  }, [flowData]);
+
+  useEffect(() => {
     const handler = () => {
       const small = window.innerWidth < 1024;
       setSidebarCollapsed(small);
@@ -117,6 +125,23 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const handleExecute = async () => {
     if (!flowId) return;
     await executeFlow(flowId);
+  };
+
+  const handleToggleFlowActive = async () => {
+    if (!flowId) return;
+
+    const nextStatus = isFlowActive ? "draft" : "active";
+    try {
+      setIsFlowStatusSaving(true);
+      const updated = await updateFlowRequest(flowId, { status: nextStatus } as any);
+      const savedStatus = (updated as any)?.status || nextStatus;
+      setIsFlowActive(savedStatus === "active");
+      toastSuccess(savedStatus === "active" ? "Flow activated (cron enabled)" : "Flow set to draft (cron disabled)");
+    } catch (error: any) {
+      toastError(error?.message || "Failed to update flow status");
+    } finally {
+      setIsFlowStatusSaving(false);
+    }
   };
 
   const handleExport = async () => {
@@ -411,6 +436,9 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         onExport={handleExport}
         onShare={handleShare}
         onRun={handleExecute}
+        isFlowActive={isFlowActive}
+        flowStatusLoading={isFlowStatusSaving}
+        onToggleFlowActive={handleToggleFlowActive}
         onAIGenerate={() => setAiModalOpened(true)}
         onAIRepair={() => setAiRepairModalOpened(true)}
       />
