@@ -1,6 +1,6 @@
 import { memo, useContext, useMemo } from "react";
-import { Text, Box, ScrollArea, ActionIcon } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { Text, Box, ScrollArea, ActionIcon, Checkbox, Group, Badge, CopyButton, Tooltip } from "@mantine/core";
+import { IconX, IconCopy, IconCheck } from "@tabler/icons-react";
 import { NodeParameterEditor } from "../Flow/config/NodeParameterEditor";
 import { FlowContext } from "../Flow/context/FlowContext";
 import { WebhookPanel } from "../Flow/WebhookPanel/WebhookPanel";
@@ -14,6 +14,8 @@ interface RightbarProps {
   open: boolean;
   onClose: () => void;
   flowId: string | null;
+  showConnectionIds: boolean;
+  onToggleShowConnectionIds: (value: boolean) => void;
 }
 
 type VariableOption = {
@@ -131,6 +133,8 @@ export const Rightbar = memo(function Rightbar({
   open,
   onClose,
   flowId,
+  showConnectionIds,
+  onToggleShowConnectionIds,
 }: RightbarProps) {
   const { nodes, edges, updateNodeParameters } = useContext(FlowContext);
   const { theme } = useTheme();
@@ -152,10 +156,37 @@ export const Rightbar = memo(function Rightbar({
     output: node?.data.executionOutput,
   }), [node]);
 
+  const incomingConnections = useMemo(() => {
+    if (!node) return [];
+    return edges
+      .filter((edge) => edge.target === node.id)
+      .map((edge) => {
+        const sourceNode = nodes.find((flowNode) => flowNode.id === edge.source);
+        return {
+          edgeId: edge.id,
+          nodeId: edge.source,
+          label: sourceNode?.data?.label || edge.source,
+        };
+      });
+  }, [edges, node, nodes]);
+
+  const outgoingConnections = useMemo(() => {
+    if (!node) return [];
+    return edges
+      .filter((edge) => edge.source === node.id)
+      .map((edge) => {
+        const targetNode = nodes.find((flowNode) => flowNode.id === edge.target);
+        return {
+          edgeId: edge.id,
+          nodeId: edge.target,
+          label: targetNode?.data?.label || edge.target,
+        };
+      });
+  }, [edges, node, nodes]);
+
   const handleSaveParameters = (params: Record<string, any>) => {
     if (node) {
       updateNodeParameters(node.id, params);
-      onClose();
     }
   };
 
@@ -204,9 +235,139 @@ export const Rightbar = memo(function Rightbar({
                 <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
                   {node.data.type || "custom"}
                 </Text>
+
+                <Group gap="xs" mt="xs" wrap="nowrap">
+                  <Badge
+                    size="sm"
+                    variant="light"
+                    styles={{
+                      root: {
+                        border: `1px solid ${theme.colors.ink}`,
+                        background: theme.colors.paper,
+                        color: theme.colors.ink,
+                        fontFamily: "monospace",
+                        maxWidth: 220,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      },
+                    }}
+                    title={node.id}
+                  >
+                    ID: {node.id}
+                  </Badge>
+
+                  <CopyButton value={node.id} timeout={1500}>
+                    {({ copied, copy }) => (
+                      <Tooltip
+                        label={copied ? "ID copied" : "Copy ID"}
+                        withArrow
+                      >
+                        <ActionIcon
+                          size="sm"
+                          variant="light"
+                          onClick={copy}
+                          style={{
+                            border: `1px solid ${theme.colors.ink}`,
+                            background: theme.colors.paper,
+                            color: theme.colors.ink,
+                          }}
+                          aria-label="Copy node ID"
+                        >
+                          {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                  </CopyButton>
+                </Group>
+
+                <Checkbox
+                  mt="xs"
+                  size="xs"
+                  checked={showConnectionIds}
+                  onChange={(event) => onToggleShowConnectionIds(event.currentTarget.checked)}
+                  label="Show connection IDs on canvas"
+                />
               </Box>
 
               <ScrollArea style={{ flex: 1 }} px="md" py="md">
+                <Box
+                  mb="md"
+                  p="sm"
+                  style={{
+                    border: `1.5px solid ${theme.colors.ink}`,
+                    borderRadius: 8,
+                    background: "rgba(45, 52, 54, 0.03)",
+                  }}
+                >
+                  <Text size="sm" fw={800} c={theme.colors.ink} mb={4}>
+                    Node connections
+                  </Text>
+                  <Text size="xs" c={theme.colors.ink} mb="xs" style={{ opacity: 0.65 }}>
+                    Review source and target links to debug the flow faster.
+                  </Text>
+
+                  <Text size="xs" fw={600} c={theme.colors.ink}>
+                    Incoming ({incomingConnections.length})
+                  </Text>
+                  {incomingConnections.length === 0 ? (
+                    <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.65 }}>
+                      No incoming connections
+                    </Text>
+                  ) : (
+                    incomingConnections.map((item) => (
+                      <Box
+                        key={item.edgeId}
+                        mt={4}
+                        px={8}
+                        py={6}
+                        style={{
+                          border: `1px solid ${theme.colors.ink}`,
+                          borderRadius: 6,
+                          background: theme.colors.paper,
+                        }}
+                      >
+                        <Text size="xs" fw={700} c={theme.colors.ink}>
+                          {item.label}
+                        </Text>
+                        <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.65 }}>
+                          ID: {item.nodeId}
+                        </Text>
+                      </Box>
+                    ))
+                  )}
+
+                  <Text size="xs" fw={600} c={theme.colors.ink} mt="xs">
+                    Outgoing ({outgoingConnections.length})
+                  </Text>
+                  {outgoingConnections.length === 0 ? (
+                    <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.65 }}>
+                      No outgoing connections
+                    </Text>
+                  ) : (
+                    outgoingConnections.map((item) => (
+                      <Box
+                        key={item.edgeId}
+                        mt={4}
+                        px={8}
+                        py={6}
+                        style={{
+                          border: `1px solid ${theme.colors.ink}`,
+                          borderRadius: 6,
+                          background: theme.colors.paper,
+                        }}
+                      >
+                        <Text size="xs" fw={700} c={theme.colors.ink}>
+                          {item.label}
+                        </Text>
+                        <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.65 }}>
+                          ID: {item.nodeId}
+                        </Text>
+                      </Box>
+                    ))
+                  )}
+                </Box>
+
                 {/* Webhook Panel - show only if webhook-trigger */}
                 {node.data.type === 'webhook-trigger' && flowId && (
                   <WebhookPanel 

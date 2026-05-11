@@ -61,17 +61,23 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
 
   if (isLoading) {
     return (
-      <Box p="xl" style={{ textAlign: "center" }}>
+      <Box p="xl" style={{ textAlign: "center", margin: "12px", border: `1px dashed ${theme.colors.ink}`, borderRadius: 10 }}>
         <Loader size="sm" color={theme.colors.ink} />
-        <Text size="sm" c={theme.colors.ink} mt="md" style={{ opacity: 0.5 }}>Loading history...</Text>
+        <Text size="sm" c={theme.colors.ink} mt="md" fw={700}>Loading history...</Text>
+        <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
+          Looking up previous executions for this flow.
+        </Text>
       </Box>
     );
   }
 
   if (!executions || executions.length === 0) {
     return (
-      <Box p="xl" style={{ textAlign: "center" }}>
-        <Text size="sm" c={theme.colors.ink} style={{ opacity: 0.5 }}>No previous executions</Text>
+      <Box p="xl" style={{ textAlign: "center", margin: "12px", border: `1px dashed ${theme.colors.ink}`, borderRadius: 10 }}>
+        <Text size="sm" fw={700} c={theme.colors.ink}>No previous executions</Text>
+        <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
+          Once you run the flow, history and comparisons will appear here.
+        </Text>
       </Box>
     );
   }
@@ -80,6 +86,23 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
     <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <ScrollArea style={{ flex: 1 }} type="auto">
         <Stack gap="xs" p="md">
+          <Card
+            p="sm"
+            withBorder
+            style={{
+              borderColor: theme.colors.ink,
+              borderWidth: 1.5,
+              background: "rgba(45, 52, 54, 0.03)",
+            }}
+          >
+            <Text size="sm" fw={800} c={theme.colors.ink}>
+              Execution timeline
+            </Text>
+            <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.65 }}>
+              Select an execution to view details and compare it with the previous run.
+            </Text>
+          </Card>
+
           {executions.map((execution) => (
             <Card
               key={execution.id}
@@ -131,16 +154,16 @@ export function ExecutionHistoryPanel({ flowId }: ExecutionHistoryPanelProps) {
             background: theme.colors.paper,
           }}
         >
-          <Text size="sm" fw={700} mb="sm" c={theme.colors.ink}>Execution Detail</Text>
+          <Text size="sm" fw={800} mb="sm" c={theme.colors.ink}>Execution details</Text>
           <Stack gap="xs">
             <Group justify="space-between">
-              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Executed Nodes:</Text>
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Executed nodes:</Text>
               <Text size="xs" fw={600} c={theme.colors.ink}>
                 {executionDetail.parsedExecutedNodes?.length || 0}
               </Text>
             </Group>
             <Group justify="space-between">
-              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Duration:</Text>
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>Duracion:</Text>
               <Text size="xs" fw={600} c={theme.colors.ink}>{executionDetail.durationMs}ms</Text>
             </Group>
             {executionDetail.errorMessage && (

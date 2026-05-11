@@ -12,6 +12,9 @@ export function CustomEdge({
   sourceY, 
   targetX, 
   targetY, 
+  source,
+  target,
+  data,
   selected,
   markerEnd,
 }: EdgeProps) {
@@ -25,6 +28,9 @@ export function CustomEdge({
 
   const { deleteElements } = useReactFlow();
   const colors = useMemo(() => getThemeColors(), []);
+  const showConnectionIds = Boolean((data as any)?.showConnectionIds);
+  const sourceNodeId = (data as any)?.sourceNodeId || source;
+  const targetNodeId = (data as any)?.targetNodeId || target;
   
   // Colors for the edge
   const stroke = selected ? colors.accent : colors.borderNode;
@@ -81,6 +87,33 @@ export function CustomEdge({
         }} 
         interactionWidth={20}
       />
+
+      {showConnectionIds && sourceNodeId && targetNodeId && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY - 18}px)`,
+              pointerEvents: 'none',
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.2px',
+              color: colors.textInk,
+              background: 'rgba(255, 248, 240, 0.95)',
+              border: `1px solid ${colors.borderNode}`,
+              borderRadius: 6,
+              padding: '2px 6px',
+              whiteSpace: 'nowrap',
+              maxWidth: 220,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+            title={`${sourceNodeId} -> ${targetNodeId}`}
+          >
+            {sourceNodeId} -&gt; {targetNodeId}
+          </div>
+        </EdgeLabelRenderer>
+      )}
 
       {/* Delete button when selected */}
       {selected && (

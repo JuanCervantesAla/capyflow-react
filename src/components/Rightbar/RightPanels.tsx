@@ -35,9 +35,28 @@ export function RightPanels({
         height: "100%",
       }}
     >
+      {!collapsed && (
+        <Box
+          px="md"
+          py="sm"
+          style={{
+            borderBottom: `2px solid ${theme.colors.ink}`,
+            background: "rgba(45, 52, 54, 0.03)",
+          }}
+        >
+          <Text size="sm" fw={800} c={theme.colors.ink}>
+            Execution Insights
+          </Text>
+          <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.65 }}>
+            Current state, history, and execution differences.
+          </Text>
+        </Box>
+      )}
+
       <ActionIcon
-        size="sm"
-        variant="subtle"
+        size="md"
+        radius="xl"
+        variant="light"
         onClick={onToggle}
         style={{
           position: "absolute",
@@ -45,6 +64,8 @@ export function RightPanels({
           left: collapsed ? 12 : 8,
           zIndex: 10,
           color: theme.colors.ink,
+          border: `1.5px solid ${theme.colors.ink}`,
+          background: theme.colors.paper,
         }}
       >
         {collapsed ? (
@@ -64,11 +85,34 @@ export function RightPanels({
             />
           ) : (
             <Box p={32} style={{ textAlign: "center" }}>
-              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.5 }}>
-                Select a flow to view its execution
+              <Text size="xs" fw={700} c={theme.colors.ink}>
+                No flow selected
+              </Text>
+              <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.6 }}>
+                Select a flow to see execution results and metrics.
               </Text>
             </Box>
           )}
+        </Box>
+      )}
+
+      {collapsed && (
+        <Box
+          style={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            size="xs"
+            fw={700}
+            c={theme.colors.ink}
+            style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", letterSpacing: "1px", opacity: 0.65 }}
+          >
+            EXEC
+          </Text>
         </Box>
       )}
     </Box>

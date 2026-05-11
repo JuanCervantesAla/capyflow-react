@@ -212,25 +212,85 @@ function JsonEditor({ value, onChange, placeholder }: { value: string; onChange:
 
 function KeyValueEditor({ value, onChange, syncKey }: { value: Record<string, any>; onChange: (val: Record<string, any>) => void; syncKey?: string }) {
   const { theme } = useTheme();
-  const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(() => {
-    return Object.entries(value || {}).map(([k, v]) => ({ key: k, value: String(v) }));
-  });
+  const toPairs = (source: Record<string, any>) =>
+    Object.entries(source || {}).map(([k, v]) => ({ key: k, value: String(v) }));
+
+  const pairsToObject = (source: Array<{ key: string; value: string }>) =>
+    source.reduce((acc, pair) => {
+      if (pair.key.trim()) {
+        acc[pair.key] = pair.value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+  const valuesEqual = (left: Record<string, any>, right: Record<string, any>) => {
+    const leftKeys = Object.keys(left || {});
+    const rightKeys = Object.keys(right || {});
+
+    if (leftKeys.length !== rightKeys.length) return false;
+
+    return leftKeys.every((key) => String(left[key]) === String(right[key]));
+  };
+
+  const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(() => toPairs(value || {}));
+  const pairsRef = useRef(pairs);
+  const lastSyncKeyRef = useRef(syncKey);
+  const lastEmittedRef = useRef('');
+  const isSyncingRef = useRef(false);
+  const debounceRef = useRef<number | null>(null);
 
   // Mantener sincronizado el estado interno solo cuando cambia el contexto
   // (por ejemplo, al cambiar de nodo), para no borrar filas recién añadidas.
   useEffect(() => {
-    setPairs(Object.entries(value || {}).map(([k, v]) => ({ key: k, value: String(v) })));
-  }, [syncKey]);
+    pairsRef.current = pairs;
+  }, [pairs]);
 
   useEffect(() => {
+    const nextValue = value || {};
+    const syncKeyChanged = lastSyncKeyRef.current !== syncKey;
+
+    if (syncKeyChanged) {
+      lastSyncKeyRef.current = syncKey;
+      lastEmittedRef.current = JSON.stringify(nextValue);
+      isSyncingRef.current = true;
+      setPairs(toPairs(nextValue));
+      return;
+    }
+
+    const currentValue = pairsToObject(pairsRef.current);
+    if (valuesEqual(nextValue, currentValue)) {
+      return;
+    }
+    lastEmittedRef.current = JSON.stringify(nextValue);
+    isSyncingRef.current = true;
+    setPairs(toPairs(nextValue));
+  }, [syncKey, value]);
+
+  useEffect(() => {
+    if (isSyncingRef.current) {
+      isSyncingRef.current = false;
+      return;
+    }
+
     const obj = pairs.reduce((acc, p) => {
       if (p.key.trim()) {
         acc[p.key] = p.value;
       }
       return acc;
     }, {} as Record<string, any>);
-    onChange(obj);
-  }, [pairs]);
+    const serialized = JSON.stringify(obj);
+    if (serialized === lastEmittedRef.current) {
+      return;
+    }
+
+    lastEmittedRef.current = serialized;
+    if (debounceRef.current) {
+      window.clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = window.setTimeout(() => {
+      onChange(obj);
+    }, 120);
+  }, [pairs, onChange]);
 
   const addPair = () => {
     setPairs([...pairs, { key: '', value: '' }]);

@@ -28,6 +28,7 @@ import { CreationTimer } from "./CreationTimer";
 import { useTheme } from "../../../theme/ThemeContext";
 import { FlowInternals } from "./FlowInternals";
 import { useCreationSession } from "../../../hooks/useCreationSession";
+import { toastError } from "../../../lib/toast";
 import "@xyflow/react/dist/style.css";
 import { useExecutionUpdates } from '../../../hooks/useExecutionUpdates';
 
@@ -58,10 +59,12 @@ function FlowCanvasComponent({
   onNodeSelected,
   onExecutionUpdate,
   onDeselectAll,
+  showConnectionIds = false,
 }: {
   onNodeSelected?: (node: any) => void;
   onExecutionUpdate?: (data: any) => void;
   onDeselectAll?: MutableRefObject<(() => void) | null>;
+  showConnectionIds?: boolean;
 }) {
   const { nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange } =
     useContext(FlowContext);
@@ -149,8 +152,46 @@ function FlowCanvasComponent({
   );
 
   const onConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges],
+    (connection: Connection) => {
+      if (!connection.source || !connection.target) {
+        toastError("Invalid connection: source or target node is missing.");
+        return;
+      }
+
+      if (connection.source === connection.target) {
+        toastError("You cannot connect a node to itself.");
+        return;
+      }
+
+      setEdges((eds) => {
+        const duplicated = eds.some(
+          (edge) =>
+            edge.source === connection.source &&
+            edge.target === connection.target &&
+            (edge.sourceHandle || "") === (connection.sourceHandle || "") &&
+            (edge.targetHandle || "") === (connection.targetHandle || ""),
+        );
+
+        if (duplicated) {
+          toastError("This connection already exists for those handles.");
+          return eds;
+        }
+
+        return addEdge(
+          {
+            ...connection,
+            type: "customEdge",
+            data: {
+              showConnectionIds,
+              sourceNodeId: connection.source,
+              targetNodeId: connection.target,
+            },
+          },
+          eds,
+        );
+      });
+    },
+    [setEdges, showConnectionIds],
   );
 
   const onPaneClick = useCallback(() => {
@@ -220,6 +261,20 @@ function FlowCanvasComponent({
     [],
   );
 
+  const edgesForRender = useMemo(
+    () =>
+      edges.map((edge) => ({
+        ...edge,
+        data: {
+          ...(edge.data || {}),
+          showConnectionIds,
+          sourceNodeId: edge.source,
+          targetNodeId: edge.target,
+        },
+      })),
+    [edges, showConnectionIds],
+  );
+
   return (
     <div
       ref={containerRef}
@@ -232,7 +287,7 @@ function FlowCanvasComponent({
     >
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={edgesForRender}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
@@ -328,7 +383,8 @@ export const FlowCanvas = memo(
     return (
       prevProps.onNodeSelected === nextProps.onNodeSelected &&
       prevProps.onExecutionUpdate === nextProps.onExecutionUpdate &&
-      prevProps.onDeselectAll === nextProps.onDeselectAll
+      prevProps.onDeselectAll === nextProps.onDeselectAll &&
+      prevProps.showConnectionIds === nextProps.showConnectionIds
     );
   }
 );
