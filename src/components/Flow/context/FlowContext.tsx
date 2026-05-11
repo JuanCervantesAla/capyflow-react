@@ -145,7 +145,7 @@ export function FlowProvider({
           icon: data.icon ?? "IconBolt",
           category: data.category ?? "",
           type: data.type ?? "custom",
-          parameters: data.parameters ?? [],
+          parameters: data.parameters ?? {},
           inputs: data.inputs ?? [],
           outputs: data.outputs ?? [],
           color: data.color ?? "#4c6ef5",

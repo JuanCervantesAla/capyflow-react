@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState, useRef } from "react";
-import { Button, Checkbox, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
+import { Button, Checkbox, Group, Modal, Stack, Text, TextInput, Select, Badge, Divider } from "@mantine/core";
 import { HeaderBar } from "../components/HeaderBar/HeaderBar";
 import { Sidebar } from "../components/SideBar/SideBar";
 import { FlowCanvas } from "../components/Flow/Canvas/FlowCanvas";
@@ -24,14 +24,23 @@ import {
 import { toastSuccess, toastError } from "../lib/toast";
 import type { ExecutionResult } from "../hooks/mutations/Flow/useExecuteFlow";
 import { transformNodeFromBackend, transformEdgeFromBackend } from "../components/Flow/types/NodeTypes";
+import {
+  clearExperimentRecords,
+  loadExperimentRecords,
+  recordsToCsv,
+  saveExperimentRecords,
+  type ExperimentGroup,
+  type ExperimentRecord,
+} from "../lib/experimentAnalytics";
 
 export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanelsCollapsed, setRightPanelsCollapsed] = useState(false);
   const [executionResult, setExecutionResult] =
     useState<ExecutionResult | null>(null);
-  const [selectedNode, setSelectedNode] = useState<any | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [rightbarOpened, setRightbarOpened] = useState(false);
+  const [showConnectionIds, setShowConnectionIds] = useState(false);
   const [aiModalOpened, setAiModalOpened] = useState(false);
   const [aiRepairModalOpened, setAiRepairModalOpened] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
@@ -42,11 +51,23 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const [isShareSaving, setIsShareSaving] = useState(false);
   const [isFlowActive, setIsFlowActive] = useState(false);
   const [isFlowStatusSaving, setIsFlowStatusSaving] = useState(false);
+  const [experimentModalOpened, setExperimentModalOpened] = useState(false);
+  const [participantId, setParticipantId] = useState("");
+  const [caseId, setCaseId] = useState("case-1");
+  const [experimentGroup, setExperimentGroup] = useState<ExperimentGroup>("manual");
+  const [isExperimentRunning, setIsExperimentRunning] = useState(false);
+  const [experimentStartedAt, setExperimentStartedAt] = useState<string | null>(null);
+  const [experimentElapsedSeconds, setExperimentElapsedSeconds] = useState(0);
+  const [experimentRecords, setExperimentRecords] = useState<ExperimentRecord[]>([]);
+  const [aiGenerateCount, setAiGenerateCount] = useState(0);
+  const [aiRepairCount, setAiRepairCount] = useState(0);
 
   const [ignoreNextSelection, setIgnoreNextSelection] = useState(false);
   const deselectAllRef = useRef<(() => void) | null>(null);
 
   const flowContext = useContext(FlowContext);
+  const selectedNode =
+    flowContext?.nodes?.find((node) => node.id === selectedNodeId) ?? null;
   const { data: flowData } = useFlow(flowId);
   const { generateFlow, isGenerating } = useAIGeneration();
 
@@ -55,6 +76,27 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
 
   const { mutateAsync: saveFlow } = useSaveFlow();
 
+  useEffect(() => {
+    setExperimentRecords(loadExperimentRecords());
+  }, []);
+
+  useEffect(() => {
+    if (!isExperimentRunning || !experimentStartedAt) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      const started = new Date(experimentStartedAt).getTime();
+      const now = Date.now();
+      const elapsed = Math.max(0, Math.floor((now - started) / 1000));
+      setExperimentElapsedSeconds(elapsed);
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isExperimentRunning, experimentStartedAt]);
+
   const handleCloseRightbar = () => {
     setIgnoreNextSelection(true);
     
@@ -62,7 +104,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
       deselectAllRef.current();
     }
     
-    setSelectedNode(null);
+    setSelectedNodeId(null);
     setRightbarOpened(false);
 
     setTimeout(() => {
@@ -241,7 +283,13 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
   const handleNodeSelected = (node: any) => {
     if (ignoreNextSelection) return;
 
-    setSelectedNode(node);
+    if (!node) {
+      setSelectedNodeId(null);
+      setRightbarOpened(false);
+      return;
+    }
+
+    setSelectedNodeId(node.id);
     setRightbarOpened(true);
   };
 
@@ -253,7 +301,90 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
     }
   };
 
+  const handleStartExperiment = () => {
+    if (!flowId || !flowContext) {
+      toastError("Select a flow before starting an experiment run.");
+      return;
+    }
+
+    if (!participantId.trim()) {
+      toastError("Participant ID is required.");
+      return;
+    }
+
+    const startedAt = new Date().toISOString();
+    setExperimentStartedAt(startedAt);
+    setIsExperimentRunning(true);
+    setExperimentElapsedSeconds(0);
+    setAiGenerateCount(0);
+    setAiRepairCount(0);
+    toastSuccess("Experiment run started.");
+  };
+
+  const handleStopExperiment = () => {
+    if (!flowContext || !flowId || !experimentStartedAt) {
+      return;
+    }
+
+    const endedAt = new Date().toISOString();
+    const metrics = computeStructuralMetrics(flowContext.nodes, flowContext.edges);
+    const record: ExperimentRecord = {
+      id: `exp-${Date.now()}`,
+      flowId,
+      flowName: flowName || "Untitled Workflow",
+      participantId: participantId.trim(),
+      caseId,
+      group: experimentGroup,
+      startedAt: experimentStartedAt,
+      endedAt,
+      durationSeconds: experimentElapsedSeconds,
+      nodeCount: flowContext.nodes.length,
+      edgeCount: flowContext.edges.length,
+      validNodeRatio: metrics.validNodeRatio,
+      validEdgeRatio: metrics.validEdgeRatio,
+      structuralPrecision: metrics.structuralPrecision,
+      executionStatus: executionResult?.status || "not-executed",
+      aiGenerateCount,
+      aiRepairCount,
+    };
+
+    const updated = [record, ...experimentRecords].slice(0, 100);
+    setExperimentRecords(updated);
+    saveExperimentRecords(updated);
+    setIsExperimentRunning(false);
+    setExperimentStartedAt(null);
+    setExperimentElapsedSeconds(0);
+    toastSuccess("Experiment run saved.");
+  };
+
+  const handleExportExperimentCsv = () => {
+    if (experimentRecords.length === 0) {
+      toastError("No experiment records to export yet.");
+      return;
+    }
+
+    const csv = recordsToCsv(experimentRecords);
+    const fileName = `experiment-results-${new Date().toISOString().slice(0, 10)}.csv`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+    toastSuccess("Experiment CSV exported.");
+  };
+
+  const handleClearExperimentRecords = () => {
+    setExperimentRecords([]);
+    clearExperimentRecords();
+    toastSuccess("Experiment records cleared.");
+  };
+
   const handleAIGenerate = async (description: string) => {
+    setAiGenerateCount((count) => count + 1);
     try {
       await generateFlow(description, undefined, (generatedFlow) => {
         if (flowContext?.loadFlowData) {
@@ -273,6 +404,8 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
 
   const handleAIRepair = async (issues?: string, goal?: string) => {
     if (!flowContext) return;
+
+    setAiRepairCount((count) => count + 1);
 
     setIsRepairing(true);
     try {
@@ -365,6 +498,126 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
       />
 
       <Modal
+        opened={experimentModalOpened}
+        onClose={() => setExperimentModalOpened(false)}
+        title="Experiment Toolkit"
+        centered
+        size="lg"
+      >
+        <Stack gap="sm">
+          <Text size="sm" c="#2d3436">
+            Use this panel to record control vs AI runs and export the evidence as CSV.
+          </Text>
+
+          <Group grow>
+            <TextInput
+              label="Participant ID"
+              placeholder="e.g. student-07"
+              value={participantId}
+              onChange={(e) => setParticipantId(e.currentTarget.value)}
+              disabled={isExperimentRunning}
+            />
+            <Select
+              label="Group"
+              data={[
+                { value: "manual", label: "Manual (Control)" },
+                { value: "ai", label: "AI-assisted (Experimental)" },
+              ]}
+              value={experimentGroup}
+              onChange={(value) => setExperimentGroup((value as ExperimentGroup) || "manual")}
+              disabled={isExperimentRunning}
+            />
+            <Select
+              label="Case"
+              data={[
+                { value: "case-1", label: "Case 1" },
+                { value: "case-2", label: "Case 2" },
+                { value: "case-3", label: "Case 3" },
+                { value: "case-4", label: "Case 4" },
+              ]}
+              value={caseId}
+              onChange={(value) => setCaseId(value || "case-1")}
+              disabled={isExperimentRunning}
+            />
+          </Group>
+
+          <Group justify="space-between" align="center">
+            <Group>
+              <Badge color={isExperimentRunning ? "green" : "gray"}>
+                {isExperimentRunning ? "Running" : "Idle"}
+              </Badge>
+              <Text size="sm" fw={700}>
+                Elapsed: {formatDuration(experimentElapsedSeconds)}
+              </Text>
+            </Group>
+
+            <Group>
+              <Button
+                color="dark"
+                variant="light"
+                onClick={handleStartExperiment}
+                disabled={isExperimentRunning}
+              >
+                Start Run
+              </Button>
+              <Button
+                color="dark"
+                onClick={handleStopExperiment}
+                disabled={!isExperimentRunning}
+              >
+                Stop & Save
+              </Button>
+            </Group>
+          </Group>
+
+          <Text size="xs" c="#2d3436" style={{ opacity: 0.75 }}>
+            Current run counters: AI Generate {aiGenerateCount} | AI Repair {aiRepairCount} | Last execution status {executionResult?.status || "not-executed"}
+          </Text>
+
+          <Divider label="Recorded Runs" labelPosition="center" />
+
+          <Stack gap={6} style={{ maxHeight: 240, overflow: "auto" }}>
+            {experimentRecords.length === 0 ? (
+              <Text size="sm" c="#2d3436" style={{ opacity: 0.65 }}>
+                No experiment runs recorded yet.
+              </Text>
+            ) : (
+              experimentRecords.map((record) => (
+                <Group
+                  key={record.id}
+                  justify="space-between"
+                  style={{
+                    border: "1px solid #d0d0d0",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                  }}
+                >
+                  <Text size="xs">
+                    {record.participantId} | {record.caseId} | {record.group.toUpperCase()} | {record.durationSeconds}s
+                  </Text>
+                  <Text size="xs" fw={600}>
+                    Precision {(record.structuralPrecision * 100).toFixed(0)}%
+                  </Text>
+                </Group>
+              ))
+            )}
+          </Stack>
+
+          <Group justify="flex-end" mt="xs">
+            <Button variant="light" color="red" onClick={handleClearExperimentRecords}>
+              Clear Records
+            </Button>
+            <Button variant="light" color="dark" onClick={handleExportExperimentCsv}>
+              Export CSV
+            </Button>
+            <Button color="dark" onClick={() => setExperimentModalOpened(false)}>
+              Close
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
         opened={shareModalOpened}
         onClose={() => setShareModalOpened(false)}
         title="Share flow"
@@ -435,6 +688,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         onSave={handleSave}
         onExport={handleExport}
         onShare={handleShare}
+        onExperiment={() => setExperimentModalOpened(true)}
         onRun={handleExecute}
         isFlowActive={isFlowActive}
         flowStatusLoading={isFlowStatusSaving}
@@ -455,6 +709,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
               onNodeSelected={handleNodeSelected}
               onExecutionUpdate={handleExecutionUpdate}
               onDeselectAll={deselectAllRef as any}
+              showConnectionIds={showConnectionIds}
             />
           )}
         </div>
@@ -464,6 +719,8 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
           open={rightbarOpened}
           onClose={handleCloseRightbar}
           flowId={flowId}
+          showConnectionIds={showConnectionIds}
+          onToggleShowConnectionIds={setShowConnectionIds}
         />
 
         <RightPanels
@@ -503,3 +760,37 @@ function formatDateTime(value: string) {
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString();
 }
+
+function formatDuration(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function computeStructuralMetrics(nodes: any[] = [], edges: any[] = []) {
+  const nodeIds = new Set(nodes.map((node) => node.id));
+
+  const validNodes = nodes.filter((node) => Boolean(node.id) && Boolean(node.data?.type));
+  const validEdges = edges.filter(
+    (edge) =>
+      Boolean(edge.source) &&
+      Boolean(edge.target) &&
+      nodeIds.has(edge.source) &&
+      nodeIds.has(edge.target),
+  );
+
+  const validNodeRatio = nodes.length === 0 ? 0 : validNodes.length / nodes.length;
+  const validEdgeRatio = edges.length === 0 ? 0 : validEdges.length / edges.length;
+  const structuralPrecision =
+    nodes.length === 0 && edges.length === 0
+      ? 0
+      : Number(((validNodeRatio + validEdgeRatio) / 2).toFixed(4));
+
+  return {
+    validNodeRatio,
+    validEdgeRatio,
+    structuralPrecision,
+  };
+}
+

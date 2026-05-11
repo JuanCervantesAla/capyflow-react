@@ -14,7 +14,7 @@ import {
   Box,
   Tabs,
 } from "@mantine/core";
-import { IconCheck, IconX, IconClock, IconCopy } from "@tabler/icons-react";
+import { IconCheck, IconX, IconClock, IconCopy, IconHistory, IconActivity } from "@tabler/icons-react";
 import { useTheme } from "../../../theme/ThemeContext";
 import { ExecutionHistoryPanel } from "./ExecutionHistoryPanel";
 import { FlowContext } from "../context/FlowContext";
@@ -41,16 +41,38 @@ export function ExecutionResultPanel({
         onChange={(value) => setActiveTab(value as "current" | "history")}
         style={{ height: "100%", display: "flex", flexDirection: "column" }}
       >
-        <Tabs.List grow>
-          <Tabs.Tab value="current">EXECUTION</Tabs.Tab>
-          <Tabs.Tab value="history">HISTORY</Tabs.Tab>
+        <Tabs.List
+          grow
+          style={{
+            borderBottom: `2px solid ${theme.colors.ink}`,
+            background: "rgba(45, 52, 54, 0.03)",
+          }}
+        >
+          <Tabs.Tab value="current" leftSection={<IconActivity size={14} />}>
+            Actual
+          </Tabs.Tab>
+          <Tabs.Tab value="history" leftSection={<IconHistory size={14} />}>
+            History
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="current" style={{ flex: 1, overflow: "hidden", background: theme.colors.paper }}>
           {!result && !isLoading ? (
-            <Box p="xl" style={{ textAlign: "center" }}>
-              <Text c={theme.colors.ink} size="sm" style={{ opacity: 0.5 }}>
-                Execute a Flow to see the results!
+            <Box
+              p="xl"
+              style={{
+                textAlign: "center",
+                margin: "12px",
+                border: `1px dashed ${theme.colors.ink}`,
+                borderRadius: 10,
+                background: "rgba(45, 52, 54, 0.02)",
+              }}
+            >
+              <Text c={theme.colors.ink} size="sm" fw={700}>
+                No execution yet
+              </Text>
+              <Text c={theme.colors.ink} size="xs" style={{ opacity: 0.6 }}>
+                Run the flow to see status, timing, and per-node results.
               </Text>
             </Box>
           ) : (
@@ -76,6 +98,39 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
   return (
     <ScrollArea style={{ height: "100%" }} type="auto">
         <Stack gap="md" style={{ padding: "1rem" }}>
+          <Card
+            p="sm"
+            withBorder
+            style={{
+              background: "rgba(45, 52, 54, 0.03)",
+              borderColor: theme.colors.ink,
+              borderWidth: 1.5,
+            }}
+          >
+            <Group justify="space-between" align="center">
+              <div>
+                <Text size="sm" fw={800} c={theme.colors.ink}>
+                  Execution summary
+                </Text>
+                <Text size="xs" c={theme.colors.ink} style={{ opacity: 0.65 }}>
+                  Monitor overall status and node-level details.
+                </Text>
+              </div>
+              <Badge
+                size="sm"
+                variant="light"
+                color="gray"
+                style={{
+                  border: `1px solid ${theme.colors.ink}`,
+                  background: theme.colors.paper,
+                  color: theme.colors.ink,
+                }}
+              >
+                {result?.executedNodes?.length || 0} nodes
+              </Badge>
+            </Group>
+          </Card>
+
           {isLoading && (
             <Card p="sm" withBorder style={{
               background: theme.colors.paper,
@@ -116,10 +171,10 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
                   )}
                   <Text size="xs" fw={700} c={theme.colors.ink}>
                     {result.status === "success"
-                      ? "Successful Execution"
+                      ? "Execution completed"
                       : result.status === "error"
-                      ? "Execution Error"
-                      : "Execution in Progress"}
+                      ? "Execution failed"
+                      : "Execution in progress"}
                   </Text>
                 </Group>
                 <Badge size="sm" variant="light" color="gray" style={{
@@ -142,7 +197,7 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
           {result?.executedNodes?.length > 0 && (
             <div>
               <Text fw={700} size="sm" mb="xs" c={theme.colors.ink}>
-                Executed Nodes ({result.executedNodes.length})
+                Executed nodes ({result.executedNodes.length})
               </Text>
               <Stack gap="xs">
                 {result.executedNodes.map((nodeId: string) => {
@@ -231,11 +286,11 @@ function CurrentExecutionContent({ result, isLoading, theme, nodes }: any) {
             }}>
               <Group justify="space-between" mb="xs">
                 <Text fw={700} size="sm" c={theme.colors.ink}>
-                  JSON Result:
+                  Resultado JSON
                 </Text>
                 <CopyButton value={JSON.stringify(result, null, 2)}>
                   {({ copied }) => (
-                    <Tooltip label={copied ? "Copiado" : "Copiar"} withArrow styles={{
+                    <Tooltip label={copied ? "Copied" : "Copy"} withArrow styles={{
                       tooltip: {
                         background: theme.colors.paper,
                         border: `2px solid ${theme.colors.ink}`,

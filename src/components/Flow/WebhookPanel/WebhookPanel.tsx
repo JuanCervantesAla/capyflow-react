@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Box, Stack, Group, Text, Textarea, Button, ActionIcon, Loader, Code } from '@mantine/core';
+import { Box, Stack, Group, Text, Textarea, Button, ActionIcon, Loader, Code, Alert } from '@mantine/core';
 import { useWebhookURL, useTriggerWebhook } from '../../../hooks/useWebhook';
-import { IconCopy, IconCheck, IconSend, IconExternalLink } from '@tabler/icons-react';
+import { IconCopy, IconCheck, IconSend, IconExternalLink, IconAlertCircle } from '@tabler/icons-react';
 import { useTheme } from '../../../theme/ThemeContext';
+import { toastError } from '../../../lib/toast';
 
 interface WebhookPanelProps {
   flowId: string;
@@ -33,8 +34,8 @@ export const WebhookPanel = ({ flowId, isVisible }: WebhookPanelProps) => {
     try {
       const payload = JSON.parse(testPayload);
       triggerWebhook.mutate({ flowId, payload });
-    } catch (err) {
-      alert('Invalid JSON payload');
+    } catch {
+      toastError('Invalid JSON payload for webhook test');
     }
   };
 
@@ -43,8 +44,8 @@ export const WebhookPanel = ({ flowId, isVisible }: WebhookPanelProps) => {
       mb="md"
       p="md"
       style={{
-        background: theme.colors.background.secondary,
-        border: `1px solid ${theme.colors.border.primary}`,
+        background: theme.colors.paper,
+        border: `2px solid ${theme.colors.ink}`,
         borderRadius: theme.borderRadius.md,
       }}
     >
@@ -58,8 +59,12 @@ export const WebhookPanel = ({ flowId, isVisible }: WebhookPanelProps) => {
         </Text>
       </Group>
 
+      <Text size="xs" mb="sm" style={{ color: theme.colors.text.secondary }}>
+        Use this URL to trigger your flow from external services or local tests.
+      </Text>
+
       {isLoading && (
-        <Group gap="xs">
+        <Group gap="xs" p="xs" style={{ border: `1px dashed ${theme.colors.ink}`, borderRadius: 8 }}>
           <Loader size="xs" />
           <Text size="sm" c="dimmed">
             Loading webhook URL...
@@ -68,22 +73,34 @@ export const WebhookPanel = ({ flowId, isVisible }: WebhookPanelProps) => {
       )}
 
       {error && (
-        <Text size="sm" c="red">
+        <Alert
+          icon={<IconAlertCircle size={14} />}
+          color="red"
+          variant="light"
+          styles={{
+            root: {
+              border: `1px solid #f43f5e`,
+            },
+          }}
+        >
           Failed to load webhook URL
-        </Text>
+        </Alert>
       )}
 
       {webhookData && (
         <Stack gap="md">
           {/* URL Display */}
           <Box>
+            <Text size="xs" fw={700} c={theme.colors.ink} mb={4}>
+              Endpoint
+            </Text>
             <Group
               gap="xs"
               px="sm"
               py="xs"
               style={{
-                background: theme.colors.background.tertiary,
-                border: `1px solid ${theme.colors.border.primary}`,
+                background: 'rgba(45, 52, 54, 0.04)',
+                border: `1px solid ${theme.colors.ink}`,
                 borderRadius: theme.borderRadius.sm,
               }}
             >
@@ -112,14 +129,14 @@ export const WebhookPanel = ({ flowId, isVisible }: WebhookPanelProps) => {
               </ActionIcon>
             </Group>
             <Text size="xs" c="dimmed" mt={4}>
-              Methods: {webhookData.methods.join(', ')}
+              Supported methods: {webhookData.methods.join(', ')}
             </Text>
           </Box>
 
           {/* Test Section */}
           <Box>
             <Text size="xs" fw={500} c="dimmed" mb="xs">
-              Test Webhook
+              Quick test
             </Text>
             <Textarea
               size="xs"
@@ -147,9 +164,10 @@ export const WebhookPanel = ({ flowId, isVisible }: WebhookPanelProps) => {
               disabled={triggerWebhook.isPending}
               style={{
                 background: theme.colors.accent.primary,
+                border: `1px solid ${theme.colors.ink}`,
               }}
             >
-              {triggerWebhook.isPending ? 'Sending...' : 'Send Test Request'}
+              {triggerWebhook.isPending ? 'Sending...' : 'Send test request'}
             </Button>
           </Box>
 

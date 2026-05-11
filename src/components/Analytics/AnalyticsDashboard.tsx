@@ -1,4 +1,4 @@
-import { Text, Stack, Group, Box } from '@mantine/core';
+import { Text, Stack, Group, Box, Badge } from '@mantine/core';
 import { 
   IconSparkles, 
   IconClock, 
@@ -10,6 +10,7 @@ import {
   IconChartBar
 } from '@tabler/icons-react';
 import { useAnalyticsSummary } from '../../hooks/useAnalytics';
+import { useExperimentAnalytics } from '../../hooks/useExperimentAnalytics';
 import { 
   BarChart, 
   Bar, 
@@ -26,6 +27,7 @@ import {
 
 export const AnalyticsDashboard = () => {
   const { data: summary, isLoading, error } = useAnalyticsSummary();
+  const { summary: experimentSummary } = useExperimentAnalytics();
 
   if (isLoading) {
     return (
@@ -65,6 +67,8 @@ export const AnalyticsDashboard = () => {
       return `${secs}s`;
     }
   };
+
+  const formatPrecision = (value: number) => `${(value * 100).toFixed(1)}%`;
 
   // Data for charts
   const comparisonData = [
@@ -257,6 +261,68 @@ export const AnalyticsDashboard = () => {
           <Text size="12px" c="#5A4A3A" fw={500}>
             Performance metrics · Thesis validation · AI Impact
           </Text>
+        </Box>
+
+        {/* Experiment Auto-Connected Section */}
+        <Box
+          style={{
+            background: '#FFF8F0',
+            border: '3px solid #0A0A08',
+            padding: '12px',
+          }}
+        >
+          <Group justify="space-between" wrap="wrap" gap={8}>
+            <Group gap={6}>
+              <IconTarget size={16} color="#C9873D" stroke={2.5} />
+              <Text
+                size="10px"
+                c="#5A4A3A"
+                fw={700}
+                style={{ letterSpacing: '1px', textTransform: 'uppercase' }}
+              >
+                Experiment Runs (Auto-connected)
+              </Text>
+            </Group>
+            <Text size="10px" c="#7A7060" fw={600}>
+              Data source: Experiment Toolkit records in editor
+            </Text>
+          </Group>
+
+          <Group mt={10} gap={10} wrap="wrap">
+            <Badge size="lg" variant="light" color="gray">
+              Total runs: {experimentSummary.totalRuns}
+            </Badge>
+            <Badge size="lg" variant="light" color="blue">
+              Manual: {experimentSummary.manualRuns}
+            </Badge>
+            <Badge size="lg" variant="light" color="grape">
+              AI: {experimentSummary.aiRuns}
+            </Badge>
+            <Badge size="lg" variant="light" color="green">
+              Structural precision: {formatPrecision(experimentSummary.avgStructuralPrecision)}
+            </Badge>
+            <Badge size="lg" variant="light" color="teal">
+              Run success: {experimentSummary.executionSuccessRate.toFixed(1)}%
+            </Badge>
+            <Badge size="lg" variant="light" color="orange">
+              Time reduction: {experimentSummary.estimatedTimeReductionPercent.toFixed(1)}%
+            </Badge>
+          </Group>
+
+          <Group mt={8} gap={18} wrap="wrap">
+            <Text size="11px" c="#5A4A3A" fw={600}>
+              Avg manual duration: {formatTime(Math.round(experimentSummary.avgManualDurationSeconds))}
+            </Text>
+            <Text size="11px" c="#5A4A3A" fw={600}>
+              Avg AI duration: {formatTime(Math.round(experimentSummary.avgAiDurationSeconds))}
+            </Text>
+            <Text size="11px" c="#5A4A3A" fw={600}>
+              Avg AI generate per run: {experimentSummary.avgAiGeneratePerRun.toFixed(2)}
+            </Text>
+            <Text size="11px" c="#5A4A3A" fw={600}>
+              Avg AI repair per run: {experimentSummary.avgAiRepairPerRun.toFixed(2)}
+            </Text>
+          </Group>
         </Box>
 
         {/* Bento Grid Layout */}

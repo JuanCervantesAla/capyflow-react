@@ -40,6 +40,7 @@ interface HeaderBarProps {
   onOpenFlowSelector?: () => void;
   onAIGenerate?: () => void;
   onAIRepair?: () => void;
+  onExperiment?: () => void;
 }
 
 export function HeaderBar({
@@ -54,6 +55,7 @@ export function HeaderBar({
   onOpenFlowSelector,
   onAIRepair,
   onAIGenerate,
+  onExperiment,
 }: HeaderBarProps) {
   const { theme } = useTheme();
   const { logout, user } = useUsers();
@@ -61,10 +63,29 @@ export function HeaderBar({
   const [opened, setOpened] = useState(false);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(workflowName);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1440,
+  );
+
+  const isCompact = viewportWidth < 1440;
+  const isTight = viewportWidth < 1240;
+  const isVeryTight = viewportWidth < 1080;
+  const showSecondaryActions = !isCompact;
+  const showFlowButton = !isVeryTight;
+  const showRepairButton = !isCompact;
 
   useEffect(() => {
     setTitle(workflowName);
   }, [workflowName]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleLogout = () => {
     setOpened(false);
@@ -122,7 +143,7 @@ export function HeaderBar({
                 size="13px"
                 c="#999999"
                 style={{
-                  maxWidth: 200,
+                  maxWidth: isVeryTight ? 120 : isTight ? 150 : 200,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -131,20 +152,22 @@ export function HeaderBar({
               >
                 {title}
               </Text>
-              <UnstyledButton
-                onClick={() => setEditing(true)}
-                style={{
-                  width: 18,
-                  height: 18,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#666666",
-                  opacity: 0.9,
-                }}
-              >
-                <IconEdit size={13} />
-              </UnstyledButton>
+              {!isVeryTight && (
+                <UnstyledButton
+                  onClick={() => setEditing(true)}
+                  style={{
+                    width: 18,
+                    height: 18,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#666666",
+                    opacity: 0.9,
+                  }}
+                >
+                  <IconEdit size={13} />
+                </UnstyledButton>
+              )}
             </Group>
           ) : (
             <input
@@ -174,12 +197,12 @@ export function HeaderBar({
         </Group>
 
         <Group gap={0} wrap="nowrap">
-          {onAIRepair && (
+          {onAIRepair && showRepairButton && (
             <UnstyledButton
               onClick={onAIRepair}
               style={{
                 height: 56,
-                padding: "0 20px",
+                padding: isTight ? "0 12px" : "0 20px",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
@@ -204,7 +227,7 @@ export function HeaderBar({
               }}
             >
               <IconWand size={16} />
-              Fix
+              {!isTight && "Fix"}
             </UnstyledButton>
           )}
 
@@ -213,7 +236,7 @@ export function HeaderBar({
               onClick={onAIGenerate}
               style={{
                 height: 56,
-                padding: "0 20px",
+                padding: isTight ? "0 12px" : "0 20px",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
@@ -238,13 +261,47 @@ export function HeaderBar({
               }}
             >
               <IconSparkles size={16} />
-              AI
+              {!isVeryTight && "AI"}
             </UnstyledButton>
           )}
 
-          {onOpenFlowSelector && (
+          {onOpenFlowSelector && showFlowButton && (
             <UnstyledButton
               onClick={onOpenFlowSelector}
+              style={{
+                height: 56,
+                padding: isTight ? "0 12px" : "0 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: 0,
+                background: "transparent",
+                border: "none",
+                color: "#AAAAAA",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+                transition: 'all 0.15s',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.color = "#FFFFFF";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#AAAAAA";
+              }}
+            >
+              <IconFolderOpen size={16} />
+              {!isTight && "Flows"}
+            </UnstyledButton>
+          )}
+
+          {onExperiment && (
+            <UnstyledButton
+              onClick={onExperiment}
               style={{
                 height: 56,
                 padding: "0 20px",
@@ -271,8 +328,8 @@ export function HeaderBar({
                 e.currentTarget.style.color = "#AAAAAA";
               }}
             >
-              <IconFolderOpen size={16} />
-              Flows
+              <IconChartBar size={16} />
+              Experiment
             </UnstyledButton>
           )}
 
@@ -280,7 +337,7 @@ export function HeaderBar({
             onClick={onSave}
             style={{
               height: 56,
-              padding: "0 20px",
+              padding: isTight ? "0 12px" : "0 20px",
               display: "flex",
               alignItems: "center",
               gap: 8,
@@ -305,72 +362,76 @@ export function HeaderBar({
             }}
           >
             <IconDeviceFloppy size={16} />
-            Save
+            {!isVeryTight && "Save"}
           </UnstyledButton>
 
-          <UnstyledButton
-            onClick={onExport}
-            style={{
-              height: 56,
-              padding: "0 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              borderRadius: 0,
-              background: "transparent",
-              border: "none",
-              color: "#AAAAAA",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-              e.currentTarget.style.color = "#FFFFFF";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#AAAAAA";
-            }}
-          >
-            <IconDownload size={16} />
-            Export
-          </UnstyledButton>
+          {showSecondaryActions && (
+            <>
+              <UnstyledButton
+                onClick={onExport}
+                style={{
+                  height: 56,
+                  padding: isTight ? "0 12px" : "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  borderRadius: 0,
+                  background: "transparent",
+                  border: "none",
+                  color: "#AAAAAA",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.8px',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.15s',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                  e.currentTarget.style.color = "#FFFFFF";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#AAAAAA";
+                }}
+              >
+                <IconDownload size={16} />
+                {!isTight && "Export"}
+              </UnstyledButton>
 
-          <UnstyledButton
-            onClick={onShare}
-            style={{
-              height: 56,
-              padding: "0 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              borderRadius: 0,
-              background: "transparent",
-              border: "none",
-              color: "#AAAAAA",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-              e.currentTarget.style.color = "#FFFFFF";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#AAAAAA";
-            }}
-          >
-            <IconShare3 size={16} />
-            Share
-          </UnstyledButton>
+              <UnstyledButton
+                onClick={onShare}
+                style={{
+                  height: 56,
+                  padding: isTight ? "0 12px" : "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  borderRadius: 0,
+                  background: "transparent",
+                  border: "none",
+                  color: "#AAAAAA",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.8px',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.15s',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                  e.currentTarget.style.color = "#FFFFFF";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#AAAAAA";
+                }}
+              >
+                <IconShare3 size={16} />
+                {!isTight && "Share"}
+              </UnstyledButton>
+            </>
+          )}
 
           <div style={{ 
             width: 2, 
