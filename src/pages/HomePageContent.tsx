@@ -33,7 +33,19 @@ import {
   type ExperimentRecord,
 } from "../lib/experimentAnalytics";
 
-export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
+interface HomePageContentProps {
+  flowId: string | null;
+  flowName: string;
+  onOpenFlowSelector: () => void;
+  onRenameFlow?: (name: string) => void;
+}
+
+export function HomePageContent({
+  flowId,
+  flowName,
+  onOpenFlowSelector,
+  onRenameFlow,
+}: HomePageContentProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanelsCollapsed, setRightPanelsCollapsed] = useState(false);
   const [executionResult, setExecutionResult] =
@@ -162,6 +174,22 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
       nodes: flowContext.nodes,
       edges: flowContext.edges,
     });
+  };
+
+  const handleRenameFlow = async (nextName: string) => {
+    if (!flowId) return;
+
+    const trimmed = nextName.trim();
+    if (!trimmed || trimmed === flowName) return;
+
+    try {
+      const updated = await updateFlowRequest(flowId, { name: trimmed } as any);
+      const savedName = (updated as any)?.name || trimmed;
+      onRenameFlow?.(savedName);
+      toastSuccess("Flow renamed");
+    } catch (error: any) {
+      toastError(error?.message || "Failed to rename flow");
+    }
   };
 
   const handleExecute = async () => {
@@ -695,6 +723,7 @@ export function HomePageContent({ flowId, flowName, onOpenFlowSelector }: any) {
         onToggleFlowActive={handleToggleFlowActive}
         onAIGenerate={() => setAiModalOpened(true)}
         onAIRepair={() => setAiRepairModalOpened(true)}
+        onRenameWorkflow={handleRenameFlow}
       />
 
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>

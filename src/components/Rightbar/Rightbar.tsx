@@ -6,6 +6,7 @@ import { FlowContext } from "../Flow/context/FlowContext";
 import { WebhookPanel } from "../Flow/WebhookPanel/WebhookPanel";
 import type { FlowNode } from "../Flow/types/NodeTypes";
 import { useTheme } from "../../theme/ThemeContext";
+import { useSaveFlow } from "../../hooks/mutations/Flow/useSaveFlow";
 
 const WIDTH = 360;
 
@@ -137,6 +138,7 @@ export const Rightbar = memo(function Rightbar({
   onToggleShowConnectionIds,
 }: RightbarProps) {
   const { nodes, edges, updateNodeParameters } = useContext(FlowContext);
+  const { mutateAsync: saveFlow } = useSaveFlow();
   const { theme } = useTheme();
 
   const variableOptions = useMemo(
@@ -185,9 +187,25 @@ export const Rightbar = memo(function Rightbar({
   }, [edges, node, nodes]);
 
   const handleSaveParameters = (params: Record<string, any>) => {
-    if (node) {
-      updateNodeParameters(node.id, params);
-    }
+    if (!node) return;
+
+    const updatedNodes = nodes.map((flowNode) =>
+      flowNode.id === node.id
+        ? {
+            ...flowNode,
+            data: {
+              ...flowNode.data,
+              parameters: params,
+            },
+          }
+        : flowNode,
+    );
+
+    updateNodeParameters(node.id, params);
+
+    if (!flowId) return;
+
+    saveFlow({ flowId, nodes: updatedNodes, edges }).catch(() => {});
   };
 
   return (
