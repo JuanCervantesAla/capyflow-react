@@ -138,6 +138,19 @@ export function HomePage() {
     toastSuccess("Flow rolled back successfully");
   };
 
+  const handleRenameFlow = (name: string) => {
+    if (!flowId) return;
+
+    setFlowName(name);
+    localStorage.setItem(
+      "currentFlow",
+      JSON.stringify({ id: flowId, name })
+    );
+
+    queryClient.invalidateQueries({ queryKey: queryKeys.flows });
+    queryClient.invalidateQueries({ queryKey: queryKeys.flow(flowId) });
+  };
+
   return (
     <>
       <FlowSelectorModal
@@ -170,6 +183,7 @@ export function HomePage() {
             flowId={flowId}
             flowName={flowName}
             onOpenFlowSelector={() => setSelectorOpen(true)}
+            onRenameFlow={handleRenameFlow}
           />
         </FlowProvider>
       </ReactFlowProvider>

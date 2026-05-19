@@ -267,6 +267,22 @@ function KeyValueEditor({ value, onChange, syncKey }: { value: Record<string, an
   }, [syncKey, value]);
 
   useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+
+      const pending = pairsToObject(pairsRef.current);
+      const serialized = JSON.stringify(pending);
+      if (serialized !== lastEmittedRef.current) {
+        lastEmittedRef.current = serialized;
+        onChange(pending);
+      }
+    };
+  }, [syncKey, onChange]);
+
+  useEffect(() => {
     if (isSyncingRef.current) {
       isSyncingRef.current = false;
       return;

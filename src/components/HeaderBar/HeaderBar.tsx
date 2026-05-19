@@ -41,6 +41,7 @@ interface HeaderBarProps {
   onAIGenerate?: () => void;
   onAIRepair?: () => void;
   onExperiment?: () => void;
+  onRenameWorkflow?: (name: string) => void;
 }
 
 export function HeaderBar({
@@ -56,6 +57,7 @@ export function HeaderBar({
   onAIRepair,
   onAIGenerate,
   onExperiment,
+  onRenameWorkflow,
 }: HeaderBarProps) {
   const { theme } = useTheme();
   const { logout, user } = useUsers();
@@ -90,6 +92,21 @@ export function HeaderBar({
   const handleLogout = () => {
     setOpened(false);
     logout();
+  };
+
+  const commitTitle = (nextValue: string) => {
+    const trimmed = nextValue.trim();
+    if (!trimmed) {
+      setTitle(workflowName);
+      setEditing(false);
+      return;
+    }
+
+    if (trimmed !== workflowName) {
+      onRenameWorkflow?.(trimmed);
+    }
+
+    setEditing(false);
   };
 
   return (
@@ -174,8 +191,17 @@ export function HeaderBar({
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onBlur={() => setEditing(false)}
-              onKeyDown={(e) => e.key === "Enter" && setEditing(false)}
+              onBlur={() => commitTitle(title)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitTitle(title);
+                }
+                if (e.key === "Escape") {
+                  setTitle(workflowName);
+                  setEditing(false);
+                }
+              }}
               style={{
                 height: 32,
                 fontWeight: 500,
